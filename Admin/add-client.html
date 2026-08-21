@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Add Client - CA Office Management"
+    >
+
+    <title>Add Client | Admin | CA Office</title>
+
+
+    <!-- =====================================================
+         GOOGLE FONT
+    ====================================================== -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- =====================================================
+         MAIN CSS
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="/CSS/style.css"
+    >
+
+
+    <!-- =====================================================
+         PAGE CSS
+    ====================================================== -->
+
+    <style>
+
+        .client-form-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+
+        .form-section {
+            margin-bottom: 18px;
+        }
+
+
+        .form-section .task-form {
+            padding: 24px;
+        }
+
+
+        .form-grid {
+            margin-bottom: 20px;
+        }
+
+
+        .form-grid:last-child {
+            margin-bottom: 0;
+        }
+
+
+        .form-alert {
+            margin-bottom: 18px;
+        }
+
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 24px;
+        }
+
+
+        .secondary-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            height: 44px;
+
+            padding: 0 20px;
+
+            border-radius: 8px;
+
+            border: 1px solid #ddd;
+
+            background: white;
+
+            color: #333;
+
+            text-decoration: none;
+
+            cursor: pointer;
+        }
+
+
+        .secondary-button:hover {
+            background: #f7f7f7;
+        }
+
+
+        .primary-button {
+            height: 44px;
+
+            padding: 0 24px;
+
+            border: none;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+        }
+
+
+        .primary-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+
+        .required {
+            color: #c93636;
+        }
+
+
+        /*
+         * Location dropdowns
+         */
+
+        #clientState,
+        #clientDistrict,
+        #clientCity,
+        #locationId {
+            width: 100%;
+        }
+
+
+        #clientDistrict:disabled,
+        #clientCity:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+
+        .location-help {
+            margin-top: 6px;
+
+            font-size: 12px;
+
+            color: #777;
+        }
+
+
+        @media (max-width: 800px) {
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .form-actions a,
+            .form-actions button {
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<div class="dashboard-layout">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+
+        <!-- BRAND -->
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+
+            <div class="brand-name">
+
+                <strong>
+                    CA Office
+                </strong>
+
+                <span>
+                    Administration
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- NAVIGATION -->
+
+        <nav class="sidebar-nav">
+
+
+            <span class="nav-section">
+                OVERVIEW
+            </span>
+
+
+            <a
+                href="/admin/dashboard.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ⌂
+                </span>
+
+                Dashboard
+
+            </a>
+
+
+            <span class="nav-section">
+                MANAGEMENT
+            </span>
+
+
+            <a
+                href="/admin/employees.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ◌
+                </span>
+
+                Employees
+
+            </a>
+
+
+            <a
+                href="/admin/clients.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ◉
+                </span>
+
+                Clients
+
+            </a>
+
+
+            <a
+                href="/admin/add-client.html"
+                class="nav-item active"
+            >
+
+                <span class="nav-icon">
+                    +
+                </span>
+
+                Add Client
+
+            </a>
+
+
+            <a
+                href="/admin/tasks.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ✓
+                </span>
+
+                Tasks
+
+            </a>
+
+
+            <a
+                href="/admin/signup-requests.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ✉
+                </span>
+
+                Signup Requests
+
+            </a>
+
+
+            <a
+                href="/admin/locations.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ◇
+                </span>
+
+                Locations
+
+            </a>
+
+
+        </nav>
+
+
+        <!-- LOGOUT -->
+
+        <div class="sidebar-bottom">
+
+            <button
+                type="button"
+                class="logout-button"
+                id="logoutButton"
+            >
+
+                <span class="nav-icon">
+                    ↪
+                </span>
+
+                Sign out
+
+            </button>
+
+        </div>
+
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="dashboard-main">
+
+
+        <div class="client-form-container">
+
+
+            <!-- =================================================
+                 FORM
+            ================================================== -->
+
+            <form
+                id="clientForm"
+                novalidate
+            >
+
+
+                <!-- =================================================
+                     BACK
+                ================================================== -->
+
+                <div
+                    style="
+                        margin-bottom:20px;
+                    "
+                >
+
+                    <a
+                        href="/admin/clients.html"
+                        style="
+                            text-decoration:none;
+                            color:#555;
+                        "
+                    >
+
+                        ← Back to Clients
+
+                    </a>
+
+                </div>
+
+
+                <!-- =================================================
+                     HEADER
+                ================================================== -->
+
+                <header class="dashboard-header">
+
+
+                    <div>
+
+                        <span class="dashboard-eyebrow">
+                            CLIENT MANAGEMENT
+                        </span>
+
+
+                        <h1>
+                            Add Client
+                        </h1>
+
+
+                        <p>
+                            Create a new client record for the office.
+                        </p>
+
+                    </div>
+
+
+                    <div class="user-profile">
+
+
+                        <div
+                            class="avatar"
+                            id="adminAvatar"
+                        >
+                            A
+                        </div>
+
+
+                        <div class="user-info">
+
+                            <strong id="adminName">
+                                Administrator
+                            </strong>
+
+                            <span id="adminRole">
+                                Administrator
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+
+                </header>
+
+
+                <!-- =================================================
+                     ALERTS
+                ================================================== -->
+
+                <div
+                    id="clientError"
+                    class="form-alert error-alert"
+                    style="display:none;"
+                ></div>
+
+
+                <div
+                    id="clientSuccess"
+                    class="form-alert success-alert"
+                    style="display:none;"
+                ></div>
+
+
+                <!-- =================================================
+                     CLIENT INFORMATION
+                ================================================== -->
+
+                <section
+                    class="dashboard-panel form-section"
+                >
+
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Client Information
+                            </h2>
+
+                            <p>
+                                Basic personal or business information.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="task-form">
+
+
+                        <!-- NAME -->
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="firstName">
+
+                                    First Name
+
+                                    <span class="required">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <input
+                                    id="firstName"
+                                    type="text"
+                                    name="firstName"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="middleName">
+                                    Middle Name
+                                </label>
+
+
+                                <input
+                                    id="middleName"
+                                    type="text"
+                                    name="middleName"
+                                >
+
+                            </div>
+
+
+                        </div>
+
+
+                        <!-- LAST NAME / TYPE -->
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="lastName">
+
+                                    Last Name
+
+                                    <span class="required">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <input
+                                    id="lastName"
+                                    type="text"
+                                    name="lastName"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="clientType">
+
+                                    Client Type
+
+                                    <span class="required">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <select
+                                    id="clientType"
+                                    name="clientType"
+                                    required
+                                >
+
+                                    <option value="">
+                                        Select client type
+                                    </option>
+
+                                    <option value="individual">
+                                        Individual
+                                    </option>
+
+                                    <option value="huf">
+                                        HUF
+                                    </option>
+
+                                    <option value="partnership">
+                                        Partnership Firm
+                                    </option>
+
+                                    <option value="llp">
+                                        LLP
+                                    </option>
+
+                                    <option value="private_limited">
+                                        Private Limited Company
+                                    </option>
+
+                                    <option value="cooperative_society">
+                                        Co-operative Society
+                                    </option>
+
+                                    <option value="trust">
+                                        Trust
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <!-- =================================================
+                             LOCATION
+                        ================================================== -->
+
+                        <div class="form-grid">
+
+
+                            <!-- STATE -->
+
+                            <div class="form-group">
+
+                                <label for="clientState">
+                                    State
+                                </label>
+
+
+                                <select
+                                    id="clientState"
+                                    name="state"
+                                >
+
+                                    <option value="">
+                                        Select state
+                                    </option>
+
+                                </select>
+
+
+                                <div class="location-help">
+                                    Select a state first.
+                                </div>
+
+                            </div>
+
+
+                            <!-- DISTRICT -->
+
+                            <div class="form-group">
+
+                                <label for="clientDistrict">
+                                    District
+                                </label>
+
+
+                                <select
+                                    id="clientDistrict"
+                                    name="district"
+                                    disabled
+                                >
+
+                                    <option value="">
+                                        Select district
+                                    </option>
+
+                                </select>
+
+
+                                <div class="location-help">
+                                    Select a state to enable districts.
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <!-- CITY / GENDER -->
+
+                        <div class="form-grid">
+
+
+                            <!-- CITY -->
+
+                            <div class="form-group">
+
+                                <label for="clientCity">
+                                    City / Town
+                                </label>
+
+
+                                <select
+                                    id="clientCity"
+                                    name="city"
+                                    disabled
+                                >
+
+                                    <option value="">
+                                        Select city / town
+                                    </option>
+
+                                </select>
+
+
+                                <div class="location-help">
+                                    Select a district to enable cities.
+                                </div>
+
+                            </div>
+
+
+                            <!-- GENDER -->
+
+                            <div class="form-group">
+
+                                <label for="gender">
+                                    Gender
+                                </label>
+
+
+                                <select
+                                    id="gender"
+                                    name="gender"
+                                >
+
+                                    <option value="">
+                                        Select gender
+                                    </option>
+
+                                    <option value="male">
+                                        Male
+                                    </option>
+
+                                    <option value="female">
+                                        Female
+                                    </option>
+
+                                    <option value="other">
+                                        Other
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <!-- =================================================
+                             OFFICE LOCATION
+                        ================================================== -->
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="locationId">
+
+                                    Office Location
+
+                                    <span class="required">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <select
+                                    id="locationId"
+                                    name="locationId"
+                                    required
+                                >
+
+                                    <option value="">
+                                        Loading office locations...
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div></div>
+
+
+                        </div>
+
+
+                        <!-- ADDRESS -->
+
+                        <div class="form-group">
+
+                            <label for="address">
+                                Complete Address
+                            </label>
+
+
+                            <textarea
+                                id="address"
+                                name="address"
+                                rows="4"
+                            ></textarea>
+
+                        </div>
+
+
+                    </div>
+
+
+                </section>
+
+
+                <!-- =================================================
+                     TAX & REGISTRATION
+                ================================================== -->
+
+                <section
+                    class="dashboard-panel form-section"
+                >
+
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Tax & Registration
+                            </h2>
+
+                            <p>
+                                Government and business registration details.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="task-form">
+
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="pan">
+                                    PAN
+                                </label>
+
+
+                                <input
+                                    id="pan"
+                                    name="pan"
+                                    maxlength="10"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="aadhaar">
+                                    Aadhaar
+                                </label>
+
+
+                                <input
+                                    id="aadhaar"
+                                    name="aadhaar"
+                                    maxlength="12"
+                                >
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="tan">
+                                    TAN
+                                </label>
+
+
+                                <input
+                                    id="tan"
+                                    name="tan"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="gst">
+                                    GST
+                                </label>
+
+
+                                <input
+                                    id="gst"
+                                    name="gst"
+                                >
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="udyam">
+                                    MSME Udyam
+                                </label>
+
+
+                                <input
+                                    id="udyam"
+                                    name="udyam"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="cin">
+                                    CIN
+                                </label>
+
+
+                                <input
+                                    id="cin"
+                                    name="cin"
+                                >
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="fssai">
+                                    FSSAI
+                                </label>
+
+
+                                <input
+                                    id="fssai"
+                                    name="fssai"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="ptec">
+                                    PTEC
+                                </label>
+
+
+                                <input
+                                    id="ptec"
+                                    name="ptec"
+                                >
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="ptrc">
+                                    PTRC
+                                </label>
+
+
+                                <input
+                                    id="ptrc"
+                                    name="ptrc"
+                                >
+
+                            </div>
+
+
+                            <div></div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </section>
+
+
+                <!-- =================================================
+                     CONTACT
+                ================================================== -->
+
+                <section
+                    class="dashboard-panel form-section"
+                >
+
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Contact Information
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="task-form">
+
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="contact">
+
+                                    Contact Number
+
+                                    <span class="required">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <input
+                                    id="contact"
+                                    type="tel"
+                                    maxlength="10"
+                                    name="contact"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="email">
+                                    Email
+                                </label>
+
+
+                                <input
+                                    id="email"
+                                    type="email"
+                                    name="email"
+                                >
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </section>
+
+
+                <!-- =================================================
+                     DATES
+                ================================================== -->
+
+                <section
+                    class="dashboard-panel form-section"
+                >
+
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Dates
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="task-form">
+
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="dateOfBirth">
+                                    Date of Birth
+                                </label>
+
+
+                                <input
+                                    id="dateOfBirth"
+                                    type="date"
+                                    name="dateOfBirth"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="dateOfRegistration">
+                                    Date of Registration
+                                </label>
+
+
+                                <input
+                                    id="dateOfRegistration"
+                                    type="date"
+                                    name="dateOfRegistration"
+                                >
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </section>
+
+
+                <!-- =================================================
+                     AUTHORISED PERSON
+                ================================================== -->
+
+                <section
+                    class="dashboard-panel form-section"
+                >
+
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Authorised Person
+                            </h2>
+
+                            <p>
+                                Person authorised to represent the client.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="task-form">
+
+
+                        <label
+                            class="checkbox-label"
+                        >
+
+                            <input
+                                type="checkbox"
+                                id="authorisedSameAsClient"
+                                name="authorisedSameAsClient"
+                            >
+
+
+                            <span>
+                                Authorised person is the same as client
+                            </span>
+
+                        </label>
+
+
+                        <div
+                            id="authorisedFields"
+                            style="margin-top:20px;"
+                        >
+
+
+                            <div class="form-grid">
+
+
+                                <div class="form-group">
+
+                                    <label for="authorisedPersonName">
+                                        Name
+                                    </label>
+
+
+                                    <input
+                                        id="authorisedPersonName"
+                                        name="authorisedPersonName"
+                                    >
+
+                                </div>
+
+
+                                <div class="form-group">
+
+                                    <label for="authorisedPersonContact">
+                                        Contact
+                                    </label>
+
+
+                                    <input
+                                        id="authorisedPersonContact"
+                                        name="authorisedPersonContact"
+                                        maxlength="10"
+                                    >
+
+                                </div>
+
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="authorisedPersonEmail">
+                                    Email
+                                </label>
+
+
+                                <input
+                                    id="authorisedPersonEmail"
+                                    type="email"
+                                    name="authorisedPersonEmail"
+                                >
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </section>
+
+
+                <!-- =================================================
+                     ACTIONS
+                ================================================== -->
+
+                <section
+                    class="dashboard-panel"
+                >
+
+
+                    <div class="form-actions">
+
+
+                        <a
+                            href="/admin/clients.html"
+                            class="secondary-button"
+                        >
+                            Cancel
+                        </a>
+
+
+                        <button
+                            id="saveClientButton"
+                            type="submit"
+                            class="primary-button"
+                        >
+                            Save Client
+                        </button>
+
+
+                    </div>
+
+
+                </section>
+
+
+            </form>
+
+
+        </div>
+
+
+    </main>
+
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+
+     IMPORTANT:
+     location-data.js MUST come BEFORE
+     admin-add-client.js
+========================================================= -->
+
+<script src="/JS/auth.js"></script>
+
+<script src="/JS/location-data.js"></script>
+
+<script src="/JS/admin-add-client.js"></script>
+
+
+</body>
+
+</html>

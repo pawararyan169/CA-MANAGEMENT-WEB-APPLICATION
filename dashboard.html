@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Dashboard | CA Office</title>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+</head>
+
+
+<body class="dashboard-body">
+
+<div class="dashboard-layout">
+
+    <!-- Sidebar -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+            <div class="brand-name">
+                <strong>CA Office</strong>
+                <span>Management</span>
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <span class="nav-section">
+                WORKSPACE
+            </span>
+
+            <a
+                href="#"
+                class="nav-item active"
+            >
+
+                <span class="nav-icon">⌂</span>
+
+                Dashboard
+
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">◉</span>
+
+                Clients
+
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">✓</span>
+
+                Tasks
+
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">▣</span>
+
+                Compliance
+
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">□</span>
+
+                Documents
+
+            </a>
+
+
+            <span class="nav-section">
+                OFFICE
+            </span>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">◌</span>
+
+                Team
+
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">◷</span>
+
+                Calendar
+
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">◈</span>
+
+                Reports
+
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">⚙</span>
+
+                Settings
+
+            </a>
+
+
+            <button
+                id="logoutButton"
+                class="logout-button"
+            >
+
+                <span class="nav-icon">
+                    ↪
+                </span>
+
+                Sign out
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- Main -->
+
+    <main class="dashboard-main">
+
+        <header class="dashboard-header">
+
+            <div>
+
+                <span class="dashboard-eyebrow">
+                    MONDAY, AUGUST 17, 2026
+                </span>
+
+                <h1>
+                    Good morning.
+                </h1>
+
+                <p>
+                    Here's what's happening in your office today.
+                </p>
+
+            </div>
+
+
+            <div class="user-profile">
+
+                <div class="avatar">
+                    A
+                </div>
+
+                <div class="user-info">
+
+                    <strong>
+                        Office Member
+                    </strong>
+
+                    <span>
+                        Staff
+                    </span>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- Stats -->
+
+        <section class="stats-grid">
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span>
+                        Active Clients
+                    </span>
+
+                    <span class="stat-icon">
+                        ◉
+                    </span>
+
+                </div>
+
+                <strong>
+                    128
+                </strong>
+
+                <span class="stat-change">
+                    +6 this month
+                </span>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span>
+                        Pending Tasks
+                    </span>
+
+                    <span class="stat-icon">
+                        ✓
+                    </span>
+
+                </div>
+
+                <strong>
+                    24
+                </strong>
+
+                <span class="stat-change">
+                    8 due this week
+                </span>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span>
+                        Compliance
+                    </span>
+
+                    <span class="stat-icon">
+                        ◷
+                    </span>
+
+                </div>
+
+                <strong>
+                    92%
+                </strong>
+
+                <span class="stat-change">
+                    On track
+                </span>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span>
+                        Outstanding
+                    </span>
+
+                    <span class="stat-icon">
+                        ₹
+                    </span>
+
+                </div>
+
+                <strong>
+                    ₹84,500
+                </strong>
+
+                <span class="stat-change">
+                    7 invoices
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- Dashboard Content -->
+
+        <section class="dashboard-grid">
+
+            <div class="dashboard-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Today's tasks
+                        </h2>
+
+                        <p>
+                            Tasks requiring your attention
+                        </p>
+
+                    </div>
+
+                    <a href="#">
+                        View all
+                    </a>
+
+                </div>
+
+
+                <div class="task-list">
+
+                    <div class="task-item">
+
+                        <div class="task-status pending"></div>
+
+                        <div class="task-details">
+
+                            <strong>
+                                GST return preparation
+                            </strong>
+
+                            <span>
+                                ABC Trading Pvt. Ltd.
+                            </span>
+
+                        </div>
+
+                        <span class="task-date">
+                            Today
+                        </span>
+
+                    </div>
+
+
+                    <div class="task-item">
+
+                        <div class="task-status review"></div>
+
+                        <div class="task-details">
+
+                            <strong>
+                                ITR document review
+                            </strong>
+
+                            <span>
+                                Rahul Mehta
+                            </span>
+
+                        </div>
+
+                        <span class="task-date">
+                            Today
+                        </span>
+
+                    </div>
+
+
+                    <div class="task-item">
+
+                        <div class="task-status pending"></div>
+
+                        <div class="task-details">
+
+                            <strong>
+                                TDS reconciliation
+                            </strong>
+
+                            <span>
+                                Sharma & Associates
+                            </span>
+
+                        </div>
+
+                        <span class="task-date">
+                            Tomorrow
+                        </span>
+
+                    </div>
+
+
+                    <div class="task-item">
+
+                        <div class="task-status completed"></div>
+
+                        <div class="task-details">
+
+                            <strong>
+                                Bank reconciliation
+                            </strong>
+
+                            <span>
+                                Kumar Enterprises
+                            </span>
+
+                        </div>
+
+                        <span class="task-date">
+                            Completed
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Upcoming -->
+
+            <div class="dashboard-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Upcoming
+                        </h2>
+
+                        <p>
+                            Important dates
+                        </p>
+
+                    </div>
+
+                    <a href="#">
+                        Calendar
+                    </a>
+
+                </div>
+
+
+                <div class="upcoming-list">
+
+                    <div class="upcoming-item">
+
+                        <div class="date-box">
+
+                            <span>
+                                AUG
+                            </span>
+
+                            <strong>
+                                20
+                            </strong>
+
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                GST filing
+                            </strong>
+
+                            <span>
+                                14 clients
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="upcoming-item">
+
+                        <div class="date-box">
+
+                            <span>
+                                AUG
+                            </span>
+
+                            <strong>
+                                25
+                            </strong>
+
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                TDS deadline
+                            </strong>
+
+                            <span>
+                                8 clients
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="upcoming-item">
+
+                        <div class="date-box">
+
+                            <span>
+                                AUG
+                            </span>
+
+                            <strong>
+                                31
+                            </strong>
+
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Monthly review
+                            </strong>
+
+                            <span>
+                                Internal office meeting
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script src="js/auth.js"></script>
+<link 
+rel="stylesheet"
+href="/css/style.css"
+
+</body>
+
+</html>

@@ -1,0 +1,16 @@
+{
+    "users": [
+        {
+            "id": "ADMIN001",
+            "username": "admin",
+            "passwordHash": "6f2cb9dd8f4b65e24e1c3f3fa5bc57982349237f11abceacd45bbcb74d621c25",
+            "name": "CA Office Administrator",
+            "email": "admin@caoffice.com",
+            "role": "admin",
+            "status": "active",
+            "createdAt": "2026-08-17T08:55:45.869Z"
+        }
+    ],
+    "signupRequests": [],
+    "tasks": []
+}

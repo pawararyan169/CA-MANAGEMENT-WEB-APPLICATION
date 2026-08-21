@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="CA Office Management - Administrator Dashboard"
+    >
+
+    <title>Admin Dashboard | CA Office</title>
+
+
+    <!-- Google Font -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- Main CSS -->
+
+    <link
+        rel="stylesheet"
+        href="/CSS/style.css"
+    >
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<div class="dashboard-layout">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+
+        <!-- BRAND -->
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+            <div class="brand-name">
+
+                <strong>
+                    CA Office
+                </strong>
+
+                <span>
+                    Administration
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             NAVIGATION
+        ================================================== -->
+
+        <nav class="sidebar-nav">
+
+
+            <!-- OVERVIEW -->
+
+            <span class="nav-section">
+                OVERVIEW
+            </span>
+
+
+            <a
+                href="/admin/dashboard.html"
+                class="nav-item active"
+            >
+
+                <span class="nav-icon">
+                    ⌂
+                </span>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </a>
+
+
+            <!-- MANAGEMENT -->
+
+            <span class="nav-section">
+                MANAGEMENT
+            </span>
+
+
+            <!-- EMPLOYEES -->
+
+            <a
+                href="/admin/employees.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ◌
+                </span>
+
+                <span>
+                    Employees
+                </span>
+
+            </a>
+
+
+            <!-- =========================================================
+     TAX & REGISTRATIONS
+========================================================= -->
+
+
+
+
+            <!-- CLIENTS -->
+
+            <a
+                href="/admin/clients.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ◉
+                </span>
+
+                <span>
+                    Clients
+                </span>
+
+            </a>
+
+
+            <!-- TASKS -->
+
+            <a
+                href="/admin/tasks.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ✓
+                </span>
+
+                <span>
+                    Tasks
+                </span>
+
+            </a>
+
+
+            <!-- SIGNUP REQUESTS -->
+
+            <a
+                href="/admin/signup-requests.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ◌
+                </span>
+
+                <span>
+                    Signup Requests
+                </span>
+
+            </a>
+
+
+            <!-- LOCATIONS -->
+
+            <a
+                href="/admin/locations.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ◇
+                </span>
+
+                <span>
+                    Locations
+                </span>
+
+            </a>
+
+
+            <!-- OFFICE -->
+
+            <span class="nav-section">
+                OFFICE
+            </span>
+
+
+            <a
+                href="#"
+                class="nav-item"
+                onclick="return false;"
+            >
+
+                <span class="nav-icon">
+                    ◷
+                </span>
+
+                <span>
+                    Calendar
+                </span>
+
+            </a>
+
+
+            <a
+                href="/admin/documents.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    □
+                </span>
+
+                <span>
+                    Documents
+                </span>
+
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+                onclick="return false;"
+            >
+
+                <span class="nav-icon">
+                    ₹
+                </span>
+
+                <span>
+                    Billing
+                </span>
+
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+                onclick="return false;"
+            >
+
+                <span class="nav-icon">
+                    ◈
+                </span>
+
+                <span>
+                    Reports
+                </span>
+
+            </a>
+
+
+        </nav>
+
+
+        <!-- =================================================
+             SIDEBAR BOTTOM
+        ================================================== -->
+
+        <div class="sidebar-bottom">
+
+
+            <a
+                href="#"
+                class="nav-item"
+                onclick="return false;"
+            >
+
+                <span class="nav-icon">
+                    ⚙
+                </span>
+
+                <span>
+                    Settings
+                </span>
+
+            </a>
+
+
+            <!-- SIGN OUT -->
+
+            <button
+                type="button"
+                class="logout-button"
+                id="logoutButton"
+            >
+
+                <span class="nav-icon">
+                    ↪
+                </span>
+
+                <span>
+                    Sign out
+                </span>
+
+            </button>
+
+
+        </div>
+
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="dashboard-main">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <header class="dashboard-header">
+
+
+            <div>
+
+                <span class="dashboard-eyebrow">
+                    ADMINISTRATION
+                </span>
+
+                <h1>
+                    Office overview
+                </h1>
+
+                <p>
+                    Monitor your firm's operations and team activity.
+                </p>
+
+            </div>
+
+
+            <!-- USER PROFILE -->
+
+            <div class="user-profile">
+
+
+                <div
+                    class="avatar"
+                    id="adminAvatar"
+                >
+                    A
+                </div>
+
+
+                <div class="user-info">
+
+                    <strong id="adminName">
+                        CA Office Administrator
+                    </strong>
+
+                    <span id="adminRole">
+                        Administrator
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+        </header>
+
+
+        <!-- =================================================
+             STATISTICS
+        ================================================== -->
+
+        <section class="stats-grid">
+
+
+            <!-- EMPLOYEES -->
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span>
+                        Employees
+                    </span>
+
+                    <span class="stat-icon">
+                        ◌
+                    </span>
+
+                </div>
+
+                <strong id="employeeCount">
+                    —
+                </strong>
+
+                <span class="stat-change">
+                    View employee workload
+                </span>
+
+            </div>
+
+
+            <!-- CLIENTS -->
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span>
+                        Active Clients
+                    </span>
+
+                    <span class="stat-icon">
+                        ◉
+                    </span>
+
+                </div>
+
+                <strong id="clientCount">
+                    —
+                </strong>
+
+                <span class="stat-change">
+                    Manage client records
+                </span>
+
+            </div>
+
+
+            <!-- TASKS -->
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span>
+                        Pending Tasks
+                    </span>
+
+                    <span class="stat-icon">
+                        ✓
+                    </span>
+
+                </div>
+
+                <strong id="taskCount">
+                    —
+                </strong>
+
+                <span class="stat-change">
+                    Review assigned work
+                </span>
+
+            </div>
+
+
+            <!-- BILLING -->
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span>
+                        Outstanding
+                    </span>
+
+                    <span class="stat-icon">
+                        ₹
+                    </span>
+
+                </div>
+
+                <strong>
+                    —
+                </strong>
+
+                <span class="stat-change">
+                    Billing module
+                </span>
+
+            </div>
+
+
+        </section>
+
+        <!-- =================================================
+             TAX & REGISTRATIONS
+             MAIN CONTENT PANEL
+        ================================================== -->
+
+        <section class="dashboard-panel registration-dashboard-panel">
+
+    <div class="panel-header">
+
+        <div>
+
+            <h2>
+                Tax & Registrations
+            </h2>
+
+            <p>
+                Live registration information from your client records.
+            </p>
+
+        </div>
+
+        <a
+            href="/admin/registrations.html?type=cin"
+            id="viewAllRegistrations"
+            class="secondary-button"
+        >
+            View All Registrations →
+        </a>
+
+    </div>
+
+
+    <div class="registration-dashboard-grid">
+
+
+        <!-- CIN -->
+
+        <a
+            href="/admin/registrations.html?type=cin"
+            class="registration-dashboard-card"
+        >
+
+            <div class="registration-dashboard-icon">
+                C
+            </div>
+
+            <div class="registration-dashboard-info">
+
+                <strong>
+                    CIN
+                </strong>
+
+                <span>
+                    Corporate Identification Number
+                </span>
+
+            </div>
+
+            <div class="registration-dashboard-count">
+
+                <strong id="dashboardCinCount">
+                    —
+                </strong>
+
+                <span>
+                    Clients
+                </span>
+
+            </div>
+
+        </a>
+
+
+        <!-- FSSAI -->
+
+        <a
+            href="/admin/registrations.html?type=fssai"
+            class="registration-dashboard-card"
+        >
+
+            <div class="registration-dashboard-icon">
+                F
+            </div>
+
+            <div class="registration-dashboard-info">
+
+                <strong>
+                    FSSAI
+                </strong>
+
+                <span>
+                    Food Safety Registration
+                </span>
+
+            </div>
+
+            <div class="registration-dashboard-count">
+
+                <strong id="dashboardFssaiCount">
+                    —
+                </strong>
+
+                <span>
+                    Clients
+                </span>
+
+            </div>
+
+        </a>
+
+
+        <!-- GST -->
+
+        <a
+            href="/admin/registrations.html?type=gst"
+            class="registration-dashboard-card"
+        >
+
+            <div class="registration-dashboard-icon">
+                G
+            </div>
+
+            <div class="registration-dashboard-info">
+
+                <strong>
+                    GST
+                </strong>
+
+                <span>
+                    Goods & Services Tax
+                </span>
+
+            </div>
+
+            <div class="registration-dashboard-count">
+
+                <strong id="dashboardGstCount">
+                    —
+                </strong>
+
+                <span>
+                    Clients
+                </span>
+
+            </div>
+
+        </a>
+
+
+        <!-- MSME UDYAM -->
+
+        <a
+            href="/admin/registrations.html?type=udyam"
+            class="registration-dashboard-card"
+        >
+
+            <div class="registration-dashboard-icon">
+                M
+            </div>
+
+            <div class="registration-dashboard-info">
+
+                <strong>
+                    MSME Udyam
+                </strong>
+
+                <span>
+                    MSME Udyam Registration
+                </span>
+
+            </div>
+
+            <div class="registration-dashboard-count">
+
+                <strong id="dashboardUdyamCount">
+                    —
+                </strong>
+
+                <span>
+                    Clients
+                </span>
+
+            </div>
+
+        </a>
+
+
+        <!-- PTEC -->
+
+        <a
+            href="/admin/registrations.html?type=ptec"
+            class="registration-dashboard-card"
+        >
+
+            <div class="registration-dashboard-icon">
+                P
+            </div>
+
+            <div class="registration-dashboard-info">
+
+                <strong>
+                    PTEC
+                </strong>
+
+                <span>
+                    Professional Tax Enrollment
+                </span>
+
+            </div>
+
+            <div class="registration-dashboard-count">
+
+                <strong id="dashboardPtecCount">
+                    —
+                </strong>
+
+                <span>
+                    Clients
+                </span>
+
+            </div>
+
+        </a>
+
+
+        <!-- PTRC -->
+
+        <a
+            href="/admin/registrations.html?type=ptrc"
+            class="registration-dashboard-card"
+        >
+
+            <div class="registration-dashboard-icon">
+                P
+            </div>
+
+            <div class="registration-dashboard-info">
+
+                <strong>
+                    PTRC
+                </strong>
+
+                <span>
+                    Professional Tax Registration
+                </span>
+
+            </div>
+
+            <div class="registration-dashboard-count">
+
+                <strong id="dashboardPtrcCount">
+                    —
+                </strong>
+
+                <span>
+                    Clients
+                </span>
+
+            </div>
+
+        </a>
+
+
+        <!-- TAN -->
+
+        <a
+            href="/admin/registrations.html?type=tan"
+            class="registration-dashboard-card"
+        >
+
+            <div class="registration-dashboard-icon">
+                T
+            </div>
+
+            <div class="registration-dashboard-info">
+
+                <strong>
+                    TAN
+                </strong>
+
+                <span>
+                    Tax Deduction Account Number
+                </span>
+
+            </div>
+
+            <div class="registration-dashboard-count">
+
+                <strong id="dashboardTanCount">
+                    —
+                </strong>
+
+                <span>
+                    Clients
+                </span>
+
+            </div>
+
+        </a>
+
+    </div>
+
+</section>
+
+
+
+
+        <!-- =================================================
+             MAIN DASHBOARD GRID
+        ================================================== -->
+
+        <section class="dashboard-grid">
+
+
+            <!-- =================================================
+                 RECENT ACTIVITY
+            ================================================== -->
+
+            <div class="dashboard-panel">
+
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Recent activity
+                        </h2>
+
+                        <p>
+                            Latest activity across your office
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="task-list">
+
+
+                    <!-- EMPLOYEE MONITORING -->
+
+                    <div class="task-item">
+
+                        <div class="task-status completed">
+                        </div>
+
+                        <div class="task-details">
+
+                            <strong>
+                                Employee monitoring
+                            </strong>
+
+                            <span>
+                                View employee workload and activity.
+                            </span>
+
+                        </div>
+
+                        <a
+                            href="/admin/employees.html"
+                            class="task-date"
+                        >
+                            View
+                        </a>
+
+                    </div>
+
+
+                    <!-- CLIENT MANAGEMENT -->
+
+                    <div class="task-item">
+
+                        <div class="task-status review">
+                        </div>
+
+                        <div class="task-details">
+
+                            <strong>
+                                Client management
+                            </strong>
+
+                            <span>
+                                View and manage all office clients.
+                            </span>
+
+                        </div>
+
+                        <a
+                            href="/admin/clients.html"
+                            class="task-date"
+                        >
+                            View
+                        </a>
+
+                    </div>
+
+
+                    <!-- SIGNUP REQUESTS -->
+
+                    <div class="task-item">
+
+                        <div class="task-status pending">
+                        </div>
+
+                        <div class="task-details">
+
+                            <strong>
+                                Signup requests
+                            </strong>
+
+                            <span>
+                                Review pending employee registrations.
+                            </span>
+
+                        </div>
+
+                        <a
+                            href="/admin/signup-requests.html"
+                            class="task-date"
+                        >
+                            Review
+                        </a>
+
+                    </div>
+
+
+                    <!-- LOCATIONS -->
+
+                    <div class="task-item">
+
+                        <div class="task-status completed">
+                        </div>
+
+                        <div class="task-details">
+
+                            <strong>
+                                Office locations
+                            </strong>
+
+                            <span>
+                                Manage locations available to staff.
+                            </span>
+
+                        </div>
+
+                        <a
+                            href="/admin/locations.html"
+                            class="task-date"
+                        >
+                            Manage
+                        </a>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 OFFICE MODULES
+            ================================================== -->
+
+            <div class="dashboard-panel">
+
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Office modules
+                        </h2>
+
+                        <p>
+                            Current management areas
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="upcoming-list">
+
+
+                    <!-- EMPLOYEES -->
+
+                    <div class="upcoming-item">
+
+                        <div class="date-box">
+
+                            <strong>
+                                01
+                            </strong>
+
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Employees
+                            </strong>
+
+                            <span>
+                                Staff monitoring
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CLIENTS -->
+
+                    <div class="upcoming-item">
+
+                        <div class="date-box">
+
+                            <strong>
+                                02
+                            </strong>
+
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Clients
+                            </strong>
+
+                            <span>
+                                Client information
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- TASKS -->
+
+                    <div class="upcoming-item">
+
+                        <div class="date-box">
+
+                            <strong>
+                                03
+                            </strong>
+
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Tasks
+                            </strong>
+
+                            <span>
+                                Employee assignments
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </section>
+
+
+        <!-- =================================================
+             QUICK ACTIONS
+        ================================================== -->
+
+        <section
+            class="dashboard-panel"
+            style="margin-top: 18px;"
+        >
+
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Quick actions
+                    </h2>
+
+                    <p>
+                        Frequently used office actions
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                style="
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 12px;
+                    padding: 20px;
+                "
+            >
+
+
+                <!-- ADD EMPLOYEE -->
+
+                <button
+                    type="button"
+                    class="quick-action"
+                    id="addEmployeeButton"
+                >
+
+                    <span class="quick-action-icon">
+                        +
+                    </span>
+
+                    <span>
+                        Add employee
+                    </span>
+
+                </button>
+
+
+                <!-- ADD CLIENT -->
+
+                <button
+                    type="button"
+                    class="quick-action"
+                    id="addClientButton"
+                >
+
+                    <span class="quick-action-icon">
+                        +
+                    </span>
+
+                    <span>
+                        Add client
+                    </span>
+
+                </button>
+
+
+                <!-- VIEW EMPLOYEES -->
+
+                <button
+                    type="button"
+                    class="quick-action"
+                    id="viewEmployeesButton"
+                >
+
+                    <span class="quick-action-icon">
+                        ◌
+                    </span>
+
+                    <span>
+                        View employees
+                    </span>
+
+                </button>
+
+
+                <!-- CREATE TASK -->
+
+                <button
+                    type="button"
+                    class="quick-action"
+                    id="createTaskButton"
+                >
+
+                    <span class="quick-action-icon">
+                        ✓
+                    </span>
+
+                    <span>
+                        Create task
+                    </span>
+
+                </button>
+
+
+            </div>
+
+
+        </section>
+
+
+        <!-- =================================================
+             CLIENT MANAGEMENT SHORTCUT
+        ================================================== -->
+
+        <section
+            class="dashboard-panel"
+            style="margin-top: 18px;"
+        >
+
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Client management
+                    </h2>
+
+                    <p>
+                        Manage client records and employee assignments.
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="/admin/clients.html"
+                >
+                    View clients
+                </a>
+
+            </div>
+
+
+            <div
+                style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 20px;
+                    padding: 20px;
+                "
+            >
+
+                <div>
+
+                    <strong
+                        style="
+                            display: block;
+                            font-size: 12px;
+                            margin-bottom: 5px;
+                        "
+                    >
+                        Add and assign clients
+                    </strong>
+
+                    <span
+                        style="
+                            color: var(--text-secondary);
+                            font-size: 10px;
+                            line-height: 1.6;
+                        "
+                    >
+                        Create a client record and assign it to a specific
+                        employee. Employees will only see clients assigned
+                        to them in their My Clients section.
+                    </span>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="primary-button"
+                    id="manageClientsButton"
+                    style="
+                        width: auto;
+                        padding: 0 18px;
+                        flex-shrink: 0;
+                    "
+                >
+                    Manage clients
+                </button>
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script src="/JS/auth.js"></script>
+
+<script src="/JS/admin.js"></script>
+
+
+</body>
+
+</html>

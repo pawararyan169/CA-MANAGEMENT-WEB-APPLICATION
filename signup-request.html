@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Signup Requests | CA Office</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/CSS/style.css"
+    >
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<div class="dashboard-layout">
+
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+            <div class="brand-name">
+
+                <strong>
+                    CA Office
+                </strong>
+
+                <span>
+                    Administration
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <span class="nav-section">
+                OVERVIEW
+            </span>
+
+
+            <a
+                href="/admin/dashboard.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ⌂
+                </span>
+
+                Dashboard
+
+            </a>
+
+
+            <span class="nav-section">
+                MANAGEMENT
+            </span>
+
+
+            <a
+                href="/admin/signup-requests.html"
+                class="nav-item active"
+            >
+
+                <span class="nav-icon">
+                    ◌
+                </span>
+
+                Signup Requests
+
+            </a>
+
+
+            <a
+                href="/admin/tasks.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ✓
+                </span>
+
+                Tasks
+
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <button
+                type="button"
+                class="logout-button"
+                id="logoutButton"
+            >
+
+                <span class="nav-icon">
+                    ↪
+                </span>
+
+                Sign out
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <main class="dashboard-main">
+
+
+        <header class="dashboard-header">
+
+            <div>
+
+                <span class="dashboard-eyebrow">
+                    ADMINISTRATION
+                </span>
+
+                <h1>
+                    Signup requests
+                </h1>
+
+                <p>
+                    Review employees requesting access to the office portal.
+                </p>
+
+            </div>
+
+
+            <div class="user-profile">
+
+                <div class="avatar">
+                    A
+                </div>
+
+                <div class="user-info">
+
+                    <strong>
+                        CA Office Administrator
+                    </strong>
+
+                    <span>
+                        Administrator
+                    </span>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <section class="dashboard-panel">
+
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Pending registrations
+                    </h2>
+
+                    <p>
+                        Approve a request to create the employee's login credentials.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="signupRequestsList"
+                class="request-list"
+            >
+
+                <div class="empty-state">
+
+                    Loading requests...
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+</div>
+
+
+<script src="/JS/auth.js"></script>
+
+<script src="/JS/signup-requests.js"></script>
+
+
+</body>
+
+</html>

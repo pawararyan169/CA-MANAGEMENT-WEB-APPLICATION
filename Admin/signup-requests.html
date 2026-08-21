@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Signup Requests | CA Office</title>
+
+    <link
+        rel="stylesheet"
+        href="/CSS/style.css"
+    >
+
+    <style>
+
+        .requests-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background: #eef0f2;
+        }
+
+        .request-card {
+            background: #ffffff;
+            padding: 24px;
+        }
+
+        .request-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .request-person {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+        }
+
+        .request-avatar {
+            width: 44px;
+            height: 44px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #edf2f6;
+            color: #42637e;
+
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .request-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .request-date {
+            margin-top: 4px;
+            color: var(--text-muted);
+            font-size: 9px;
+        }
+
+        .request-status {
+            padding: 6px 11px;
+            border-radius: 20px;
+
+            background: #fff4e5;
+            color: #9a5b00;
+
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .request-status.approved {
+            background: #ecfdf3;
+            color: #18794e;
+        }
+
+        .request-status.rejected {
+            background: #fff1f1;
+            color: #c93636;
+        }
+
+        .request-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+
+            gap: 15px;
+
+            margin-top: 20px;
+            padding-top: 17px;
+
+            border-top: 1px solid var(--border);
+        }
+
+        .request-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .request-info-item span {
+            color: var(--text-muted);
+            font-size: 9px;
+        }
+
+        .request-info-item strong {
+            color: var(--text);
+            font-size: 10px;
+            word-break: break-word;
+        }
+
+        .request-message {
+            margin-top: 18px;
+            padding: 13px;
+
+            border-radius: 8px;
+            background: #fafbfc;
+        }
+
+        .request-message span {
+            display: block;
+            margin-bottom: 5px;
+
+            color: var(--text-muted);
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+        .request-message p {
+            color: var(--text-secondary);
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        .approval-box {
+            margin-top: 20px;
+            padding: 18px;
+
+            border: 1px solid var(--border);
+            border-radius: 9px;
+
+            background: #fbfcfd;
+        }
+
+        .approval-box h3 {
+            font-size: 11px;
+            margin-bottom: 5px;
+        }
+
+        .approval-box > p {
+            margin-bottom: 15px;
+
+            color: var(--text-muted);
+            font-size: 9px;
+        }
+
+        .approval-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .approval-fields input {
+            width: 100%;
+            height: 42px;
+
+            padding: 0 12px;
+
+            border: 1px solid var(--border);
+            border-radius: 7px;
+
+            outline: none;
+
+            font-family: var(--font);
+            font-size: 11px;
+        }
+
+        .approval-fields input:focus {
+            border-color: var(--border-focus);
+
+            box-shadow:
+                0 0 0 3px
+                rgba(49, 91, 131, 0.07);
+        }
+
+        .approval-actions {
+            display: flex;
+            gap: 10px;
+
+            margin-top: 13px;
+        }
+
+        .approve-btn,
+        .reject-btn {
+            height: 40px;
+
+            padding: 0 16px;
+
+            border-radius: 7px;
+
+            font-family: var(--font);
+            font-size: 10px;
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+        .approve-btn {
+            border: none;
+
+            background: var(--primary);
+            color: white;
+        }
+
+        .approve-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .reject-btn {
+            border: 1px solid #e1a6a6;
+
+            background: white;
+            color: #a33b3b;
+        }
+
+        .reject-btn:hover {
+            background: #fff7f7;
+        }
+
+        .request-error {
+            margin-top: 10px;
+
+            color: var(--error);
+            font-size: 10px;
+        }
+
+        @media (max-width: 700px) {
+
+            .request-header {
+                flex-direction: column;
+            }
+
+            .request-info {
+                grid-template-columns: 1fr;
+            }
+
+            .approval-fields {
+                grid-template-columns: 1fr;
+            }
+
+            .approval-actions {
+                flex-direction: column;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<div class="dashboard-layout">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+            <div class="brand-name">
+
+                <strong>
+                    CA Office
+                </strong>
+
+                <span>
+                    Administration
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <span class="nav-section">
+                OVERVIEW
+            </span>
+
+            <a
+                href="/admin/dashboard.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+
+            <span class="nav-section">
+                MANAGEMENT
+            </span>
+
+            <a
+                href="/admin/employees.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">◌</span>
+                Employees
+            </a>
+
+            <a
+                href="/client/clients.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">◉</span>
+                Clients
+            </a>
+
+            <a
+                href="/admin/tasks.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">✓</span>
+                Tasks
+            </a>
+
+            <a
+                href="/admin/signup-requests.html"
+                class="nav-item active"
+            >
+                <span class="nav-icon">◌</span>
+                Signup Requests
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <button
+                type="button"
+                id="logoutButton"
+                class="logout-button"
+            >
+                <span class="nav-icon">↪</span>
+                Sign out
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="dashboard-main">
+
+
+        <header class="dashboard-header">
+
+            <div>
+
+                <span class="dashboard-eyebrow">
+                    REGISTRATION
+                </span>
+
+                <h1>
+                    Signup requests
+                </h1>
+
+                <p>
+                    Review employee registration requests.
+                </p>
+
+            </div>
+
+        </header>
+
+
+        <section class="dashboard-panel">
+
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Employee registration requests
+                    </h2>
+
+                    <p>
+                        Approve employees and create their login credentials.
+                    </p>
+
+                </div>
+
+                <span
+                    id="requestCount"
+                    class="task-count-label"
+                >
+                    Loading...
+                </span>
+
+            </div>
+
+
+            <div
+                id="requestsList"
+                class="requests-list"
+            >
+
+                <div class="empty-state">
+
+                    <strong>
+                        Loading requests...
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+</div>
+
+
+<script src="/JS/auth.js"></script>
+
+<script src="/JS/signup-requests.js"></script>
+
+
+</body>
+
+</html>

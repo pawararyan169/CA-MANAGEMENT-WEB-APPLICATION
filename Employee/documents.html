@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Documents | Employee | CA Office</title>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/CSS/style.css"
+    >
+
+    <style>
+
+        .documents-page {
+            width: 100%;
+            max-width: 1450px;
+        }
+
+        .documents-section {
+            margin-bottom: 20px;
+        }
+
+        .documents-form {
+            padding: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            min-width: 0;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .readonly-field {
+            background: #f6f8fb !important;
+            color: #555;
+            cursor: not-allowed;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 22px;
+        }
+
+        .form-alert {
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .error-alert {
+            background: #fff0f0;
+            color: #a82d2d;
+            border: 1px solid #f0caca;
+        }
+
+        .success-alert {
+            background: #eefaf1;
+            color: #28783b;
+            border: 1px solid #c8e9d0;
+        }
+
+
+        .document-export-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-left: auto;
+        }
+
+        .document-export-button {
+            border: 1px solid #d8dee8;
+            border-radius: 8px;
+            padding: 10px 16px;
+            min-width: 138px;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+        }
+
+        .document-export-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(20, 40, 80, .08);
+        }
+
+        .document-export-excel {
+            background: #fff;
+            color: #1d6f42;
+        }
+
+        .document-export-pdf {
+            background: #fff;
+            color: #b42318;
+        }
+
+        .document-export-button:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .document-register-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 700px) {
+            .document-export-actions {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .document-export-button {
+                flex: 1 1 0;
+                min-width: 0;
+            }
+        }
+
+        .document-summary {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 20px 24px 0;
+        }
+
+        .document-summary-card {
+            min-width: 160px;
+            border: 1px solid #e2e7ee;
+            border-radius: 10px;
+            padding: 14px 16px;
+            background: #fff;
+        }
+
+        .document-summary-card span {
+            display: block;
+            color: #777;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .document-summary-card strong {
+            font-size: 22px;
+        }
+
+
+
+        .dispatch-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .days-label {
+            color: #777;
+            font-size: 12px;
+            margin-left: 3px;
+        }
+
+        .document-date-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .document-date-filter span {
+            color: #777;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .document-date-filter input {
+            min-width: 145px;
+        }
+
+        .dispatch-disabled {
+            background: #f5f6f8 !important;
+            color: #888 !important;
+            cursor: not-allowed !important;
+            opacity: 0.65;
+        }
+
+        @media (max-width: 800px) {
+            .document-date-filter {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .document-date-filter input {
+                flex: 1 1 140px;
+            }
+        }
+
+        .document-filters {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 220px;
+            gap: 12px;
+            padding: 20px 24px;
+        }
+
+        .document-table-wrapper {
+            overflow-x: auto;
+            padding: 0 24px 24px;
+        }
+
+        .document-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1050px;
+        }
+
+        .document-table th,
+        .document-table td {
+            padding: 13px 12px;
+            border-bottom: 1px solid #edf0f4;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .document-table th {
+            background: #f8fafc;
+            font-size: 13px;
+            font-weight: 700;
+            color: #555;
+        }
+
+        .document-table td {
+            font-size: 14px;
+        }
+
+        .muted-small {
+            color: #777;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .mode-badge,
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .mode-online {
+            background: #edf5ff;
+            color: #2864b4;
+        }
+
+        .mode-offline {
+            background: #f4f4f4;
+            color: #555;
+        }
+
+        .status-received {
+            background: #fff7e6;
+            color: #8a5a00;
+        }
+
+        .status-dispatched {
+            background: #edf9f0;
+            color: #28783b;
+        }
+
+        .documents-empty {
+            padding: 30px 24px;
+            text-align: center;
+            color: #777;
+        }
+
+        .required {
+            color: #c93636;
+        }
+
+        @media (max-width: 800px) {
+
+            .form-grid,
+            .document-filters {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body class="dashboard-body">
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+            <div class="brand-name">
+                <strong>CA Office</strong>
+                <span>Employee Portal</span>
+            </div>
+
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <span class="nav-section">
+                WORKSPACE
+            </span>
+
+            <a
+                href="/employee/dashboard.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a
+                href="/employee/clients.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">◉</span>
+                Clients
+            </a>
+
+            <a
+                href="/employee/add-client.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">+</span>
+                Add Client
+            </a>
+
+            <a
+                href="/employee/tasks.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">✓</span>
+                My Tasks
+            </a>
+
+            <a
+                href="/employee/documents.html"
+                class="nav-item active"
+            >
+                <span class="nav-icon">□</span>
+                Documents
+            </a>
+
+            <span class="nav-section">
+                OFFICE
+            </span>
+
+            <a
+                href="#"
+                class="nav-item"
+                onclick="return false;"
+            >
+                <span class="nav-icon">◷</span>
+                Calendar
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <button
+                type="button"
+                class="logout-button"
+                id="logoutButton"
+            >
+                <span class="nav-icon">↪</span>
+                Sign out
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <main class="dashboard-main">
+
+        <div class="documents-page">
+
+            <div style="margin-bottom:20px;">
+                <a
+                    href="/employee/dashboard.html"
+                    style="text-decoration:none;color:#555;"
+                >
+                    ← Back to Dashboard
+                </a>
+            </div>
+
+
+            <header class="dashboard-header">
+
+                <div>
+                    <span class="dashboard-eyebrow">
+                        OFFICE DOCUMENT REGISTER
+                    </span>
+
+                    <h1>
+                        Documents
+                    </h1>
+
+                    <p>
+                        Record documents received from and delivered to clients.
+                    </p>
+                </div>
+
+                <div class="user-profile">
+                    <div class="avatar" id="employeeAvatar">
+                        E
+                    </div>
+
+                    <div class="user-info">
+                        <strong id="employeeName">
+                            Employee
+                        </strong>
+                        <span id="employeeRole">
+                            Staff
+                        </span>
+                    </div>
+                </div>
+
+            </header>
+
+
+            <div
+                id="documentError"
+                class="form-alert error-alert"
+                style="display:none;"
+            ></div>
+
+            <div
+                id="documentSuccess"
+                class="form-alert success-alert"
+                style="display:none;"
+            ></div>
+
+
+            <section class="dashboard-panel documents-section">
+
+                <div class="panel-header">
+                    <div>
+                        <h2>
+                            New Document Entry
+                        </h2>
+                        <p>
+                            Register a document received or delivered by the office.
+                        </p>
+                    </div>
+                </div>
+
+                <form
+                    id="documentForm"
+                    class="documents-form"
+                >
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+                            <label for="serialNumber">
+                                Serial Number
+                            </label>
+
+                            <input
+                                id="serialNumber"
+                                class="readonly-field"
+                                type="text"
+                                value="Loading..."
+                                readonly
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="clientId">
+                                Name of Client
+                                <span class="required">*</span>
+                            </label>
+
+                            <select id="clientId" required>
+                                <option value="">
+                                    Loading clients...
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="purpose">
+                                Purpose
+                                <span class="required">*</span>
+                            </label>
+
+                            <select id="purpose" required>
+                                <option value="">
+                                    Select purpose
+                                </option>
+                                <option value="PAN">
+                                    PAN
+                                </option>
+                                <option value="Aadhaar">
+                                    Aadhaar
+                                </option>
+                                <option value="TAN">
+                                    TAN
+                                </option>
+                                <option value="GST">
+                                    GST
+                                </option>
+                                <option value="MSME Udyam">
+                                    MSME Udyam
+                                </option>
+                                <option value="CIN">
+                                    CIN
+                                </option>
+                                <option value="FSSAI">
+                                    FSSAI
+                                </option>
+                                <option value="PTEC">
+                                    PTEC
+                                </option>
+                                <option value="PTRC">
+                                    PTRC
+                                </option>
+                                <option value="Other">
+                                    Other
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="mode">
+                                Mode
+                                <span class="required">*</span>
+                            </label>
+
+                            <select id="mode" required>
+                                <option value="">
+                                    Select mode
+                                </option>
+                                <option value="online">
+                                    Online
+                                </option>
+                                <option value="offline">
+                                    Offline
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="receiptDate">
+                                Date of Receipt
+                                <span class="required">*</span>
+                            </label>
+
+                            <input
+                                id="receiptDate"
+                                type="date"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dispatchDate">
+                                Date of Dispatch
+                            </label>
+
+                            <input
+                                id="dispatchDate"
+                                type="date"
+                                disabled
+                            >
+
+                            <small
+                                id="dispatchDateHelp"
+                                style="display:block;margin-top:5px;color:#777;"
+                            ></small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="receivingStaffId">
+                                Receiving Staff
+                                <span class="required">*</span>
+                            </label>
+
+                            <select
+                                id="receivingStaffId"
+                                required
+                            >
+                                <option value="">
+                                    Loading staff...
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="deliveringStaffId">
+                                Delivering Staff
+                            </label>
+
+                            <select id="deliveringStaffId">
+                                <option value="">
+                                    Select delivering staff
+                                </option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="form-actions">
+                        <button
+                            type="submit"
+                            id="saveDocumentButton"
+                            class="primary-button"
+                        >
+                            Save Document
+                        </button>
+                    </div>
+
+                </form>
+
+            </section>
+
+
+            <section class="dashboard-panel documents-section">
+
+                <div class="panel-header document-register-header">
+                    <div>
+                        <h2>
+                            Live Document Register
+                        </h2>
+                        <p>
+                            Office document records update automatically.
+                        </p>
+                    </div>
+
+                    <div class="document-export-actions">
+                        <button
+                            type="button"
+                            id="exportExcelButton"
+                            class="document-export-button document-export-excel"
+                        >
+                            Export Excel
+                        </button>
+
+                        <button
+                            type="button"
+                            id="exportPdfButton"
+                            class="document-export-button document-export-pdf"
+                        >
+                            Export PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div class="document-summary">
+
+                    <div class="document-summary-card">
+                        <span>
+                            Total Documents
+                        </span>
+                        <strong id="documentTotal">
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="document-summary-card">
+                        <span>
+                            Visible Records
+                        </span>
+                        <strong id="documentVisible">
+                            0
+                        </strong>
+                    </div>
+
+                </div>
+
+                <div class="document-filters">
+
+                    <input
+                        id="documentSearch"
+                        type="search"
+                        placeholder="Search serial number, client, PAN, purpose or staff..."
+                    >
+
+                    <select id="documentModeFilter">
+                        <option value="">
+                            All modes
+                        </option>
+                        <option value="online">
+                            Online
+                        </option>
+                        <option value="offline">
+                            Offline
+                        </option>
+                    </select>
+
+                    <div class="document-date-filter">
+                        <span>Receipt:</span>
+
+                        <input
+                            id="receiptDateFromFilter"
+                            type="date"
+                            aria-label="Receipt date from"
+                            title="Receipt date from"
+                        >
+
+                        <span>to</span>
+
+                        <input
+                            id="receiptDateToFilter"
+                            type="date"
+                            aria-label="Receipt date to"
+                            title="Receipt date to"
+                        >
+                    </div>
+
+                </div>
+
+                <div class="document-table-wrapper">
+
+                    <table class="document-table">
+
+                        <thead>
+                            <tr>
+                                <th>Serial Number</th>
+                                <th>Client</th>
+                                <th>Purpose</th>
+                                <th>Mode</th>
+                                <th>Date of Receipt</th>
+                                <th>Date of Dispatch</th>
+
+                        <th>
+                            Days
+                        </th>
+                                <th>Receiving Staff</th>
+                                <th>Delivering Staff</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="documentsTableBody">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <div
+                    id="documentsEmpty"
+                    class="documents-empty"
+                    style="display:none;"
+                >
+                    No document records have been added yet.
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script src="/JS/auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="/JS/documents.js"></script>
+
+</body>
+</html>

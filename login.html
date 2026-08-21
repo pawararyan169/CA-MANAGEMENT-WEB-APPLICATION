@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Sign In | CA Office Management</title>
+
+
+    <!-- Google Font -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- Main CSS -->
+
+    <link
+        rel="stylesheet"
+        href="/CSS/style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+    <div class="auth-page">
+
+
+        <!-- =====================================================
+             LEFT BRAND SECTION
+        ====================================================== -->
+
+        <section class="auth-brand">
+
+
+            <div class="brand-content">
+
+
+                <!-- BRAND -->
+
+                <div class="brand-logo">
+
+                    <div class="logo-mark">
+                        CA
+                    </div>
+
+
+                    <div class="brand-name">
+
+                        <strong>
+                            CA Office
+                        </strong>
+
+                        <span>
+                            Management Portal
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- MAIN BRAND MESSAGE -->
+
+                <div class="brand-message">
+
+                    <span class="eyebrow">
+                        PROFESSIONAL OFFICE MANAGEMENT
+                    </span>
+
+
+                    <h1>
+                        Manage your
+                        <span>
+                            office with clarity.
+                        </span>
+                    </h1>
+
+
+                    <p>
+                        A secure workspace for managing
+                        employees, assignments, deadlines,
+                        documents and everyday CA office
+                        operations.
+                    </p>
+
+                </div>
+
+
+                <!-- FOOTER STATUS -->
+
+                <div class="brand-footer">
+
+                    <span class="status-dot"></span>
+
+                    <span>
+                        Office management system
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+        </section>
+
+
+        <!-- =====================================================
+             RIGHT LOGIN SECTION
+        ====================================================== -->
+
+        <main class="auth-container">
+
+
+            <div class="auth-card">
+
+
+                <!-- =================================================
+                     MOBILE BRAND
+                ================================================== -->
+
+                <div class="mobile-brand">
+
+                    <div class="logo-mark">
+                        CA
+                    </div>
+
+
+                    <div class="brand-name">
+
+                        <strong>
+                            CA Office
+                        </strong>
+
+                        <span>
+                            Management Portal
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     LOGIN HEADER
+                ================================================== -->
+
+                <div class="auth-header">
+
+                    <h2>
+                        Welcome back
+                    </h2>
+
+
+                    <p>
+                        Sign in to access your office workspace.
+                    </p>
+
+                </div>
+
+
+                <!-- =================================================
+                     LOGIN FORM
+                ================================================== -->
+
+                <form
+                    id="loginForm"
+                    novalidate
+                >
+
+
+                    <!-- USERNAME -->
+
+                    <div class="form-group">
+
+
+                        <label for="loginUsername">
+                            Username
+                        </label>
+
+
+                        <div class="input-wrapper">
+
+
+                            <!-- User Icon -->
+
+                            <svg
+                                class="input-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+
+                                <path
+                                    d="M20 21a8 8 0 0 0-16 0"
+                                />
+
+                                <circle
+                                    cx="12"
+                                    cy="7"
+                                    r="4"
+                                />
+
+                            </svg>
+
+
+                            <input
+                                type="text"
+                                id="loginUsername"
+                                name="username"
+                                placeholder="Enter your username"
+                                autocomplete="username"
+                                required
+                            >
+
+
+                        </div>
+
+
+                    </div>
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="form-group">
+
+
+                        <div class="label-row">
+
+
+                            <label for="loginPassword">
+                                Password
+                            </label>
+
+
+                            <a
+                                href="/forgot-password.html"
+                            >
+                                Forgot password?
+                            </a>
+
+
+                        </div>
+
+
+                        <div class="input-wrapper">
+
+
+                            <!-- Lock Icon -->
+
+                            <svg
+                                class="input-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+
+                                <rect
+                                    x="3"
+                                    y="11"
+                                    width="18"
+                                    height="10"
+                                    rx="2"
+                                />
+
+                                <path
+                                    d="M7 11V7a5 5 0 0 1 10 0v4"
+                                />
+
+                            </svg>
+
+
+                            <input
+                                type="password"
+                                id="loginPassword"
+                                name="password"
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                                required
+                            >
+
+
+                            <!-- Password Toggle -->
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                data-target="loginPassword"
+                                aria-label="Show password"
+                            >
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+
+                                    <path
+                                        d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"
+                                    />
+
+                                    <circle
+                                        cx="12"
+                                        cy="12"
+                                        r="2.5"
+                                    />
+
+                                </svg>
+
+                            </button>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                    <!-- =================================================
+                         LOGIN ERROR
+                    ================================================== -->
+
+                    <div
+                        id="loginError"
+                        class="form-alert error-alert"
+                        role="alert"
+                        aria-live="polite"
+                    ></div>
+
+
+                    <!-- =================================================
+                         REMEMBER ME
+                    ================================================== -->
+
+                    <div class="remember-row">
+
+
+                        <label class="checkbox-label">
+
+
+                            <input
+                                type="checkbox"
+                                id="rememberMe"
+                                name="rememberMe"
+                            >
+
+
+                            <span
+                                class="custom-checkbox"
+                            ></span>
+
+
+                            <span>
+                                Keep me signed in on this device
+                            </span>
+
+
+                        </label>
+
+
+                    </div>
+
+
+                    <!-- =================================================
+                         SIGN IN BUTTON
+                    ================================================== -->
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                        id="loginButton"
+                    >
+
+                        <span>
+                            Sign in
+                        </span>
+
+
+                        <!-- Arrow -->
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+
+                            <path
+                                d="M5 12h14"
+                            />
+
+                            <path
+                                d="m13 6 6 6-6 6"
+                            />
+
+                        </svg>
+
+
+                    </button>
+
+
+                </form>
+
+
+                <!-- =================================================
+                     SIGNUP REQUEST
+                ================================================== -->
+
+                <div class="auth-switch">
+
+                    <span>
+                        Don't have an office account?
+                    </span>
+
+
+                    <a href="/signup.html">
+                        Request access
+                    </a>
+
+                </div>
+
+
+                <!-- =================================================
+                     SECURITY NOTE
+                ================================================== -->
+
+                <div class="security-note">
+
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+
+                        <rect
+                            x="4"
+                            y="10"
+                            width="16"
+                            height="11"
+                            rx="2"
+                        />
+
+                        <path
+                            d="M8 10V7a4 4 0 0 1 8 0v3"
+                        />
+
+                    </svg>
+
+
+                    <span>
+                        Secure office access
+                    </span>
+
+
+                </div>
+
+
+            </div>
+
+
+        </main>
+
+
+    </div>
+
+
+    <!-- Authentication JavaScript -->
+
+    <script src="/JS/auth.js"></script>
+
+
+</body>
+
+</html> 

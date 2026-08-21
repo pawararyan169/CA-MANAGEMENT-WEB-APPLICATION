@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Tasks | CA Office</title>
+
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <link
+        rel="stylesheet"
+        href="/CSS/style.css"
+    >
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<div class="dashboard-layout">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+            <div class="brand-name">
+
+                <strong>
+                    CA Office
+                </strong>
+
+                <span>
+                    Administration
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+
+            <span class="nav-section">
+                OVERVIEW
+            </span>
+
+
+            <a
+                href="/admin/dashboard.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">
+                    ⌂
+                </span>
+
+                Dashboard
+            </a>
+
+
+            <span class="nav-section">
+                MANAGEMENT
+            </span>
+
+
+            <a
+                href="/admin/employees.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">
+                    ◌
+                </span>
+
+                Employees
+            </a>
+
+
+            <a
+                href="/client/clients.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">
+                    ◉
+                </span>
+
+                Clients
+            </a>
+
+
+            <a
+                href="/admin/tasks.html"
+                class="nav-item active"
+            >
+                <span class="nav-icon">
+                    ✓
+                </span>
+
+                Tasks
+            </a>
+
+
+            <a
+                href="/admin/signup-requests.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">
+                    ◌
+                </span>
+
+                Signup Requests
+            </a>
+
+
+            <a
+                href="/admin/locations.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">
+                    ◇
+                </span>
+
+                Locations
+            </a>
+
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <button
+                type="button"
+                class="logout-button"
+                id="logoutButton"
+            >
+
+                <span class="nav-icon">
+                    ↪
+                </span>
+
+                Sign out
+
+            </button>
+
+        </div>
+
+
+    </aside>
+
+
+
+    <!-- MAIN -->
+
+    <main class="dashboard-main">
+
+
+        <header class="dashboard-header">
+
+            <div>
+
+                <span class="dashboard-eyebrow">
+                    WORK MANAGEMENT
+                </span>
+
+                <h1>
+                    Tasks
+                </h1>
+
+                <p>
+                    Assign and monitor work across your team.
+                </p>
+
+            </div>
+
+
+            <div class="user-profile">
+
+                <div class="avatar">
+                    A
+                </div>
+
+                <div class="user-info">
+
+                    <strong>
+                        Administrator
+                    </strong>
+
+                    <span>
+                        CA Office
+                    </span>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- CREATE TASK -->
+
+        <section class="dashboard-panel task-create-panel">
+
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Assign new task
+                    </h2>
+
+                    <p>
+                        Assign work to an individual employee.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <form
+                id="taskForm"
+                class="task-form"
+            >
+
+
+                <div class="form-grid">
+
+
+                    <!-- TITLE -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Task title
+                        </label>
+
+                        <input
+                            type="text"
+                            id="taskTitle"
+                            placeholder="e.g. Prepare GST return"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- EMPLOYEE -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Assign to employee
+                        </label>
+
+                        <select
+                            id="taskEmployee"
+                            required
+                        >
+
+                            <option value="">
+                                Loading employees...
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- CLIENT -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Client
+                            <span class="optional">
+                                optional
+                            </span>
+                        </label>
+
+                        <select
+                            id="taskClient"
+                        >
+
+                            <option value="">
+                                No client selected
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- PRIORITY -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Priority
+                        </label>
+
+                        <select
+                            id="taskPriority"
+                        >
+
+                            <option value="low">
+                                Low
+                            </option>
+
+                            <option
+                                value="medium"
+                                selected
+                            >
+                                Medium
+                            </option>
+
+                            <option value="high">
+                                High
+                            </option>
+
+                            <option value="urgent">
+                                Urgent
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- DUE DATE -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Due date
+                        </label>
+
+                        <input
+                            type="date"
+                            id="taskDueDate"
+                        >
+
+                    </div>
+
+
+                    <!-- DESCRIPTION -->
+
+                    <div class="form-group">
+
+                        <label>
+                            Description
+                        </label>
+
+                        <textarea
+                            id="taskDescription"
+                            placeholder="Describe what needs to be completed..."
+                        ></textarea>
+
+                    </div>
+
+
+                </div>
+
+
+                <div
+                    id="taskError"
+                    class="task-field-error"
+                ></div>
+
+
+                <div
+                    id="taskSuccess"
+                    class="task-success-message"
+                ></div>
+
+
+                <button
+                    type="submit"
+                    class="primary-button task-submit-button"
+                    id="assignTaskButton"
+                >
+                    Assign task
+                </button>
+
+
+            </form>
+
+        </section>
+
+
+
+        <!-- TASK LIST -->
+
+        <section class="dashboard-panel task-list-panel">
+
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Assigned work
+                    </h2>
+
+                    <p>
+                        Tasks currently assigned to your team.
+                    </p>
+
+                </div>
+
+
+                <span
+                    class="task-count-label"
+                    id="taskCount"
+                >
+                    0 tasks
+                </span>
+
+            </div>
+
+
+            <div
+                id="taskList"
+                class="work-list"
+            >
+
+                <div class="empty-state">
+
+                    <strong>
+                        Loading tasks...
+                    </strong>
+
+                    <span>
+                        Please wait.
+                    </span>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+</div>
+
+
+
+<script src="/JS/auth.js"></script>
+
+<script src="/JS/admin-tasks.js"></script>
+
+
+</body>
+
+</html>

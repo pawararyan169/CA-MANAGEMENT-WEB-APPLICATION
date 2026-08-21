@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Request Access | CA Office Management</title>
+
+
+    <!-- Google Font -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- Main CSS -->
+
+    <link
+        rel="stylesheet"
+        href="/CSS/style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+    <div class="auth-page">
+
+
+        <!-- =====================================================
+             LEFT BRAND PANEL
+        ====================================================== -->
+
+        <section class="auth-brand">
+
+            <div class="brand-content">
+
+
+                <!-- BRAND -->
+
+                <div class="brand-logo">
+
+                    <div class="logo-mark">
+                        CA
+                    </div>
+
+
+                    <div class="brand-name">
+
+                        <strong>
+                            CA Office
+                        </strong>
+
+                        <span>
+                            Management Portal
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- BRAND MESSAGE -->
+
+                <div class="brand-message">
+
+                    <span class="eyebrow">
+                        JOIN THE OFFICE
+                    </span>
+
+
+                    <h1>
+                        Request your
+                        <span>
+                            office access.
+                        </span>
+                    </h1>
+
+
+                    <p>
+                        Submit your personal and verification
+                        details to the office administrator.
+                        Your account will only be created
+                        after approval.
+                    </p>
+
+                </div>
+
+
+                <!-- STATUS -->
+
+                <div class="brand-footer">
+
+                    <span class="status-dot"></span>
+
+                    <span>
+                        Access requires administrator approval
+                    </span>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             RIGHT SIGNUP SECTION
+        ====================================================== -->
+
+        <main class="auth-container signup-container">
+
+
+            <div class="auth-card signup-card">
+
+
+                <!-- MOBILE BRAND -->
+
+                <div class="mobile-brand">
+
+                    <div class="logo-mark">
+                        CA
+                    </div>
+
+
+                    <div class="brand-name">
+
+                        <strong>
+                            CA Office
+                        </strong>
+
+                        <span>
+                            Management Portal
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- BACK -->
+
+                <div class="back-link">
+
+                    <a href="/login.html">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+
+                            <path d="M19 12H5"></path>
+
+                            <path d="m12 19-7-7 7-7"></path>
+
+                        </svg>
+
+                        Back to sign in
+
+                    </a>
+
+                </div>
+
+
+                <!-- HEADER -->
+
+                <div class="auth-header">
+
+                    <h2>
+                        Request access
+                    </h2>
+
+
+                    <p>
+                        Submit your details to request an
+                        office account.
+                    </p>
+
+                </div>
+
+
+                <!-- =================================================
+                     SIGNUP FORM
+                ================================================== -->
+
+                <form
+                    id="signupForm"
+                    novalidate
+                >
+
+
+                    <!-- =================================================
+                         PERSONAL INFORMATION
+                    ================================================== -->
+
+                    <div class="form-section-title">
+
+                        Personal information
+
+                    </div>
+
+
+                    <!-- =================================================
+                         NAME
+                    ================================================== -->
+
+                    <div class="form-name-grid">
+
+
+                        <!-- FIRST NAME -->
+
+                        <div class="form-group">
+
+                            <label for="signupFirstName">
+                                First name
+                            </label>
+
+
+                            <input
+                                type="text"
+                                id="signupFirstName"
+                                name="firstName"
+                                placeholder="First name"
+                                autocomplete="given-name"
+                                maxlength="50"
+                                required
+                            >
+
+
+                            <span
+                                id="firstNameError"
+                                class="field-error"
+                            ></span>
+
+                        </div>
+
+
+                        <!-- MIDDLE NAME -->
+
+                        <div class="form-group">
+
+                            <label for="signupMiddleName">
+
+                                Middle name
+
+                                <span class="optional">
+                                    Optional
+                                </span>
+
+                            </label>
+
+
+                            <input
+                                type="text"
+                                id="signupMiddleName"
+                                name="middleName"
+                                placeholder="Middle name"
+                                autocomplete="additional-name"
+                                maxlength="50"
+                            >
+
+
+                            <span
+                                id="middleNameError"
+                                class="field-error"
+                            ></span>
+
+                        </div>
+
+
+                        <!-- LAST NAME -->
+
+                        <div class="form-group">
+
+                            <label for="signupLastName">
+                                Last name
+                            </label>
+
+
+                            <input
+                                type="text"
+                                id="signupLastName"
+                                name="lastName"
+                                placeholder="Last name"
+                                autocomplete="family-name"
+                                maxlength="50"
+                                required
+                            >
+
+
+                            <span
+                                id="lastNameError"
+                                class="field-error"
+                            ></span>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <!-- =================================================
+                         EMAIL
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="signupEmail">
+                            Email address
+                        </label>
+
+
+                        <div class="input-wrapper">
+
+                            <svg
+                                class="input-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+
+                                <rect
+                                    x="3"
+                                    y="5"
+                                    width="18"
+                                    height="14"
+                                    rx="2"
+                                ></rect>
+
+                                <path d="m3 7 9 6 9-6"></path>
+
+                            </svg>
+
+
+                            <input
+                                type="email"
+                                id="signupEmail"
+                                name="email"
+                                placeholder="you@example.com"
+                                autocomplete="email"
+                                required
+                            >
+
+                        </div>
+
+
+                        <span
+                            id="emailError"
+                            class="field-error"
+                        ></span>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         PHONE
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="signupPhone">
+                            Phone number
+                        </label>
+
+
+                        <div class="input-wrapper">
+
+                            <svg
+                                class="input-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+
+                                <path
+                                    d="M22 16.92v3a2 2 0 0 1-2.18 2
+                                    19.79 19.79 0 0 1-8.63-3.07
+                                    19.5 19.5 0 0 1-6-6
+                                    19.79 19.79 0 0 1-3.07-8.67
+                                    A2 2 0 0 1 4.11 2h3
+                                    a2 2 0 0 1 2 1.72
+                                    12.84 12.84 0 0 0 .7 2.81
+                                    2 2 0 0 1-.45 2.11L8.09 9.91
+                                    a16 16 0 0 0 6 6l1.27-1.27
+                                    a2 2 0 0 1 2.11-.45
+                                    12.84 12.84 0 0 0 2.81.7
+                                    A2 2 0 0 1 22 16.92z"
+                                ></path>
+
+                            </svg>
+
+
+                            <input
+                                type="tel"
+                                id="signupPhone"
+                                name="phone"
+                                placeholder="Enter your phone number"
+                                autocomplete="tel"
+                                inputmode="numeric"
+                                maxlength="10"
+                                required
+                            >
+
+                        </div>
+
+
+                        <span
+                            id="phoneError"
+                            class="field-error"
+                        ></span>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         IDENTITY VERIFICATION
+                    ================================================== -->
+
+                    <div class="form-section-title verification-title">
+
+                        Identity verification
+
+                    </div>
+
+
+                    <div class="verification-description">
+
+                        These details are collected for employee
+                        verification and office records.
+
+                    </div>
+
+
+                    <!-- =================================================
+                         AADHAAR
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="signupAadhaar">
+                            Aadhaar number
+                        </label>
+
+
+                        <div class="input-wrapper">
+
+                            <svg
+                                class="input-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+
+                                <rect
+                                    x="4"
+                                    y="3"
+                                    width="16"
+                                    height="18"
+                                    rx="2"
+                                ></rect>
+
+                                <circle
+                                    cx="12"
+                                    cy="9"
+                                    r="2.5"
+                                ></circle>
+
+                                <path
+                                    d="M8 17c1.2-1.5 2.5-2 4-2s2.8.5 4 2"
+                                ></path>
+
+                            </svg>
+
+
+                            <input
+                                type="text"
+                                id="signupAadhaar"
+                                name="aadhaar"
+                                placeholder="Enter 12-digit Aadhaar number"
+                                inputmode="numeric"
+                                maxlength="14"
+                                autocomplete="off"
+                                required
+                            >
+
+                        </div>
+
+
+                        <span class="field-hint">
+                            Enter your 12-digit Aadhaar number.
+                        </span>
+
+
+                        <span
+                            id="aadhaarError"
+                            class="field-error"
+                        ></span>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         PAN
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="signupPan">
+                            PAN number
+                        </label>
+
+
+                        <div class="input-wrapper">
+
+                            <svg
+                                class="input-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+
+                                <rect
+                                    x="3"
+                                    y="5"
+                                    width="18"
+                                    height="14"
+                                    rx="2"
+                                ></rect>
+
+                                <path d="M7 10h10"></path>
+
+                                <path d="M7 14h6"></path>
+
+                            </svg>
+
+
+                            <input
+                                type="text"
+                                id="signupPan"
+                                name="pan"
+                                placeholder="Enter PAN number"
+                                maxlength="10"
+                                autocomplete="off"
+                                autocapitalize="characters"
+                                required
+                            >
+
+                        </div>
+
+
+                        <span class="field-hint">
+                            Example format: ABCDE1234F
+                        </span>
+
+
+                        <span
+                            id="panError"
+                            class="field-error"
+                        ></span>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         MESSAGE
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="signupMessage">
+
+                            Message
+
+                            <span class="optional">
+                                Optional
+                            </span>
+
+                        </label>
+
+
+                        <textarea
+                            id="signupMessage"
+                            name="message"
+                            placeholder="Tell the administrator anything they should know..."
+                            rows="4"
+                        ></textarea>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         ERROR
+                    ================================================== -->
+
+                    <div
+                        id="signupError"
+                        class="form-alert error-alert"
+                        role="alert"
+                        aria-live="polite"
+                    ></div>
+
+
+                    <!-- =================================================
+                         SUCCESS
+                    ================================================== -->
+
+                    <div
+                        id="signupSuccess"
+                        class="form-alert success-alert"
+                        role="status"
+                        aria-live="polite"
+                    ></div>
+
+
+                    <!-- =================================================
+                         AGREEMENT
+                    ================================================== -->
+
+                    <div class="terms-row">
+
+                        <label class="checkbox-label">
+
+                            <input
+                                type="checkbox"
+                                id="signupAgreement"
+                                name="agreement"
+                                required
+                            >
+
+                            <span class="custom-checkbox"></span>
+
+
+                            <span>
+
+                                I confirm that the information
+                                provided is accurate and I
+                                understand that account access
+                                requires administrator approval.
+
+                            </span>
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         SUBMIT
+                    ================================================== -->
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                        id="signupButton"
+                    >
+
+                        <span>
+                            Submit access request
+                        </span>
+
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+
+                            <path d="M5 12h14"></path>
+
+                            <path d="m13 6 6 6-6 6"></path>
+
+                        </svg>
+
+                    </button>
+
+
+                </form>
+
+
+                <!-- LOGIN -->
+
+                <div class="auth-switch">
+
+                    <span>
+                        Already have an account?
+                    </span>
+
+
+                    <a href="/login.html">
+                        Sign in
+                    </a>
+
+                </div>
+
+
+                <!-- SECURITY -->
+
+                <div class="security-note">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+
+                        <rect
+                            x="4"
+                            y="10"
+                            width="16"
+                            height="11"
+                            rx="2"
+                        ></rect>
+
+                        <path
+                            d="M8 10V7a4 4 0 0 1 8 0v3"
+                        ></path>
+
+                    </svg>
+
+
+                    <span>
+                        Your verification details are protected.
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+        </main>
+
+
+    </div>
+
+
+    <script src="/JS/auth.js"></script>
+
+
+</body>
+
+</html>
