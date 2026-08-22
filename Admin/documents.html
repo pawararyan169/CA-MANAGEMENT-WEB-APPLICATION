@@ -207,20 +207,72 @@
             margin-left: 3px;
         }
 
-        .document-date-filter {
+
+        .dispatch-cell {
+            min-width: 190px;
+        }
+
+        .dispatch-display {
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
-        .document-date-filter span {
-            color: #777;
-            font-size: 13px;
+        .dispatch-date-value {
             white-space: nowrap;
         }
 
-        .document-date-filter input {
-            min-width: 145px;
+        .edit-dispatch-button,
+        .save-dispatch-button,
+        .cancel-dispatch-button {
+            border: 1px solid #d6dbe3;
+            border-radius: 6px;
+            padding: 5px 9px;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .edit-dispatch-button {
+            background: #fff;
+            color: #155eef;
+        }
+
+        .save-dispatch-button {
+            background: #155eef;
+            color: #fff;
+            border-color: #155eef;
+        }
+
+        .cancel-dispatch-button {
+            background: #fff;
+            color: #555;
+        }
+
+        .edit-dispatch-button:hover,
+        .cancel-dispatch-button:hover {
+            background: #f3f7ff;
+        }
+
+        .save-dispatch-button:hover {
+            opacity: .9;
+        }
+
+        .dispatch-inline-input {
+            width: 145px;
+            height: 34px;
+            padding: 0 8px;
+            border: 1px solid #155eef;
+            border-radius: 6px;
+            font: inherit;
+            outline: none;
+        }
+
+        .save-dispatch-button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
         }
 
         .dispatch-disabled {
@@ -243,9 +295,68 @@
 
         .document-filters {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 220px;
-            gap: 12px;
-            padding: 20px 24px;
+            grid-template-columns: minmax(220px, 1fr) minmax(130px, 150px) minmax(130px, 150px) minmax(280px, 1.2fr);
+            gap: 10px;
+            align-items: center;
+            padding: 16px 24px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .document-filters > * {
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .document-filters input,
+        .document-filters select {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .document-date-filter {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+            align-items: center;
+            gap: 7px;
+            min-width: 0;
+        }
+
+        .document-date-filter span {
+            color: #777;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .document-date-filter input {
+            min-width: 0;
+            width: 100%;
+        }
+
+        @media (max-width: 1150px) {
+            .document-filters {
+                grid-template-columns: minmax(180px, 1fr) minmax(125px, 145px) minmax(125px, 145px);
+            }
+
+            .document-date-filter {
+                grid-column: 1 / -1;
+                max-width: 520px;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .form-grid,
+            .document-filters {
+                grid-template-columns: 1fr;
+            }
+
+            .document-date-filter {
+                grid-column: auto;
+                width: 100%;
+                max-width: none;
+            }
         }
 
         .document-table-wrapper {
@@ -333,6 +444,94 @@
                 grid-template-columns: 1fr;
             }
 
+        }
+
+    
+        .live-task-register {
+            margin-top: 24px;
+        }
+
+        .live-task-register .panel-header {
+            align-items: center;
+        }
+
+        .live-task-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 34px;
+            height: 34px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: #155eef;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .live-task-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            padding: 0 24px 24px;
+            box-sizing: border-box;
+        }
+
+        .live-task-table {
+            width: 100%;
+            min-width: 900px;
+            border-collapse: collapse;
+        }
+
+        .live-task-table th,
+        .live-task-table td {
+            padding: 12px;
+            border-bottom: 1px solid #edf0f4;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .live-task-table th {
+            background: #f8fafc;
+            color: #555;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .live-task-table td {
+            font-size: 13px;
+        }
+
+        .live-task-days {
+            color: #777;
+            font-size: 11px;
+            margin-left: 3px;
+        }
+
+        .live-task-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .live-task-wip {
+            background: #fff7e6;
+            color: #8a5a00;
+        }
+
+        .live-task-incomplete {
+            background: #fff0f0;
+            color: #a33;
+        }
+
+        .live-task-empty {
+            padding: 32px 20px;
+            text-align: center;
+            color: #777;
         }
 
     </style>
@@ -652,6 +851,28 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="assignedEmployeeId">
+                                Assigned Employee
+                                <span class="required">*</span>
+                            </label>
+
+                            <select
+                                id="assignedEmployeeId"
+                                required
+                            >
+                                <option value="">
+                                    Loading employees...
+                                </option>
+                            </select>
+
+                            <small
+                                style="display:block;margin-top:5px;color:#777;"
+                            >
+                                Employee responsible for this document.
+                            </small>
+                        </div>
+
+                        <div class="form-group">
                             <label for="deliveringStaffId">
                                 Delivering Staff
                             </label>
@@ -753,6 +974,12 @@
                         </option>
                     </select>
 
+                    <select id="documentStatusFilter">
+                        <option value="">All statuses</option>
+                        <option value="received">Received</option>
+                        <option value="dispatched">Dispatched</option>
+                    </select>
+
                     <div class="document-date-filter">
                         <span>Receipt:</span>
 
@@ -793,6 +1020,7 @@
                         </th>
                                 <th>Receiving Staff</th>
                                 <th>Delivering Staff</th>
+                                <th>Assigned Employee</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -816,6 +1044,59 @@
 
         </div>
 
+    
+            <section class="dashboard-panel live-task-register">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h2>Live Task Register</h2>
+                        <p>
+                            Active W.I.P and Incomplete tasks assigned to employees.
+                            The register refreshes automatically.
+                        </p>
+                    </div>
+
+                    <div
+                        id="liveTasksCount"
+                        class="live-task-count"
+                    >
+                        0
+                    </div>
+
+                </div>
+
+                <div
+                    id="liveTasksEmpty"
+                    class="live-task-empty"
+                >
+                    Loading live tasks...
+                </div>
+
+                <div class="live-task-table-wrap">
+
+                    <table class="live-task-table">
+
+                        <thead>
+                            <tr>
+                                <th>Task / Work</th>
+                                <th>Work Type</th>
+                                <th>Client</th>
+                                <th>Assigned Employee</th>
+                                <th>Date of Assigning</th>
+                                <th>No. of Days</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="liveTasksTableBody"></tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
     </main>
 
 </div>
@@ -826,6 +1107,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 <script src="/JS/documents.js"></script>
+<script src="/JS/live-tasks.js"></script>
 
 </body>
 </html>

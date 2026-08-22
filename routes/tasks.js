@@ -1,512 +1,809 @@
-const express = require("express");
+const express = require('express');
+const crypto = require('crypto');
+
+const db = require('../database/database');
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-const db = require("../database/database");
+/* =========================================================
+   TASK REGISTER
+   Historical records are never deleted by monthly reset.
+   The UI defaults to the current month; previous months remain
+   available through the date filter.
+========================================================= */
+
+db.exec(`
+    CREATE TABLE IF NOT EXISTS office_tasks (
+
+        id TEXT PRIMARY KEY,
+
+        task_name TEXT NOT NULL,
+
+        client_id TEXT,
+
+        work_type TEXT NOT NULL
+            CHECK (work_type IN ('office', 'miscellaneous')),
+
+        assigned_date TEXT NOT NULL,
+
+        completion_date TEXT,
+
+        billable INTEGER NOT NULL DEFAULT 0,
+
+        status TEXT NOT NULL DEFAULT 'incomplete'
+            CHECK (status IN ('incomplete', 'wip', 'completed')),
+
+        assigned_by TEXT NOT NULL,
+
+        created_at TEXT NOT NULL,
+
+        updated_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_office_tasks_assigned_date
+        ON office_tasks(assigned_date);
+
+    CREATE INDEX IF NOT EXISTS idx_office_tasks_client
+        ON office_tasks(client_id);
+
+    CREATE INDEX IF NOT EXISTS idx_office_tasks_status
+        ON office_tasks(status);
+
+    CREATE INDEX IF NOT EXISTS idx_office_tasks_assigned_by
+        ON office_tasks(assigned_by);
+`);
+
+
+try {
+    const taskColumns =
+        db.prepare(`PRAGMA table_info(office_tasks)`).all();
+
+    if (
+        !taskColumns.some(
+            column => column.name === 'assigned_employee_id'
+        )
+    ) {
+        db.exec(`
+            ALTER TABLE office_tasks
+            ADD COLUMN assigned_employee_id TEXT
+        `);
+    }
+
+    db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_office_tasks_assigned_employee
+            ON office_tasks(assigned_employee_id);
+    `);
+} catch (migrationError) {
+    console.error(
+        'Task assigned employee migration error:',
+        migrationError
+    );
+}
+
+function clean(value) {
+    return String(value ?? '').trim();
+}
+
+
+function generateId() {
+    return `TASK${Date.now()}${crypto.randomInt(1000, 9999)}`;
+}
+
+
+function displayName(first, middle, last) {
+    return [
+        first,
+        middle,
+        last
+    ].filter(Boolean).join(' ').trim();
+}
+
+
+function validDate(value) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+
+function calculateDays(assignedDate, completionDate, status) {
+
+    if (!assignedDate || !validDate(assignedDate)) {
+        return 0;
+    }
+
+    const start =
+        new Date(`${assignedDate}T00:00:00`);
+
+    let end;
+
+    if (
+        status === 'completed' &&
+        completionDate &&
+        validDate(completionDate)
+    ) {
+        end =
+            new Date(`${completionDate}T00:00:00`);
+    } else {
+        end = new Date();
+    }
+
+    const diff =
+        end.getTime() - start.getTime();
+
+    return Math.max(
+        0,
+        Math.floor(diff / (24 * 60 * 60 * 1000))
+    );
+}
+
+
+function taskQuery() {
+
+    return `
+        SELECT
+            t.*,
+
+            TRIM(
+                COALESCE(c.first_name, '') ||
+                CASE
+                    WHEN c.middle_name IS NOT NULL
+                         AND c.middle_name != ''
+                    THEN ' ' || c.middle_name
+                    ELSE ''
+                END ||
+                CASE
+                    WHEN c.last_name IS NOT NULL
+                         AND c.last_name != ''
+                    THEN ' ' || c.last_name
+                    ELSE ''
+                END
+            ) AS client_name,
+
+            c.pan AS client_pan,
+
+            TRIM(
+                COALESCE(u.first_name, '') ||
+                CASE
+                    WHEN u.middle_name IS NOT NULL
+                         AND u.middle_name != ''
+                    THEN ' ' || u.middle_name
+                    ELSE ''
+                END ||
+                CASE
+                    WHEN u.last_name IS NOT NULL
+                         AND u.last_name != ''
+                    THEN ' ' || u.last_name
+                    ELSE ''
+                END
+            ) AS assigned_by_name,
+
+            TRIM(
+                COALESCE(ae.first_name, '') ||
+                CASE
+                    WHEN ae.middle_name IS NOT NULL
+                         AND ae.middle_name != ''
+                    THEN ' ' || ae.middle_name
+                    ELSE ''
+                END ||
+                CASE
+                    WHEN ae.last_name IS NOT NULL
+                         AND ae.last_name != ''
+                    THEN ' ' || ae.last_name
+                    ELSE ''
+                END
+            ) AS assigned_employee_name
+
+        FROM office_tasks t
+
+        LEFT JOIN clients c
+            ON c.id = t.client_id
+
+        LEFT JOIN users u
+            ON u.id = t.assigned_by
+
+        LEFT JOIN users ae
+            ON ae.id = t.assigned_employee_id
+    `;
+}
+
+
+function mapTask(row) {
+
+    return {
+        id: row.id,
+        taskName: row.task_name || '',
+        clientId: row.client_id || '',
+        clientName: row.client_name || '',
+        clientPan: row.client_pan || '',
+        workType: row.work_type || '',
+        assignedDate: row.assigned_date || '',
+        completionDate: row.completion_date || '',
+        billable: Boolean(row.billable),
+        status: row.status || 'incomplete',
+        assignedBy: row.assigned_by || '',
+        assignedByName: row.assigned_by_name || 'Unknown',
+        assignedEmployeeId: row.assigned_employee_id || '',
+        assignedEmployeeName: row.assigned_employee_name || '',
+        numberOfDays:
+            calculateDays(
+                row.assigned_date,
+                row.completion_date,
+                row.status
+            ),
+        createdAt: row.created_at || '',
+        updatedAt: row.updated_at || ''
+    };
+}
 
 
 /* =========================================================
-   GET EMPLOYEES FOR TASK ASSIGNMENT
+   CLIENTS
 ========================================================= */
 
 router.get(
-    "/admin/task-employees",
+    '/tasks/clients',
+    requireAuth,
     (req, res) => {
 
         try {
 
-            const employees = db.prepare(`
+            const rows = db.prepare(`
                 SELECT
                     id,
-                    username,
                     first_name,
                     middle_name,
                     last_name,
-                    designation,
-                    email
-                FROM users
-                WHERE
-                    role = 'employee'
-                    AND status = 'active'
-                ORDER BY first_name ASC
+                    pan
+                FROM clients
+                WHERE status = 'active'
+                ORDER BY first_name COLLATE NOCASE,
+                         last_name COLLATE NOCASE
             `).all();
 
-
-            const result = employees.map(employee => ({
-
-                id: employee.id,
-
-                name: [
-                    employee.first_name,
-                    employee.middle_name,
-                    employee.last_name
-                ]
-                    .filter(Boolean)
-                    .join(" ") || employee.username,
-
-                username:
-                    employee.username,
-
-                designation:
-                    employee.designation || "",
-
-                email:
-                    employee.email || ""
-
-            }));
-
-
             return res.json({
-
                 success: true,
-
-                employees: result
-
+                clients: rows.map(row => ({
+                    id: row.id,
+                    name: displayName(
+                        row.first_name,
+                        row.middle_name,
+                        row.last_name
+                    ),
+                    pan: row.pan || ''
+                }))
             });
 
-        }
+        } catch (error) {
 
-        catch (error) {
-
-            console.error(
-                "Task employee error:",
-                error
-            );
+            console.error('Task clients error:', error);
 
             return res.status(500).json({
-
                 success: false,
-
-                message:
-                    "Unable to load employees."
-
+                message: 'Unable to load clients.'
             });
-
         }
-
     }
 );
 
 
 /* =========================================================
-   GET CLIENTS FOR TASK ASSIGNMENT
+   EMPLOYEES AVAILABLE FOR TASK ASSIGNMENT
 ========================================================= */
 
 router.get(
-    "/admin/task-clients",
+    '/tasks/employees',
+    requireAuth,
     (req, res) => {
 
         try {
 
-            const clients = db.prepare(`
-                SELECT *
-                FROM clients
-                ORDER BY created_at DESC
+            const rows = db.prepare(`
+                SELECT
+                    id,
+                    first_name,
+                    middle_name,
+                    last_name,
+                    username,
+                    role
+                FROM users
+                WHERE
+                    status = 'active'
+                    AND role = 'employee'
+                ORDER BY
+                    first_name COLLATE NOCASE,
+                    last_name COLLATE NOCASE
             `).all();
 
-
-            const result = clients.map(client => {
-
-                const name = [
-                    client.first_name,
-                    client.middle_name,
-                    client.last_name
-                ]
-                    .filter(Boolean)
-                    .join(" ");
-
-
-                return {
-
-                    id:
-                        client.id,
-
-                    name:
-                        name ||
-                        client.name ||
-                        client.business_name ||
-                        "Unnamed Client",
-
-                    type:
-                        client.type || "",
-
-                    pan:
-                        client.pan_number || ""
-
-                };
-
-            });
-
-
             return res.json({
-
                 success: true,
-
-                clients: result
-
+                employees: rows.map(row => ({
+                    id: row.id,
+                    name:
+                        displayName(
+                            row.first_name,
+                            row.middle_name,
+                            row.last_name
+                        ) ||
+                        row.username ||
+                        'Employee'
+                }))
             });
 
-        }
-
-        catch (error) {
+        } catch (error) {
 
             console.error(
-                "Task client error:",
+                'Task employees error:',
                 error
             );
 
             return res.status(500).json({
-
                 success: false,
-
-                message:
-                    "Unable to load clients."
-
+                message: 'Unable to load employees.'
             });
-
         }
-
     }
 );
 
 
 /* =========================================================
-   CREATE / ASSIGN TASK
+   LIST TASKS
 ========================================================= */
 
-router.post(
-    "/admin/tasks",
+router.get(
+    '/tasks',
+    requireAuth,
     (req, res) => {
 
         try {
 
-            const {
-                title,
-                description,
-                assigned_to,
-                client_id,
-                priority,
-                due_date
-            } = req.body;
+            const rows =
+                db.prepare(`
+                    ${taskQuery()}
+                    ORDER BY
+                        t.assigned_date DESC,
+                        t.created_at DESC
+                `).all();
+
+            return res.json({
+                success: true,
+                tasks: rows.map(mapTask)
+            });
+
+        } catch (error) {
+
+            console.error('Load tasks error:', error);
+
+            return res.status(500).json({
+                success: false,
+                message: 'Unable to load tasks.'
+            });
+        }
+    }
+);
 
 
-            /* -----------------------------------------
-               VALIDATION
-            ----------------------------------------- */
+/* =========================================================
+   CREATE TASK
+========================================================= */
 
-            if (
-                !title ||
-                !assigned_to
-            ) {
+router.post(
+    '/tasks',
+    requireAuth,
+    (req, res) => {
 
+        try {
+
+            const body = req.body || {};
+
+            const taskName =
+                clean(body.taskName);
+
+            const workType =
+                clean(body.workType).toLowerCase();
+
+            const clientId =
+                clean(body.clientId);
+
+            const assignedEmployeeId =
+                clean(body.assignedEmployeeId);
+
+            const assignedDate =
+                clean(body.assignedDate);
+
+            const completionDate =
+                clean(body.completionDate);
+
+            const billable =
+                Boolean(body.billable);
+
+            let status =
+                clean(body.status).toLowerCase();
+
+            if (!['office', 'miscellaneous'].includes(workType)) {
                 return res.status(400).json({
-
                     success: false,
-
-                    message:
-                        "Task title and employee are required."
-
+                    message: 'Please select Office Work or Miscellaneous.'
                 });
-
             }
 
+            if (!taskName) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Task / work description is required.'
+                });
+            }
 
-            /* -----------------------------------------
-               CHECK EMPLOYEE
-            ----------------------------------------- */
+            if (!assignedEmployeeId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Please select the employee assigned to this task.'
+                });
+            }
 
-            const employee =
+            const assignedEmployee =
                 db.prepare(`
-                    SELECT
-                        id,
-                        username,
-                        first_name,
-                        middle_name,
-                        last_name
+                    SELECT id
                     FROM users
                     WHERE
                         id = ?
-                        AND role = 'employee'
-                        AND status = 'active'
-                `).get(
-                    assigned_to
-                );
+                        AND LOWER(role) = 'employee'
+                        AND LOWER(status) = 'active'
+                    LIMIT 1
+                `).get(assignedEmployeeId);
 
-
-            if (!employee) {
-
-                return res.status(404).json({
-
+            if (!assignedEmployee) {
+                return res.status(400).json({
                     success: false,
-
-                    message:
-                        "Selected employee was not found."
-
+                    message: 'Selected employee is not available.'
                 });
-
             }
 
+            if (!assignedDate || !validDate(assignedDate)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'A valid date of assigning is required.'
+                });
+            }
 
-            /* -----------------------------------------
-               CHECK CLIENT
-            ----------------------------------------- */
+            if (!['wip', 'completed'].includes(status)) {
+                status = 'wip';
+            }
 
-            if (client_id) {
+            /*
+             * Miscellaneous tasks must never contain a client.
+             */
+            const finalClientId =
+                workType === 'miscellaneous'
+                    ? null
+                    : clientId || null;
+
+            if (
+                workType === 'office' &&
+                !finalClientId
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Please select a client for Office Work.'
+                });
+            }
+
+            if (
+                finalClientId
+            ) {
 
                 const client =
                     db.prepare(`
                         SELECT id
                         FROM clients
-                        WHERE id = ?
-                    `).get(
-                        client_id
-                    );
-
+                        WHERE
+                            id = ?
+                            AND status = 'active'
+                        LIMIT 1
+                    `).get(finalClientId);
 
                 if (!client) {
-
-                    return res.status(404).json({
-
+                    return res.status(400).json({
                         success: false,
-
-                        message:
-                            "Selected client was not found."
-
+                        message: 'Selected client is not available.'
                     });
-
                 }
-
             }
 
+            if (
+                completionDate &&
+                !validDate(completionDate)
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid completion date.'
+                });
+            }
 
-            /* -----------------------------------------
-               CREATE TASK ID
-            ----------------------------------------- */
+            if (
+                completionDate &&
+                completionDate < assignedDate
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        'Date of completion cannot be earlier than date of assigning.'
+                });
+            }
 
-            const taskId =
-                "TASK" +
-                Date.now() +
-                Math.floor(
-                    Math.random() * 1000
-                );
-
+            /*
+             * Status intentionally has only W.I.P and Incomplete.
+             * Completion date remains an optional data field and does not
+             * create a third status.
+             */
 
             const now =
                 new Date().toISOString();
 
-
-            const taskPriority =
-                [
-                    "low",
-                    "medium",
-                    "high",
-                    "urgent"
-                ].includes(
-                    String(priority).toLowerCase()
-                )
-                    ? String(priority).toLowerCase()
-                    : "medium";
-
-
-            /* -----------------------------------------
-               INSERT TASK
-            ----------------------------------------- */
+            const id =
+                generateId();
 
             db.prepare(`
-                INSERT INTO tasks (
+                INSERT INTO office_tasks (
                     id,
-                    title,
-                    description,
-                    assigned_to,
+                    task_name,
                     client_id,
+                    assigned_employee_id,
+                    work_type,
+                    assigned_date,
+                    completion_date,
+                    billable,
                     status,
-                    priority,
-                    due_date,
+                    assigned_by,
                     created_at,
                     updated_at
                 )
-
-                VALUES (
-                    ?,
-                    ?,
-                    ?,
-                    ?,
-                    ?,
-                    'pending',
-                    ?,
-                    ?,
-                    ?,
-                    ?
-                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(
-
-                taskId,
-
-                title.trim(),
-
-                description
-                    ? description.trim()
-                    : "",
-
-                assigned_to,
-
-                client_id || null,
-
-                taskPriority,
-
-                due_date || null,
-
+                id,
+                taskName,
+                finalClientId,
+                assignedEmployeeId,
+                workType,
+                assignedDate,
+                completionDate || null,
+                billable ? 1 : 0,
+                status,
+                req.user.id,
                 now,
-
                 now
-
             );
 
+            const created =
+                db.prepare(`
+                    ${taskQuery()}
+                    WHERE t.id = ?
+                    LIMIT 1
+                `).get(id);
 
             return res.status(201).json({
-
                 success: true,
-
-                message:
-                    "Task assigned successfully.",
-
-                task: {
-
-                    id:
-                        taskId,
-
-                    title:
-                        title.trim(),
-
-                    assigned_to:
-                        assigned_to,
-
-                    client_id:
-                        client_id || null,
-
-                    status:
-                        "pending",
-
-                    priority:
-                        taskPriority,
-
-                    due_date:
-                        due_date || null
-
-                }
-
+                message: 'Task created successfully.',
+                task: mapTask(created)
             });
 
-        }
+        } catch (error) {
 
-        catch (error) {
-
-            console.error(
-                "Create task error:",
-                error
-            );
+            console.error('Create task error:', error);
 
             return res.status(500).json({
-
                 success: false,
-
-                message:
-                    "Unable to create task.",
-
-                error:
-                    process.env.NODE_ENV === "development"
-                        ? error.message
-                        : undefined
-
+                message: 'Unable to create task.'
             });
-
         }
-
     }
 );
 
 
 /* =========================================================
-   ADMIN - GET ALL TASKS
+   UPDATE TASK
 ========================================================= */
 
-router.get(
-    "/admin/tasks",
+router.patch(
+    '/tasks/:id',
+    requireAuth,
     (req, res) => {
 
         try {
 
-            const tasks = db.prepare(`
-                SELECT
-                    tasks.*,
+            const id =
+                clean(req.params.id);
 
-                    users.first_name,
-                    users.middle_name,
-                    users.last_name,
-                    users.username,
-                    users.designation
+            const existing =
+                db.prepare(`
+                    SELECT *
+                    FROM office_tasks
+                    WHERE id = ?
+                    LIMIT 1
+                `).get(id);
 
-                FROM tasks
+            if (!existing) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Task not found.'
+                });
+            }
 
-                LEFT JOIN users
-                    ON users.id = tasks.assigned_to
+            const body = req.body || {};
 
-                ORDER BY
-                    tasks.created_at DESC
-            `).all();
+            const taskName =
+                clean(
+                    body.taskName ??
+                    existing.task_name
+                );
 
+            const workType =
+                clean(
+                    body.workType ??
+                    existing.work_type
+                ).toLowerCase();
 
-            const result =
-                tasks.map(task => ({
+            const assignedDate =
+                clean(
+                    body.assignedDate ??
+                    existing.assigned_date
+                );
 
-                    ...task,
+            const completionDate =
+                clean(
+                    body.completionDate ??
+                    existing.completion_date ??
+                    ''
+                );
 
-                    employee_name: [
+            const billable =
+                body.billable === undefined
+                    ? Boolean(existing.billable)
+                    : Boolean(body.billable);
 
-                        task.first_name,
-                        task.middle_name,
-                        task.last_name
+            let status =
+                clean(
+                    body.status ??
+                    existing.status
+                ).toLowerCase();
 
-                    ]
-                        .filter(Boolean)
-                        .join(" ") ||
-                        task.username ||
-                        "Unassigned"
+            const clientId =
+                clean(
+                    body.clientId ??
+                    existing.client_id ??
+                    ''
+                );
 
-                }));
+            const assignedEmployeeId =
+                clean(
+                    body.assignedEmployeeId ??
+                    existing.assigned_employee_id ??
+                    ''
+                );
 
+            if (!taskName) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Task / work description is required.'
+                });
+            }
 
-            return res.json({
+            if (!['office', 'miscellaneous'].includes(workType)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid work type.'
+                });
+            }
 
-                success: true,
+            if (!validDate(assignedDate)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid date of assigning.'
+                });
+            }
 
-                tasks:
-                    result
+            if (
+                completionDate &&
+                !validDate(completionDate)
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid completion date.'
+                });
+            }
 
-            });
+            if (
+                completionDate &&
+                completionDate < assignedDate
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        'Date of completion cannot be earlier than date of assigning.'
+                });
+            }
 
-        }
+            if (!['wip', 'completed'].includes(status)) {
+                status = 'wip';
+            }
 
-        catch (error) {
+            const assignedEmployee =
+                db.prepare(`
+                    SELECT id
+                    FROM users
+                    WHERE
+                        id = ?
+                        AND LOWER(role) = 'employee'
+                        AND LOWER(status) = 'active'
+                    LIMIT 1
+                `).get(assignedEmployeeId);
 
-            console.error(
-                "Get tasks error:",
-                error
+            if (!assignedEmployee) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Please select a valid employee for this task.'
+                });
+            }
+
+            if (workType === 'miscellaneous') {
+                /* Client is intentionally forced empty. */
+            } else if (!clientId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Please select a client for Office Work.'
+                });
+            }
+
+            db.prepare(`
+                UPDATE office_tasks
+                SET
+                    task_name = ?,
+                    client_id = ?,
+                    assigned_employee_id = ?,
+                    work_type = ?,
+                    assigned_date = ?,
+                    completion_date = ?,
+                    billable = ?,
+                    status = ?,
+                    updated_at = ?
+                WHERE id = ?
+            `).run(
+                taskName,
+                workType === 'miscellaneous'
+                    ? null
+                    : clientId || null,
+                assignedEmployeeId,
+                workType,
+                assignedDate,
+                completionDate || null,
+                billable ? 1 : 0,
+                status,
+                new Date().toISOString(),
+                id
             );
 
-            return res.status(500).json({
+            const updated =
+                db.prepare(`
+                    ${taskQuery()}
+                    WHERE t.id = ?
+                    LIMIT 1
+                `).get(id);
 
-                success: false,
-
-                message:
-                    "Unable to load tasks."
-
+            return res.json({
+                success: true,
+                message: 'Task updated successfully.',
+                task: mapTask(updated)
             });
 
-        }
+        } catch (error) {
 
+            console.error('Update task error:', error);
+
+            return res.status(500).json({
+                success: false,
+                message: 'Unable to update task.'
+            });
+        }
     }
 );
-
 
 module.exports = router;

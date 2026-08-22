@@ -53,6 +53,32 @@ db.exec(`
 `);
 
 
+try {
+    const documentColumns =
+        db.prepare(`PRAGMA table_info(office_documents)`).all();
+
+    if (
+        !documentColumns.some(
+            column => column.name === 'assigned_employee_id'
+        )
+    ) {
+        db.exec(`
+            ALTER TABLE office_documents
+            ADD COLUMN assigned_employee_id TEXT
+        `);
+    }
+
+    db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_office_documents_assigned_employee
+            ON office_documents(assigned_employee_id);
+    `);
+} catch (migrationError) {
+    console.error(
+        'Document assigned employee migration error:',
+        migrationError
+    );
+}
+
 /* =========================================================
    HELPERS
 ========================================================= */
@@ -119,6 +145,12 @@ function mapDocument(row) {
 
         deliveringStaff:
             row.delivering_staff_name || '',
+
+        assignedEmployeeId:
+            row.assigned_employee_id || '',
+
+        assignedEmployee:
+            row.assigned_employee_name || '',
 
         createdBy:
             row.created_by || '',
@@ -187,7 +219,23 @@ function documentQuery() {
                     THEN ' ' || del.last_name
                     ELSE ''
                 END
-            ) AS delivering_staff_name
+            ) AS delivering_staff_name,
+
+            TRIM(
+                COALESCE(ae.first_name, '') ||
+                CASE
+                    WHEN ae.middle_name IS NOT NULL
+                         AND ae.middle_name != ''
+                    THEN ' ' || ae.middle_name
+                    ELSE ''
+                END ||
+                CASE
+                    WHEN ae.last_name IS NOT NULL
+                         AND ae.last_name != ''
+                    THEN ' ' || ae.last_name
+                    ELSE ''
+                END
+            ) AS assigned_employee_name
 
         FROM office_documents d
 
@@ -199,6 +247,9 @@ function documentQuery() {
 
         LEFT JOIN users del
             ON del.id = d.delivering_staff_id
+
+        LEFT JOIN users ae
+            ON ae.id = d.assigned_employee_id
     `;
 }
 
@@ -481,6 +532,64 @@ router.get(
 
 
 /* =========================================================
+   EMPLOYEES FOR DOCUMENT ASSIGNMENT
+========================================================= */
+
+router.get(
+    '/documents/employees',
+    requireAuth,
+    (req, res) => {
+
+        try {
+
+            const rows = db.prepare(`
+                SELECT
+                    id,
+                    first_name,
+                    middle_name,
+                    last_name,
+                    username
+                FROM users
+                WHERE
+                    role = 'employee'
+                    AND status = 'active'
+                ORDER BY
+                    first_name COLLATE NOCASE,
+                    last_name COLLATE NOCASE
+            `).all();
+
+            return res.json({
+                success: true,
+                employees: rows.map(row => ({
+                    id: row.id,
+                    name:
+                        displayName(
+                            row.first_name,
+                            row.middle_name,
+                            row.last_name
+                        ) ||
+                        row.username ||
+                        'Employee'
+                }))
+            });
+
+        } catch (error) {
+
+            console.error(
+                'Document employees error:',
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: 'Unable to load employees.'
+            });
+        }
+    }
+);
+
+
+/* =========================================================
    CREATE DOCUMENT
 
    Both Admin and Employee can create a document register entry.
@@ -525,6 +634,34 @@ router.post(
 
             const deliveringStaffId =
                 clean(body.deliveringStaffId);
+
+            const assignedEmployeeId =
+                clean(body.assignedEmployeeId);
+
+            if (!assignedEmployeeId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Please select the employee assigned to this document.'
+                });
+            }
+
+            const assignedEmployee =
+                db.prepare(`
+                    SELECT id
+                    FROM users
+                    WHERE
+                        id = ?
+                        AND role = 'employee'
+                        AND status = 'active'
+                    LIMIT 1
+                `).get(assignedEmployeeId);
+
+            if (!assignedEmployee) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Selected employee is not available.'
+                });
+            }
 
 
             if (!clientId) {
@@ -680,6 +817,7 @@ router.post(
                         dispatch_date,
                         receiving_staff_id,
                         delivering_staff_id,
+                        assigned_employee_id,
                         created_by,
                         created_at,
                         updated_at
@@ -714,6 +852,7 @@ router.post(
                     dispatchDate || null,
                     receivingStaffId || null,
                     deliveringStaffId || null,
+                    assignedEmployeeId,
                     req.user.id,
                     now,
                     now

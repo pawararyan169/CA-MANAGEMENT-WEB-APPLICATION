@@ -42,6 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const deliveringStaffSelect =
         document.getElementById('deliveringStaffId');
 
+    const assignedEmployeeSelect =
+        document.getElementById('assignedEmployeeId');
+
     const saveButton =
         document.getElementById('saveDocumentButton');
 
@@ -62,6 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const modeFilter =
         document.getElementById('documentModeFilter');
+
+    const statusFilter =
+        document.getElementById('documentStatusFilter');
 
     const receiptDateFromFilter =
         document.getElementById('receiptDateFromFilter');
@@ -400,6 +406,71 @@ document.addEventListener('DOMContentLoaded', () => {
        STAFF DROPDOWNS
     ========================================================= */
 
+    async function loadAssignedEmployees() {
+
+        try {
+
+            const response =
+                await fetch(
+                    '/api/documents/employees',
+                    {
+                        credentials: 'same-origin'
+                    }
+                );
+
+            const result =
+                await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(
+                    result.message ||
+                    'Unable to load employees.'
+                );
+            }
+
+            state.employees =
+                Array.isArray(result.employees)
+                    ? result.employees
+                    : [];
+
+            if (assignedEmployeeSelect) {
+
+                assignedEmployeeSelect.innerHTML = `
+                    <option value="">
+                        Select employee
+                    </option>
+                `;
+
+                state.employees.forEach(employee => {
+
+                    const option =
+                        document.createElement('option');
+
+                    option.value =
+                        employee.id;
+
+                    option.textContent =
+                        employee.name;
+
+                    assignedEmployeeSelect.appendChild(option);
+                });
+            }
+
+        } catch (error) {
+
+            console.error(
+                'Assigned document employees error:',
+                error
+            );
+
+            showError(
+                error.message ||
+                'Unable to load employees.'
+            );
+        }
+    }
+
+
     async function loadStaff() {
 
         try {
@@ -562,6 +633,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const mode =
             clean(modeFilter?.value).toLowerCase();
 
+        const status =
+            clean(statusFilter?.value).toLowerCase();
+
         const receiptFrom =
             clean(receiptDateFromFilter?.value);
 
@@ -573,6 +647,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (
                 mode &&
                 clean(doc.mode).toLowerCase() !== mode
+            ) {
+                return false;
+            }
+
+            const documentStatus =
+                doc.dispatchDate
+                    ? 'dispatched'
+                    : 'received';
+
+            if (
+                status &&
+                documentStatus !== status
             ) {
                 return false;
             }
@@ -612,6 +698,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 doc.mode,
                 doc.receivingStaff,
                 doc.deliveringStaff,
+                doc.assignedEmployee,
                 doc.receiptDate,
                 doc.dispatchDate
             ]
@@ -714,9 +801,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <td>
                     <div class="dispatch-cell">
-                        <span>
-                            ${esc(formatDate(doc.dispatchDate))}
-                        </span>
+                        ${
+                            doc.mode === 'offline'
+                                ? `
+                                    <div
+                                        class="dispatch-display"
+                                        data-document-id="${esc(doc.id)}"
+                                    >
+                                        <span class="dispatch-date-value">
+                                            ${esc(formatDate(doc.dispatchDate))}
+                                        </span>
+
+                                        <button
+                                            type="button"
+                                            class="edit-dispatch-button"
+                                            data-document-id="${esc(doc.id)}"
+                                            data-dispatch-date="${esc(doc.dispatchDate || '')}"
+                                            data-receipt-date="${esc(doc.receiptDate || '')}"
+                                        >
+                                            Edit
+                                        </button>
+                                    </div>
+                                `
+                                : `
+                                    <span class="dispatch-date-value">
+                                        —
+                                    </span>
+                                `
+                        }
                     </div>
                 </td>
 
@@ -738,6 +850,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <td>
                     ${esc(doc.deliveringStaff || '—')}
+                </td>
+
+                <td>
+                    ${esc(doc.assignedEmployee || '—')}
                 </td>
 
                 <td>
@@ -776,6 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'Number of Days': getDocumentDays(doc.receiptDate, doc.dispatchDate),
             'Receiving Staff': doc.receivingStaff || '',
             'Delivering Staff': doc.deliveringStaff || '',
+            'Assigned Employee': doc.assignedEmployee || '',
             'Status': doc.dispatchDate ? 'Dispatched' : 'Received'
         }));
     }
@@ -822,6 +939,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { wch: 12 },
             { wch: 18 },
             { wch: 18 },
+            { wch: 25 },
             { wch: 25 },
             { wch: 25 },
             { wch: 16 }
@@ -895,6 +1013,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const mode =
             clean(modeFilter?.value);
 
+        const status =
+            clean(statusFilter?.value);
+
         const receiptFrom =
             clean(receiptDateFromFilter?.value);
 
@@ -913,6 +1034,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filterText = [
             search ? `Search: ${search}` : '',
             mode ? `Mode: ${mode}` : '',
+            status ? `Status: ${status}` : '',
             receiptRange
         ].filter(Boolean).join(' | ');
 
@@ -936,6 +1058,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 row['Number of Days'],
                 row['Receiving Staff'],
                 row['Delivering Staff'],
+                row['Assigned Employee'],
                 row['Status']
             ]);
 
@@ -959,6 +1082,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Days',
                 'Receiving Staff',
                 'Delivering Staff',
+                'Assigned Employee',
                 'Status'
             ]],
             body,
@@ -997,6 +1121,243 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }
 
+
+
+
+    /* =========================================================
+       INLINE EDIT DISPATCH DATE
+    ========================================================= */
+
+    function startDispatchEdit(button) {
+
+        const cell =
+            button.closest('.dispatch-display');
+
+        if (!cell) {
+            return;
+        }
+
+        const documentId =
+            button.dataset.documentId;
+
+        const receiptDate =
+            button.dataset.receiptDate || '';
+
+        const currentDate =
+            button.dataset.dispatchDate || '';
+
+        cell.innerHTML = `
+            <input
+                type="date"
+                class="dispatch-inline-input"
+                value="${esc(currentDate)}"
+                min="${esc(receiptDate)}"
+                data-document-id="${esc(documentId)}"
+                data-receipt-date="${esc(receiptDate)}"
+            >
+
+            <button
+                type="button"
+                class="save-dispatch-button"
+                data-document-id="${esc(documentId)}"
+            >
+                Save
+            </button>
+
+            <button
+                type="button"
+                class="cancel-dispatch-button"
+                data-document-id="${esc(documentId)}"
+                data-dispatch-date="${esc(currentDate)}"
+                data-receipt-date="${esc(receiptDate)}"
+            >
+                Cancel
+            </button>
+        `;
+
+        const input =
+            cell.querySelector('.dispatch-inline-input');
+
+        input?.focus();
+
+        if (typeof input?.showPicker === 'function') {
+            try {
+                input.showPicker();
+            } catch (_) {
+                // Some browsers only allow showPicker after a trusted action.
+            }
+        }
+    }
+
+
+    async function saveDispatchDateFromCell(button) {
+
+        const cell =
+            button.closest('.dispatch-display');
+
+        const input =
+            cell?.querySelector('.dispatch-inline-input');
+
+        if (!cell || !input) {
+            return;
+        }
+
+        const documentId =
+            button.dataset.documentId;
+
+        const dispatchDate =
+            clean(input.value);
+
+        const receiptDate =
+            clean(input.dataset.receiptDate);
+
+        /*
+         * Empty is allowed while editing.
+         * Saving an empty value clears the dispatch date and changes
+         * the record back to Received.
+         */
+        if (
+            dispatchDate &&
+            receiptDate &&
+            dispatchDate < receiptDate
+        ) {
+            showError(
+                'Date of dispatch cannot be earlier than the date of receipt.'
+            );
+            input.focus();
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = 'Saving...';
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/documents/${encodeURIComponent(documentId)}/dispatch-date`,
+                    {
+                        method: 'PATCH',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            dispatchDate
+                        })
+                    }
+                );
+
+            const result =
+                await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(
+                    result.message ||
+                    'Unable to update dispatch date.'
+                );
+            }
+
+            showSuccess(
+                'Dispatch date updated successfully.'
+            );
+
+            await loadDocuments();
+
+        }
+        catch (error) {
+
+            console.error(
+                'Update dispatch date error:',
+                error
+            );
+
+            showError(
+                error.message ||
+                'Unable to update dispatch date.'
+            );
+
+            button.disabled = false;
+            button.textContent = 'Save';
+        }
+    }
+
+
+    function cancelDispatchEdit(button) {
+
+        const cell =
+            button.closest('.dispatch-display');
+
+        if (!cell) {
+            return;
+        }
+
+        const documentId =
+            button.dataset.documentId;
+
+        const dispatchDate =
+            button.dataset.dispatchDate || '';
+
+        const receiptDate =
+            button.dataset.receiptDate || '';
+
+        cell.innerHTML = `
+            <span class="dispatch-date-value">
+                ${esc(
+                    dispatchDate
+                        ? formatDate(dispatchDate)
+                        : '—'
+                )}
+            </span>
+
+            <button
+                type="button"
+                class="edit-dispatch-button"
+                data-document-id="${esc(documentId)}"
+                data-dispatch-date="${esc(dispatchDate)}"
+                data-receipt-date="${esc(receiptDate)}"
+            >
+                Edit
+            </button>
+        `;
+    }
+
+
+    tableBody?.addEventListener(
+        'click',
+        event => {
+
+            const editButton =
+                event.target.closest(
+                    '.edit-dispatch-button'
+                );
+
+            if (editButton) {
+                startDispatchEdit(editButton);
+                return;
+            }
+
+            const saveButton =
+                event.target.closest(
+                    '.save-dispatch-button'
+                );
+
+            if (saveButton) {
+                saveDispatchDateFromCell(saveButton);
+                return;
+            }
+
+            const cancelButton =
+                event.target.closest(
+                    '.cancel-dispatch-button'
+                );
+
+            if (cancelButton) {
+                cancelDispatchEdit(cancelButton);
+            }
+        }
+    );
 
 
     /* =========================================================
@@ -1049,7 +1410,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     clean(receivingStaffSelect?.value),
 
                 deliveringStaffId:
-                    clean(deliveringStaffSelect?.value)
+                    clean(deliveringStaffSelect?.value),
+
+                assignedEmployeeId:
+                    clean(assignedEmployeeSelect?.value)
             };
 
 
@@ -1085,6 +1449,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!data.receivingStaffId) {
                 showError('Please select the receiving staff member.');
+                return;
+            }
+
+            if (!data.assignedEmployeeId) {
+                showError('Please select the employee assigned to this document.');
                 return;
             }
 
@@ -1172,6 +1541,11 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 
     modeFilter?.addEventListener(
+        'change',
+        renderDocuments
+    );
+
+    statusFilter?.addEventListener(
         'change',
         renderDocuments
     );

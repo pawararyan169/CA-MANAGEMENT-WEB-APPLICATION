@@ -6,6 +6,7 @@ const crypto = require('crypto');
 require('./database/database');
 const db = require('./database/database');
 
+
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
 
@@ -20,6 +21,7 @@ app.use('/api', require('./routes/clients'));
 app.use('/api', require('./routes/employees'));
 app.use('/api', require('./routes/tasks'));
 app.use('/api', require('./routes/documents'));
+app.use('/api', require('./routes/billing'));
 
 app.use(express.static(__dirname));
 
@@ -109,6 +111,39 @@ app.get('/admin/dashboard.html', (req, res) => {
 });
 
 
+
+app.get('/admin/documents.html', (req, res) => {
+
+    res.sendFile(
+        path.join(
+            __dirname,
+            'admin',
+            'documents.html'
+        )
+    );
+
+});
+
+
+
+app.get('/admin/tasks.html', (req, res) => {
+
+    res.sendFile(
+        path.join(
+            __dirname,
+            'admin',
+            'tasks.html'
+        )
+    );
+
+});
+
+app.get('/admin/billing.html', (req, res) => {
+    res.sendFile(
+        path.join(__dirname, 'admin', 'billing.html')
+    );
+});
+
 /* =========================================================
    EMPLOYEE
 ========================================================= */
@@ -138,6 +173,39 @@ app.get('/employee/dashboard.html', (req, res) => {
 
 });
 
+
+
+app.get('/employee/documents.html', (req, res) => {
+
+    res.sendFile(
+        path.join(
+            __dirname,
+            'employee',
+            'documents.html'
+        )
+    );
+
+});
+
+
+
+app.get('/employee/tasks.html', (req, res) => {
+
+    res.sendFile(
+        path.join(
+            __dirname,
+            'employee',
+            'tasks.html'
+        )
+    );
+
+});
+
+app.get('/employee/billing.html', (req, res) => {
+    res.sendFile(
+        path.join(__dirname, 'employee', 'billing.html')
+    );
+});
 
 /* =========================================================
    CLIENT
