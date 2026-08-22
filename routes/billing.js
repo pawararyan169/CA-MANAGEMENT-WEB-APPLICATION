@@ -1,93 +1,47 @@
 const express = require("express");
-const crypto = require("crypto");
+const router = express.Router();
 
 const db = require("../database/database");
 const { requireAuth } = require("../middleware/auth");
 
-const router = express.Router();
+/*
+=========================================================
+BILLING RECORDS
+=========================================================
 
-/* =========================================================
-   TASK BILLING FIELD MIGRATION
-   The task screen already has a Billing option. This makes
-   the database able to store it without deleting existing data.
-========================================================= */
+Only tasks that have a completion date AND are billable
+appear in the Billing Records page.
 
-function ensureColumn(table, column, definition) {
-    const columns = db
-        .prepare(`PRAGMA table_info(${table})`)
-        .all();
+Important database facts for this project:
+- Task table: office_tasks
+- Task name column: task_name
+- Task ID is TEXT, e.g. TASK17873872735585285
+- Client ID: client_id
+- Completion date: completion_date
+- Billable flag: billable
+- Billing table requires client_id when inserting
+- Billing table is linked to the task through task_id
 
-    if (!columns.some(item => item.name === column)) {
-        db.prepare(
-            `ALTER TABLE ${table}
-             ADD COLUMN ${column} ${definition}`
-        ).run();
-    }
-}
+The frontend can edit:
+- chargeable amount
+- receipt date
+- amount
+- payment mode
+- advance payment date
+- advance amount
+- advance payment mode
 
-ensureColumn(
-    "tasks",
-    "billing",
-    "TEXT DEFAULT 'non-billable'"
-);
+Balance is always calculated on the server:
+chargeable - amount - advance
+If balance is zero, the frontend displays NIL.
+=========================================================
+*/
 
-/* =========================================================
-   BILLING TABLE
-========================================================= */
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS billing_records (
-        id TEXT PRIMARY KEY,
-        serial_number INTEGER NOT NULL UNIQUE,
-        task_id TEXT NOT NULL,
-        client_id TEXT NOT NULL,
-        chargeable_amount REAL NOT NULL DEFAULT 0,
-        receipt_date TEXT NOT NULL,
-        amount REAL NOT NULL DEFAULT 0,
-        payment_mode TEXT,
-        advance_payment_date TEXT,
-        advance_amount REAL NOT NULL DEFAULT 0,
-        advance_payment_mode TEXT,
-        balance REAL NOT NULL DEFAULT 0,
-        created_by TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
-    );
-
-    CREATE INDEX IF NOT EXISTS
-        idx_billing_records_task
-    ON billing_records(task_id);
-
-    CREATE INDEX IF NOT EXISTS
-        idx_billing_records_client
-    ON billing_records(client_id);
-
-    CREATE INDEX IF NOT EXISTS
-        idx_billing_records_receipt
-    ON billing_records(receipt_date);
-`);
-
-/* =========================================================
-   HELPERS
-========================================================= */
 
 function clean(value) {
     return String(value ?? "").trim();
 }
 
-function amount(value) {
-    const n = Number(value);
-    return Number.isFinite(n) && n >= 0 ? n : 0;
-}
-
-function id() {
-    return (
-        "BIL-" +
-        Date.now() +
-        "-" +
-        crypto.randomBytes(4).toString("hex")
-    );
-}
 
 function fullName(row) {
     return [
@@ -95,97 +49,109 @@ function fullName(row) {
         row.middle_name,
         row.last_name
     ]
-        .filter(Boolean)
+        .filter(value => value && String(value).trim())
         .join(" ")
         .trim();
 }
 
+
+function toAmount(value) {
+    const n = Number(value);
+
+    if (!Number.isFinite(n) || n < 0) {
+        return 0;
+    }
+
+    return n;
+}
+
+
 function nextSerial() {
+
     const row = db.prepare(`
-        SELECT COALESCE(MAX(serial_number), 0) + 1 AS next_serial
+        SELECT
+            COALESCE(MAX(CAST(serial_number AS INTEGER)), 0) + 1
+            AS next_serial
         FROM billing_records
     `).get();
 
-    return Number(row.next_serial || 1);
+    return Number(row?.next_serial || 1);
 }
 
-/* =========================================================
-   COMPLETED + BILLABLE TASK CONDITION
-========================================================= */
 
-function completedBillableWhere() {
-    return `
-        (
-            LOWER(COALESCE(t.status, '')) IN
-            ('complete', 'completed')
-        )
-        AND
-        LOWER(
-            REPLACE(
-                REPLACE(
-                    COALESCE(t.billing, 'non-billable'),
-                    '_',
-                    '-'
-                ),
-                ' ',
-                '-'
-            )
-        ) IN
-        (
-            'billable',
-            'chargeable',
-            'yes'
-        )
-    `;
+function isBillable(task) {
+
+    if (Number(task.billable) === 1) {
+        return true;
+    }
+
+    const billing = String(
+        task.billing ?? ""
+    )
+        .trim()
+        .toLowerCase();
+
+    return [
+        "billable",
+        "chargeable",
+        "yes",
+        "true"
+    ].includes(billing);
 }
 
-/* =========================================================
-   GET ELIGIBLE TASKS
 
-   A task appears here only after:
-   1. Status = Complete / Completed
-   2. Billing = Billable / Chargeable / Yes
-========================================================= */
+function isCompleted(task) {
 
+    /*
+     * Current task logic derives completion from
+     * completion_date. We therefore use the date as the
+     * primary source of truth.
+     */
+    return Boolean(
+        clean(task.completion_date)
+    );
+}
+
+
+/*
+=========================================================
+GET BILLING RECORDS
+=========================================================
+*/
 router.get(
-    "/billing/eligible-tasks",
+    "/billing",
     requireAuth,
     (req, res) => {
+
         try {
+
             const rows = db.prepare(`
                 SELECT
-                    t.id,
-                    t.title,
-                    t.client_id,
-                    t.status,
-                    t.billing,
+                    t.id AS task_id,
+                    t.task_name AS task_name,
+                    t.client_id AS task_client_id,
+                    t.completion_date AS completion_date,
+                    t.billable AS task_billable,
+                    t.billing AS task_billing,
 
-                    TRIM(
-                        COALESCE(c.first_name, '') ||
-                        CASE
-                            WHEN c.middle_name IS NOT NULL
-                                 AND TRIM(c.middle_name) <> ''
-                            THEN ' ' || c.middle_name
-                            ELSE ''
-                        END ||
-                        CASE
-                            WHEN c.last_name IS NOT NULL
-                                 AND TRIM(c.last_name) <> ''
-                            THEN ' ' || c.last_name
-                            ELSE ''
-                        END
-                    ) AS client_name,
-
+                    c.first_name AS first_name,
+                    c.middle_name AS middle_name,
+                    c.last_name AS last_name,
                     c.pan AS pan,
 
-                    CASE
-                        WHEN b.id IS NULL THEN 0
-                        ELSE 1
-                    END AS already_billed,
+                    b.id AS billing_id,
+                    b.serial_number AS serial_number,
+                    b.client_id AS billing_client_id,
+                    b.chargeable_amount AS chargeable_amount,
+                    b.receipt_date AS receipt_date,
+                    b.amount AS amount,
+                    b.payment_mode AS payment_mode,
+                    b.advance_payment_date AS advance_payment_date,
+                    b.advance_amount AS advance_amount,
+                    b.advance_payment_mode AS advance_payment_mode,
+                    b.balance AS stored_balance
 
-                    b.id AS billing_id
-
-                FROM tasks t
+                FROM office_tasks t
 
                 LEFT JOIN clients c
                     ON c.id = t.client_id
@@ -194,159 +160,148 @@ router.get(
                     ON b.task_id = t.id
 
                 WHERE
-                    ${completedBillableWhere()}
+                    t.completion_date IS NOT NULL
+                    AND TRIM(t.completion_date) <> ''
+
+                    AND (
+                        COALESCE(t.billable, 0) = 1
+
+                        OR LOWER(
+                            TRIM(
+                                COALESCE(t.billing, '')
+                            )
+                        ) IN (
+                            'billable',
+                            'chargeable',
+                            'yes',
+                            'true'
+                        )
+                    )
 
                 ORDER BY
-                    t.updated_at DESC,
-                    t.created_at DESC
+                    t.completion_date DESC,
+                    t.created_at DESC,
+                    t.id DESC
             `).all();
 
-            return res.json({
-                success: true,
-                tasks: rows.map(row => ({
-                    id: row.id,
-                    title: row.title || "",
-                    clientId: row.client_id || "",
-                    clientName: row.client_name || "",
-                    pan: row.pan || "",
-                    status: row.status || "",
-                    billing: row.billing || "",
-                    alreadyBilled: Boolean(row.already_billed),
-                    billingId: row.billing_id || null
-                }))
-            });
 
-        } catch (error) {
-            console.error(
-                "Billing eligible task error:",
-                error
+            const records = rows.map(
+                (row, index) => {
+
+                    const chargeable =
+                        Number(
+                            row.chargeable_amount || 0
+                        );
+
+                    const amount =
+                        Number(
+                            row.amount || 0
+                        );
+
+                    const advance =
+                        Number(
+                            row.advance_amount || 0
+                        );
+
+                    const balance =
+                        Math.max(
+                            0,
+                            chargeable -
+                            amount -
+                            advance
+                        );
+
+
+                    return {
+
+                        /*
+                         * Use the billing record ID when it
+                         * exists. Otherwise use the task ID.
+                         *
+                         * The task ID is TEXT and can be:
+                         * TASK17873872735585285
+                         */
+                        id:
+                            row.billing_id ||
+                            row.task_id,
+
+                        taskId:
+                            row.task_id,
+
+                        billingId:
+                            row.billing_id || null,
+
+                        serialNumber:
+                            row.serial_number ||
+                            String(index + 1).padStart(
+                                4,
+                                "0"
+                            ),
+
+                        clientId:
+                            row.task_client_id ||
+                            row.billing_client_id ||
+                            "",
+
+                        clientName:
+                            fullName(row),
+
+                        pan:
+                            row.pan || "",
+
+                        taskName:
+                            row.task_name || "",
+
+                        completionDate:
+                            row.completion_date || "",
+
+                        status:
+                            "completed",
+
+                        billable:
+                            true,
+
+                        chargeableAmount:
+                            chargeable,
+
+                        receiptDate:
+                            row.receipt_date || "",
+
+                        amount:
+                            amount,
+
+                        paymentMode:
+                            row.payment_mode || "",
+
+                        advancePaymentDate:
+                            row.advance_payment_date || "",
+
+                        advanceAmount:
+                            advance,
+
+                        advancePaymentMode:
+                            row.advance_payment_mode || "",
+
+                        balance:
+                            balance
+                    };
+                }
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Unable to load completed billable tasks."
-            });
-        }
-    }
-);
-
-/* =========================================================
-   NEXT SERIAL
-========================================================= */
-
-router.get(
-    "/billing/next-serial",
-    requireAuth,
-    (req, res) => {
-        try {
-            return res.json({
-                success: true,
-                serialNumber: nextSerial()
-            });
-        } catch (error) {
-            console.error(
-                "Billing serial error:",
-                error
-            );
-
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Unable to generate billing serial."
-            });
-        }
-    }
-);
-
-/* =========================================================
-   GET BILLING RECORDS
-
-   Only records connected to completed + billable tasks
-   are returned.
-========================================================= */
-
-router.get(
-    "/billing",
-    requireAuth,
-    (req, res) => {
-        try {
-            const rows = db.prepare(`
-                SELECT
-                    b.*,
-
-                    TRIM(
-                        COALESCE(c.first_name, '') ||
-                        CASE
-                            WHEN c.middle_name IS NOT NULL
-                                 AND TRIM(c.middle_name) <> ''
-                            THEN ' ' || c.middle_name
-                            ELSE ''
-                        END ||
-                        CASE
-                            WHEN c.last_name IS NOT NULL
-                                 AND TRIM(c.last_name) <> ''
-                            THEN ' ' || c.last_name
-                            ELSE ''
-                        END
-                    ) AS client_name,
-
-                    c.pan AS pan,
-
-                    t.title AS task_name,
-                    t.status AS task_status,
-                    t.billing AS task_billing
-
-                FROM billing_records b
-
-                INNER JOIN tasks t
-                    ON t.id = b.task_id
-
-                LEFT JOIN clients c
-                    ON c.id = b.client_id
-
-                WHERE
-                    ${completedBillableWhere()}
-
-                ORDER BY
-                    b.receipt_date DESC,
-                    b.serial_number DESC
-            `).all();
 
             return res.json({
                 success: true,
-                records: rows.map(row => ({
-                    id: row.id,
-                    serialNumber: row.serial_number,
-                    taskId: row.task_id,
-                    clientId: row.client_id,
-                    clientName: row.client_name || "",
-                    pan: row.pan || "",
-                    taskName: row.task_name || "",
-                    chargeableAmount:
-                        Number(row.chargeable_amount || 0),
-                    receiptDate:
-                        row.receipt_date || "",
-                    amount:
-                        Number(row.amount || 0),
-                    paymentMode:
-                        row.payment_mode || null,
-                    advancePaymentDate:
-                        row.advance_payment_date || null,
-                    advanceAmount:
-                        Number(row.advance_amount || 0),
-                    advancePaymentMode:
-                        row.advance_payment_mode || null,
-                    balance:
-                        Number(row.balance || 0)
-                }))
+                records
             });
 
+
         } catch (error) {
+
             console.error(
-                "Get billing records error:",
+                "Billing GET error:",
                 error
             );
+
 
             return res.status(500).json({
                 success: false,
@@ -357,456 +312,452 @@ router.get(
     }
 );
 
-/* =========================================================
-   GET ONE BILLING RECORD
-========================================================= */
 
-router.get(
-    "/billing/:id",
-    requireAuth,
-    (req, res) => {
-        try {
-            const row = db.prepare(`
-                SELECT
-                    b.*,
+/*
+=========================================================
+PUT /api/billing/:id
 
-                    TRIM(
-                        COALESCE(c.first_name, '') ||
-                        CASE
-                            WHEN c.middle_name IS NOT NULL
-                                 AND TRIM(c.middle_name) <> ''
-                            THEN ' ' || c.middle_name
-                            ELSE ''
-                        END ||
-                        CASE
-                            WHEN c.last_name IS NOT NULL
-                                 AND TRIM(c.last_name) <> ''
-                            THEN ' ' || c.last_name
-                            ELSE ''
-                        END
-                    ) AS client_name,
+:id may be either:
+1. Existing billing record ID
+2. Task ID such as TASK17873872735585285
 
-                    c.pan AS pan,
-                    t.title AS task_name
-
-                FROM billing_records b
-
-                INNER JOIN tasks t
-                    ON t.id = b.task_id
-
-                LEFT JOIN clients c
-                    ON c.id = b.client_id
-
-                WHERE
-                    b.id = ?
-                    AND ${completedBillableWhere()}
-            `).get(req.params.id);
-
-            if (!row) {
-                return res.status(404).json({
-                    success: false,
-                    message:
-                        "Billing record not found."
-                });
-            }
-
-            return res.json({
-                success: true,
-                record: {
-                    id: row.id,
-                    serialNumber: row.serial_number,
-                    taskId: row.task_id,
-                    clientId: row.client_id,
-                    clientName: row.client_name || "",
-                    pan: row.pan || "",
-                    taskName: row.task_name || "",
-                    chargeableAmount:
-                        Number(row.chargeable_amount || 0),
-                    receiptDate:
-                        row.receipt_date || "",
-                    amount:
-                        Number(row.amount || 0),
-                    paymentMode:
-                        row.payment_mode || null,
-                    advancePaymentDate:
-                        row.advance_payment_date || null,
-                    advanceAmount:
-                        Number(row.advance_amount || 0),
-                    advancePaymentMode:
-                        row.advance_payment_mode || null,
-                    balance:
-                        Number(row.balance || 0)
-                }
-            });
-
-        } catch (error) {
-            console.error(
-                "Get billing record error:",
-                error
-            );
-
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Unable to load billing record."
-            });
-        }
-    }
-);
-
-/* =========================================================
-   VALIDATE BILLING INPUT
-========================================================= */
-
-function validateBillingInput(body, currentId = null) {
-    const taskId = clean(body.taskId);
-    const chargeableAmount =
-        amount(body.chargeableAmount);
-    const receiptDate =
-        clean(body.receiptDate);
-
-    const receivedAmount =
-        amount(body.amount);
-
-    const advanceAmount =
-        amount(body.advanceAmount);
-
-    const paymentMode =
-        clean(body.paymentMode);
-
-    const advancePaymentDate =
-        clean(body.advancePaymentDate);
-
-    const advancePaymentMode =
-        clean(body.advancePaymentMode);
-
-    if (!taskId) {
-        return {
-            error:
-                "A completed billable task is required."
-        };
-    }
-
-    if (!receiptDate) {
-        return {
-            error:
-                "Date of receipt is required."
-        };
-    }
-
-    if (chargeableAmount <= 0) {
-        return {
-            error:
-                "Chargeable amount must be greater than zero."
-        };
-    }
-
-    if (
-        receivedAmount +
-        advanceAmount >
-        chargeableAmount
-    ) {
-        return {
-            error:
-                "Amount received plus advance cannot exceed the chargeable amount."
-        };
-    }
-
-    if (
-        receivedAmount > 0 &&
-        !["online", "cash"].includes(paymentMode)
-    ) {
-        return {
-            error:
-                "Select Online or Cash for the payment mode."
-        };
-    }
-
-    if (advanceAmount > 0) {
-        if (!advancePaymentDate) {
-            return {
-                error:
-                    "Advance payment date is required."
-            };
-        }
-
-        if (
-            !["online", "cash"]
-                .includes(advancePaymentMode)
-        ) {
-            return {
-                error:
-                    "Select Online or Cash for advance payment mode."
-            };
-        }
-    }
-
-    const task = db.prepare(`
-        SELECT
-            t.id,
-            t.client_id,
-            t.title,
-            t.status,
-            t.billing
-        FROM tasks t
-        WHERE t.id = ?
-          AND ${completedBillableWhere()}
-    `).get(taskId);
-
-    if (!task) {
-        return {
-            error:
-                "The selected task is not both Complete and Billable."
-        };
-    }
-
-    const client = db.prepare(`
-        SELECT id
-        FROM clients
-        WHERE id = ?
-    `).get(task.client_id);
-
-    if (!client) {
-        return {
-            error:
-                "The client linked to this task does not exist."
-        };
-    }
-
-    const duplicate = db.prepare(`
-        SELECT id
-        FROM billing_records
-        WHERE task_id = ?
-          AND id <> ?
-    `).get(
-        taskId,
-        currentId || ""
-    );
-
-    if (duplicate) {
-        return {
-            error:
-                "This completed billable task already has a billing record."
-        };
-    }
-
-    const balance = Math.max(
-        0,
-        chargeableAmount -
-        receivedAmount -
-        advanceAmount
-    );
-
-    return {
-        task,
-        client,
-        values: {
-            taskId,
-            clientId: task.client_id,
-            chargeableAmount,
-            receiptDate,
-            amount: receivedAmount,
-            paymentMode:
-                receivedAmount > 0
-                    ? paymentMode
-                    : null,
-            advancePaymentDate:
-                advanceAmount > 0
-                    ? advancePaymentDate
-                    : null,
-            advanceAmount,
-            advancePaymentMode:
-                advanceAmount > 0
-                    ? advancePaymentMode
-                    : null,
-            balance
-        }
-    };
-}
-
-/* =========================================================
-   CREATE BILLING RECORD
-========================================================= */
-
-router.post(
-    "/billing",
-    requireAuth,
-    (req, res) => {
-        try {
-            const validation =
-                validateBillingInput(
-                    req.body || {}
-                );
-
-            if (validation.error) {
-                return res.status(400).json({
-                    success: false,
-                    message: validation.error
-                });
-            }
-
-            const values =
-                validation.values;
-
-            const recordId =
-                id();
-
-            const serial =
-                nextSerial();
-
-            const now =
-                new Date().toISOString();
-
-            db.prepare(`
-                INSERT INTO billing_records (
-                    id,
-                    serial_number,
-                    task_id,
-                    client_id,
-                    chargeable_amount,
-                    receipt_date,
-                    amount,
-                    payment_mode,
-                    advance_payment_date,
-                    advance_amount,
-                    advance_payment_mode,
-                    balance,
-                    created_by,
-                    created_at,
-                    updated_at
-                )
-                VALUES (
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-                )
-            `).run(
-                recordId,
-                serial,
-                values.taskId,
-                values.clientId,
-                values.chargeableAmount,
-                values.receiptDate,
-                values.amount,
-                values.paymentMode,
-                values.advancePaymentDate,
-                values.advanceAmount,
-                values.advancePaymentMode,
-                values.balance,
-                req.user.id,
-                now,
-                now
-            );
-
-            return res.status(201).json({
-                success: true,
-                message:
-                    "Billing record created successfully.",
-                id: recordId,
-                serialNumber: serial
-            });
-
-        } catch (error) {
-            console.error(
-                "Create billing record error:",
-                error
-            );
-
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Unable to create billing record."
-            });
-        }
-    }
-);
-
-/* =========================================================
-   UPDATE BILLING RECORD
-========================================================= */
-
+If the task has no billing record yet, one is created.
+=========================================================
+*/
 router.put(
     "/billing/:id",
     requireAuth,
     (req, res) => {
-        try {
-            const existing = db.prepare(`
-                SELECT id
-                FROM billing_records
-                WHERE id = ?
-            `).get(req.params.id);
 
-            if (!existing) {
+        try {
+
+            const routeId =
+                clean(req.params.id);
+
+            if (!routeId) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Billing/task ID is required."
+                });
+            }
+
+
+            const body =
+                req.body || {};
+
+
+            /*
+             * First determine whether :id is an existing
+             * billing record.
+             *
+             * Billing IDs in this project are TEXT.
+             */
+            let existingBilling =
+                db.prepare(`
+                    SELECT
+                        b.*
+                    FROM billing_records b
+                    WHERE b.id = ?
+                    LIMIT 1
+                `).get(routeId);
+
+
+            let task = null;
+
+
+            /*
+             * If it isn't a billing ID, treat it as
+             * the task ID.
+             */
+            if (existingBilling) {
+
+                task =
+                    db.prepare(`
+                        SELECT
+                            *
+                        FROM office_tasks
+                        WHERE id = ?
+                        LIMIT 1
+                    `).get(
+                        existingBilling.task_id
+                    );
+
+            } else {
+
+                task =
+                    db.prepare(`
+                        SELECT
+                            *
+                        FROM office_tasks
+                        WHERE id = ?
+                        LIMIT 1
+                    `).get(
+                        routeId
+                    );
+
+
+                /*
+                 * If the frontend ever sends task-<id>,
+                 * support that as well.
+                 */
+                if (!task && routeId.startsWith("task-")) {
+
+                    const taskId =
+                        routeId.slice(5);
+
+                    task =
+                        db.prepare(`
+                            SELECT
+                                *
+                            FROM office_tasks
+                            WHERE id = ?
+                            LIMIT 1
+                        `).get(taskId);
+                }
+            }
+
+
+            if (!task) {
+
                 return res.status(404).json({
                     success: false,
                     message:
-                        "Billing record not found."
+                        "Task not found."
                 });
             }
 
-            const validation =
-                validateBillingInput(
-                    req.body || {},
-                    req.params.id
-                );
 
-            if (validation.error) {
+            /*
+             * Billing is only available for completed tasks.
+             */
+            if (!isCompleted(task)) {
+
                 return res.status(400).json({
                     success: false,
-                    message: validation.error
+                    message:
+                        "Only completed tasks can be billed."
                 });
             }
 
-            const values =
-                validation.values;
 
-            db.prepare(`
-                UPDATE billing_records
-                SET
-                    task_id = ?,
-                    client_id = ?,
-                    chargeable_amount = ?,
-                    receipt_date = ?,
-                    amount = ?,
-                    payment_mode = ?,
-                    advance_payment_date = ?,
-                    advance_amount = ?,
-                    advance_payment_mode = ?,
-                    balance = ?,
-                    updated_at = ?
-                WHERE id = ?
-            `).run(
-                values.taskId,
-                values.clientId,
-                values.chargeableAmount,
-                values.receiptDate,
-                values.amount,
-                values.paymentMode,
-                values.advancePaymentDate,
-                values.advanceAmount,
-                values.advancePaymentMode,
-                values.balance,
-                new Date().toISOString(),
-                req.params.id
-            );
+            /*
+             * Billing is only available for billable tasks.
+             */
+            if (!isBillable(task)) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Only billable tasks can be billed."
+                });
+            }
+
+
+            /*
+             * The database requires client_id NOT NULL.
+             *
+             * Therefore a task without a client cannot be
+             * inserted into billing_records.
+             */
+            const clientId =
+                clean(
+                    task.client_id
+                );
+
+
+            if (!clientId) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "This billable task has no client linked to it."
+                });
+            }
+
+
+            /*
+             * Make sure the client exists.
+             */
+            const client =
+                db.prepare(`
+                    SELECT
+                        id
+                    FROM clients
+                    WHERE id = ?
+                    LIMIT 1
+                `).get(clientId);
+
+
+            if (!client) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "The client linked to this task does not exist."
+                });
+            }
+
+
+            /*
+             * Read and validate payment values.
+             */
+            const chargeableAmount =
+                toAmount(
+                    body.chargeableAmount
+                );
+
+            const amount =
+                toAmount(
+                    body.amount
+                );
+
+            const advanceAmount =
+                toAmount(
+                    body.advanceAmount
+                );
+
+
+            if (
+                amount +
+                advanceAmount >
+                chargeableAmount
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Amount plus advance cannot exceed the chargeable amount."
+                });
+            }
+
+
+            /*
+             * Empty fields are allowed.
+             *
+             * This is important because the billing record
+             * can initially be blank and filled in directly
+             * from the spreadsheet.
+             */
+            const receiptDate =
+                clean(
+                    body.receiptDate
+                ) || null;
+
+            const paymentMode =
+                clean(
+                    body.paymentMode
+                ) || null;
+
+            const advancePaymentDate =
+                clean(
+                    body.advancePaymentDate
+                ) || null;
+
+            const advancePaymentMode =
+                clean(
+                    body.advancePaymentMode
+                ) || null;
+
+
+            /*
+             * Automatic balance.
+             */
+            const balance =
+                Math.max(
+                    0,
+                    chargeableAmount -
+                    amount -
+                    advanceAmount
+                );
+
+
+            /*
+             * Save atomically.
+             */
+            const save =
+                db.transaction(() => {
+
+                    /*
+                     * Existing billing record.
+                     */
+                    if (existingBilling) {
+
+                        db.prepare(`
+                            UPDATE billing_records
+
+                            SET
+                                task_id = ?,
+                                client_id = ?,
+                                chargeable_amount = ?,
+                                receipt_date = ?,
+                                amount = ?,
+                                payment_mode = ?,
+                                advance_payment_date = ?,
+                                advance_amount = ?,
+                                advance_payment_mode = ?,
+                                balance = ?,
+                                updated_at = ?
+
+                            WHERE id = ?
+                        `).run(
+
+                            task.id,
+                            clientId,
+
+                            chargeableAmount,
+
+                            receiptDate,
+
+                            amount,
+
+                            paymentMode,
+
+                            advancePaymentDate,
+
+                            advanceAmount,
+
+                            advancePaymentMode,
+
+                            balance,
+
+                            new Date().toISOString(),
+
+                            existingBilling.id
+                        );
+
+
+                        return {
+                            billingId:
+                                existingBilling.id,
+
+                            serialNumber:
+                                existingBilling.serial_number
+                        };
+                    }
+
+
+                    /*
+                     * No billing record yet.
+                     *
+                     * Create one automatically.
+                     */
+                    const serial =
+                        nextSerial();
+
+
+                    /*
+                     * Use a unique TEXT billing ID.
+                     */
+                    const billingId =
+                        `BIL-${Date.now()}-${Math.random()
+                            .toString(36)
+                            .slice(2, 10)}`;
+
+
+                    db.prepare(`
+                        INSERT INTO billing_records
+                        (
+                            id,
+                            serial_number,
+                            task_id,
+                            client_id,
+                            chargeable_amount,
+                            receipt_date,
+                            amount,
+                            payment_mode,
+                            advance_payment_date,
+                            advance_amount,
+                            advance_payment_mode,
+                            balance,
+                            created_by,
+                            created_at,
+                            updated_at
+                        )
+
+                        VALUES
+                        (
+                            ?, ?, ?, ?, ?, ?,
+                            ?, ?, ?, ?, ?, ?,
+                            ?, ?, ?
+                        )
+                    `).run(
+
+                        billingId,
+
+                        serial,
+
+                        task.id,
+
+                        clientId,
+
+                        chargeableAmount,
+
+                        receiptDate,
+
+                        amount,
+
+                        paymentMode,
+
+                        advancePaymentDate,
+
+                        advanceAmount,
+
+                        advancePaymentMode,
+
+                        balance,
+
+                        req.user.id,
+
+                        new Date().toISOString(),
+
+                        new Date().toISOString()
+                    );
+
+
+                    return {
+                        billingId,
+                        serialNumber: serial
+                    };
+                });
+
 
             return res.json({
                 success: true,
                 message:
-                    "Billing record updated successfully."
+                    "Billing record saved successfully.",
+                billingId:
+                    save.billingId,
+                taskId:
+                    task.id,
+                serialNumber:
+                    save.serialNumber,
+                balance:
+                    balance,
+                balanceDisplay:
+                    balance === 0
+                        ? "NIL"
+                        : balance
             });
 
+
         } catch (error) {
+
             console.error(
-                "Update billing record error:",
+                "Billing PUT error:",
                 error
             );
+
 
             return res.status(500).json({
                 success: false,
                 message:
-                    "Unable to update billing record."
+                    "Unable to save billing record."
             });
         }
     }
 );
+
 
 module.exports = router;

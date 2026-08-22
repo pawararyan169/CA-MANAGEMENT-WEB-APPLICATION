@@ -1312,21 +1312,7 @@ document.addEventListener("DOMContentLoaded", () => {
             noteElement.value.trim();
 
 
-        if (!note) {
-
-            showUpdateMessage(
-                taskId,
-                "Please enter a progress update.",
-                true
-            );
-
-            return;
-        }
-
-
-        task.status =
-            status;
-
+       
 
         task.progress =
             progress;

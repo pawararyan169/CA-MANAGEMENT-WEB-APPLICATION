@@ -68,7 +68,7 @@
              * Completed tasks are not part of the live queue.
              */
             const live = tasks.filter(task =>
-                task.status === 'wip'
+                !task.completionDate
             );
 
             if (countBox) {
@@ -90,9 +90,13 @@
 
             tableBody.innerHTML = live.map(task => {
                 const isMisc = task.workType === 'miscellaneous';
-                const status = task.status === 'wip'
-                    ? 'W.I.P'
-                    : 'Incomplete';
+                const status = task.completionDate
+                    ? 'Complete'
+                    : 'W.I.P';
+
+                const statusClass = task.completionDate
+                    ? 'completed'
+                    : 'wip';
 
                 return `
                     <tr>
@@ -108,7 +112,7 @@
                             <span class="live-task-days">days</span>
                         </td>
                         <td>
-                            <span class="live-task-status live-task-${esc(task.status)}">
+                            <span class="live-task-status live-task-${esc(statusClass)}">
                                 ${esc(status)}
                             </span>
                         </td>

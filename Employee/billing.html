@@ -3,532 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Billing Register | CA Office</title>
-
-    <link rel="stylesheet" href="billing.css">
-
-    <!-- Icons -->
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
+    <title>Billing Records</title>
+    <link rel="stylesheet" href="/billing.css?v=20260822-50">
 </head>
 
 <body>
 
-<div class="billing-page">
+<main class="billing-page">
 
-    <!-- ================= HEADER ================= -->
-    <header class="billing-header">
+    <!-- ONLY THE LOWER BILLING RECORD SECTION -->
+    <section class="records-card">
 
-        <div>
-            <div class="breadcrumb">
-                Dashboard <span>/</span> Billing
-            </div>
-
-            <h1>Billing Register</h1>
-
-            <p class="page-subtitle">
-                Manage client billing, payments and outstanding amounts.
-            </p>
-        </div>
-
-        <button class="add-bill-btn">
-            <i class="fa-solid fa-plus"></i>
-            Create Bill
-        </button>
-
-    </header>
-
-
-    <!-- ================= SUMMARY ================= -->
-    <section class="summary-grid">
-
-        <div class="summary-card">
-            <div class="summary-icon blue">
-                <i class="fa-solid fa-file-invoice"></i>
-            </div>
-
+        <div class="records-header">
             <div>
-                <span>Total Bills</span>
-                <strong>128</strong>
-            </div>
-        </div>
-
-
-        <div class="summary-card">
-            <div class="summary-icon green">
-                <i class="fa-solid fa-indian-rupee-sign"></i>
+                <h1>Billing Records</h1>
+                <p>Completed and billable tasks only</p>
             </div>
 
-            <div>
-                <span>Total Billed</span>
-                <strong>₹4,82,500</strong>
-            </div>
-        </div>
-
-
-        <div class="summary-card">
-            <div class="summary-icon purple">
-                <i class="fa-solid fa-wallet"></i>
-            </div>
-
-            <div>
-                <span>Amount Received</span>
-                <strong>₹3,64,000</strong>
-            </div>
-        </div>
-
-
-        <div class="summary-card">
-            <div class="summary-icon orange">
-                <i class="fa-solid fa-clock"></i>
-            </div>
-
-            <div>
-                <span>Outstanding</span>
-                <strong>₹1,18,500</strong>
-            </div>
-        </div>
-
-    </section>
-
-
-    <!-- ================= BILL FORM ================= -->
-    <section class="billing-form-card">
-
-        <div class="section-heading">
-
-            <div>
-                <h2>Create New Bill</h2>
-                <p>Enter billing and payment details.</p>
-            </div>
-
-            <span class="form-status">
-                New Bill
-            </span>
-
-        </div>
-
-
-        <div class="form-grid">
-
-            <!-- Client -->
-            <div class="form-group span-2">
-                <label>Client</label>
-
-                <select>
-                    <option>Select client</option>
-                    <option>ABC Private Limited</option>
-                    <option>Sharma Enterprises</option>
-                    <option>Rajesh Kumar</option>
-                </select>
-            </div>
-
-
-            <!-- Bill Number -->
-            <div class="form-group">
-                <label>Bill Number</label>
-
-                <input
-                    type="text"
-                    placeholder="Auto generated"
-                    readonly
-                >
-            </div>
-
-
-            <!-- Bill Date -->
-            <div class="form-group">
-                <label>Bill Date</label>
-
-                <input
-                    type="date"
-                    value="2026-08-22"
-                >
-            </div>
-
-
-            <!-- Task -->
-            <div class="form-group span-2">
-                <label>Task / Service</label>
-
-                <select>
-                    <option>Select task or service</option>
-                    <option>GST Return Filing</option>
-                    <option>Income Tax Return</option>
-                    <option>Audit</option>
-                    <option>Accounting</option>
-                    <option>Company Registration</option>
-                    <option>Tax Consultation</option>
-                </select>
-            </div>
-
-
-            <!-- Chargeable -->
-            <div class="form-group">
-                <label>Chargeable Amount</label>
-
-                <div class="amount-input">
-                    <span>₹</span>
-                    <input
-                        type="number"
-                        placeholder="0.00"
-                    >
-                </div>
-            </div>
-
-
-            <!-- Advance -->
-            <div class="form-group">
-                <label>Advance Paid</label>
-
-                <div class="amount-input">
-                    <span>₹</span>
-                    <input
-                        type="number"
-                        placeholder="0.00"
-                    >
-                </div>
-            </div>
-
-
-            <!-- Balance -->
-            <div class="form-group balance-field">
-                <label>Balance Amount</label>
-
-                <div class="amount-display">
-                    ₹0.00
-                </div>
-            </div>
-
-
-            <!-- Payment Mode -->
-            <div class="form-group">
-                <label>Payment Mode</label>
-
-                <select>
-                    <option>Select payment mode</option>
-                    <option>Cash</option>
-                    <option>UPI</option>
-                    <option>Bank Transfer</option>
-                    <option>Cheque</option>
-                    <option>Card</option>
-                </select>
-            </div>
-
-
-            <!-- Payment Status -->
-            <div class="form-group">
-                <label>Payment Status</label>
-
-                <select>
-                    <option>Pending</option>
-                    <option>Partially Paid</option>
-                    <option>Paid</option>
-                </select>
-            </div>
-
-
-            <!-- Remarks -->
-            <div class="form-group span-3">
-                <label>Remarks</label>
-
-                <textarea
-                    placeholder="Add any billing notes or remarks..."
-                ></textarea>
-            </div>
-
-        </div>
-
-
-        <div class="form-actions">
-
-            <button class="cancel-btn">
-                Cancel
-            </button>
-
-            <button class="save-btn">
-                <i class="fa-solid fa-check"></i>
-                Save Bill
-            </button>
-
-        </div>
-
-    </section>
-
-
-    <!-- ================= REGISTER ================= -->
-    <section class="register-card">
-
-        <div class="register-header">
-
-            <div>
-                <h2>Billing Register</h2>
-                <p>View and manage all billing records.</p>
-            </div>
-
-            <div class="register-actions">
-
-                <button class="secondary-btn">
-                    <i class="fa-solid fa-file-excel"></i>
-                    Export Excel
+            <div class="header-actions">
+                <button id="refreshBilling" type="button" class="btn secondary">
+                    ↻ Refresh
                 </button>
 
-                <button class="secondary-btn">
-                    <i class="fa-solid fa-file-pdf"></i>
-                    Export PDF
+                <button id="exportBillingExcel" type="button" class="btn excel">
+                    Export to Excel
                 </button>
 
+                <button id="exportBillingPdf" type="button" class="btn pdf">
+                    Export to PDF
+                </button>
             </div>
-
         </div>
 
-
-        <!-- Filters -->
-        <div class="filters">
+        <div class="filters-row">
 
             <div class="search-box">
-
-                <i class="fa-solid fa-magnifying-glass"></i>
-
+                <span>⌕</span>
                 <input
-                    type="text"
-                    placeholder="Search client, bill number..."
+                    id="billingSearch"
+                    type="search"
+                    placeholder="Search client, PAN, task or serial number..."
                 >
-
             </div>
 
+            <div class="date-box">
+                <label>Receipt From</label>
+                <input id="billingDateFrom" type="date">
+            </div>
 
-            <select>
-                <option>All Clients</option>
-            </select>
+            <div class="date-box">
+                <label>Receipt To</label>
+                <input id="billingDateTo" type="date">
+            </div>
 
+            <button id="resetBillingFilters" type="button" class="btn reset">
+                Reset
+            </button>
 
-            <select>
-                <option>All Status</option>
-                <option>Paid</option>
-                <option>Partially Paid</option>
-                <option>Pending</option>
-            </select>
-
-
-            <input
-                type="date"
-                title="From date"
-            >
-
-
-            <input
-                type="date"
-                title="To date"
-            >
+            <div class="visible-count">
+                <strong id="visibleCount">0</strong>
+                <span>visible records</span>
+            </div>
 
         </div>
 
+        <div id="billingError" class="alert error" hidden></div>
+        <div id="billingSuccess" class="alert success" hidden></div>
 
-        <!-- Table -->
-        <div class="table-wrapper">
+        <div class="table-meta">
+            <span id="registerState">Loading...</span>
+            <span>Completed + Billable</span>
+        </div>
 
+        <div class="table-wrap">
             <table class="billing-table">
 
                 <thead>
                     <tr>
-                        <th>Sr. No.</th>
-                        <th>Bill Number</th>
-                        <th>Client</th>
-                        <th>Task / Service</th>
-                        <th>Bill Date</th>
-                        <th>Chargeable</th>
-                        <th>Advance Paid</th>
+                        <th>Serial Number</th>
+                        <th>Name</th>
+                        <th>Name of Task</th>
+                        <th>Chargeable Amount</th>
+                        <th>Date of Receipt</th>
+                        <th>Amount</th>
+                        <th>Mode</th>
+                        <th>Date of Advance Payment</th>
+                        <th>Advance Paid Amount</th>
+                        <th>Advance Payment Mode</th>
                         <th>Balance</th>
-                        <th>Status</th>
-                        <th>Payment Mode</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
 
-                <tbody>
-
+                <tbody id="billingTableBody">
                     <tr>
-
-                        <td>01</td>
-
-                        <td>
-                            <strong>BILL-2026-001</strong>
+                        <td colspan="11" class="empty">
+                            Loading billing records...
                         </td>
-
-                        <td>
-                            <div class="client-name">
-                                ABC Private Limited
-                            </div>
-                            <small>CL-00021</small>
-                        </td>
-
-                        <td>GST Return Filing</td>
-
-                        <td>22 Aug 2026</td>
-
-                        <td class="money">
-                            ₹15,000
-                        </td>
-
-                        <td class="money received">
-                            ₹10,000
-                        </td>
-
-                        <td class="money outstanding">
-                            ₹5,000
-                        </td>
-
-                        <td>
-                            <span class="status partially-paid">
-                                Partially Paid
-                            </span>
-                        </td>
-
-                        <td>UPI</td>
-
-                        <td>
-                            <button class="action-btn">
-                                <i class="fa-solid fa-ellipsis"></i>
-                            </button>
-                        </td>
-
                     </tr>
-
-
-                    <tr>
-
-                        <td>02</td>
-
-                        <td>
-                            <strong>BILL-2026-002</strong>
-                        </td>
-
-                        <td>
-                            <div class="client-name">
-                                Sharma Enterprises
-                            </div>
-                            <small>CL-00022</small>
-                        </td>
-
-                        <td>Income Tax Return</td>
-
-                        <td>21 Aug 2026</td>
-
-                        <td class="money">
-                            ₹8,500
-                        </td>
-
-                        <td class="money received">
-                            ₹8,500
-                        </td>
-
-                        <td class="money paid">
-                            ₹0
-                        </td>
-
-                        <td>
-                            <span class="status paid">
-                                Paid
-                            </span>
-                        </td>
-
-                        <td>Bank Transfer</td>
-
-                        <td>
-                            <button class="action-btn">
-                                <i class="fa-solid fa-ellipsis"></i>
-                            </button>
-                        </td>
-
-                    </tr>
-
-
-                    <tr>
-
-                        <td>03</td>
-
-                        <td>
-                            <strong>BILL-2026-003</strong>
-                        </td>
-
-                        <td>
-                            <div class="client-name">
-                                Rajesh Kumar
-                            </div>
-                            <small>CL-00023</small>
-                        </td>
-
-                        <td>Tax Consultation</td>
-
-                        <td>20 Aug 2026</td>
-
-                        <td class="money">
-                            ₹3,000
-                        </td>
-
-                        <td class="money received">
-                            ₹0
-                        </td>
-
-                        <td class="money outstanding">
-                            ₹3,000
-                        </td>
-
-                        <td>
-                            <span class="status pending">
-                                Pending
-                            </span>
-                        </td>
-
-                        <td>—</td>
-
-                        <td>
-                            <button class="action-btn">
-                                <i class="fa-solid fa-ellipsis"></i>
-                            </button>
-                        </td>
-
-                    </tr>
-
                 </tbody>
 
             </table>
-
         </div>
 
-
-        <!-- Footer -->
-        <div class="table-footer">
-
-            <span>
-                Showing <strong>1–3</strong> of <strong>128</strong> bills
-            </span>
-
-            <div class="pagination">
-
-                <button disabled>
-                    <i class="fa-solid fa-chevron-left"></i>
-                </button>
-
-                <button class="active">1</button>
-                <button>2</button>
-                <button>3</button>
-
-                <button>
-                    <i class="fa-solid fa-chevron-right"></i>
-                </button>
-
-            </div>
-
+        <div class="records-footer">
+            <span>Only completed and billable task records are shown.</span>
+            <span>Use the horizontal scrollbar to view all columns.</span>
         </div>
 
     </section>
 
-</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="/JS/billing.js?v=20260822-50" defer></script>
 
 </body>
 </html>

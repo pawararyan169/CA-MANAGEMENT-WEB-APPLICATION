@@ -105,7 +105,7 @@ function validDate(value) {
 }
 
 
-function calculateDays(assignedDate, completionDate, status) {
+function calculateDays(assignedDate, completionDate) {
 
     if (!assignedDate || !validDate(assignedDate)) {
         return 0;
@@ -117,7 +117,6 @@ function calculateDays(assignedDate, completionDate, status) {
     let end;
 
     if (
-        status === 'completed' &&
         completionDate &&
         validDate(completionDate)
     ) {
@@ -219,7 +218,7 @@ function mapTask(row) {
         assignedDate: row.assigned_date || '',
         completionDate: row.completion_date || '',
         billable: Boolean(row.billable),
-        status: row.status || 'incomplete',
+        status: row.completion_date ? 'completed' : 'wip',
         assignedBy: row.assigned_by || '',
         assignedByName: row.assigned_by_name || 'Unknown',
         assignedEmployeeId: row.assigned_employee_id || '',
@@ -227,8 +226,7 @@ function mapTask(row) {
         numberOfDays:
             calculateDays(
                 row.assigned_date,
-                row.completion_date,
-                row.status
+                row.completion_date
             ),
         createdAt: row.created_at || '',
         updatedAt: row.updated_at || ''
@@ -416,9 +414,6 @@ router.post(
             const billable =
                 Boolean(body.billable);
 
-            let status =
-                clean(body.status).toLowerCase();
-
             if (!['office', 'miscellaneous'].includes(workType)) {
                 return res.status(400).json({
                     success: false,
@@ -463,10 +458,6 @@ router.post(
                     success: false,
                     message: 'A valid date of assigning is required.'
                 });
-            }
-
-            if (!['wip', 'completed'].includes(status)) {
-                status = 'wip';
             }
 
             /*
@@ -530,11 +521,7 @@ router.post(
                 });
             }
 
-            /*
-             * Status intentionally has only W.I.P and Incomplete.
-             * Completion date remains an optional data field and does not
-             * create a third status.
-             */
+            /* Status is derived automatically from completion_date. */
 
             const now =
                 new Date().toISOString();
@@ -567,7 +554,7 @@ router.post(
                 assignedDate,
                 completionDate || null,
                 billable ? 1 : 0,
-                status,
+                completionDate ? 'completed' : 'wip',
                 req.user.id,
                 now,
                 now
@@ -660,12 +647,6 @@ router.patch(
                     ? Boolean(existing.billable)
                     : Boolean(body.billable);
 
-            let status =
-                clean(
-                    body.status ??
-                    existing.status
-                ).toLowerCase();
-
             const clientId =
                 clean(
                     body.clientId ??
@@ -722,10 +703,6 @@ router.patch(
                 });
             }
 
-            if (!['wip', 'completed'].includes(status)) {
-                status = 'wip';
-            }
-
             const assignedEmployee =
                 db.prepare(`
                     SELECT id
@@ -776,7 +753,7 @@ router.patch(
                 assignedDate,
                 completionDate || null,
                 billable ? 1 : 0,
-                status,
+                completionDate ? 'completed' : 'wip',
                 new Date().toISOString(),
                 id
             );

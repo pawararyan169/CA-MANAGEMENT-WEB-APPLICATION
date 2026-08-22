@@ -1,282 +1,338 @@
 (() => {
     "use strict";
 
+    /*
+     * ============================================================
+     * BILLING RECORD
+     * ============================================================
+     *
+     * Table order:
+     *
+     * 1.  Serial Number
+     * 2.  Name
+     * 3.  Name of Task
+     * 4.  Chargeable Amount
+     * 5.  Date of Receipt
+     * 6.  Amount
+     * 7.  Mode
+     * 8.  Date of Advance Payment
+     * 9.  Advance Paid Amount
+     * 10. Advance Payment Mode
+     * 11. Balance
+     *
+     * Only COMPLETED + BILLABLE tasks are shown.
+     *
+     * Client name and task name are read-only.
+     *
+     * Payment fields are editable directly in the table.
+     *
+     * Balance:
+     *
+     * Chargeable Amount
+     * - Amount
+     * - Advance Paid Amount
+     *
+     * If balance = 0:
+     *     NIL
+     *
+     * ============================================================
+     */
+
     const API = "/api/billing";
 
-    let billingRecords = [];
-    let eligibleTasks = [];
-    let editingId = null;
+    let records = [];
+    let savingTimers = new Map();
 
-    const $ = id => document.getElementById(id);
 
-    function escapeHtml(value) {
-        return String(value ?? "")
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+    /* ============================================================
+       BASIC HELPERS
+    ============================================================ */
+
+    const $ = (id) => document.getElementById(id);
+
+
+    function setText(id, value) {
+        const element = $(id);
+
+        if (element) {
+            element.textContent = value;
+        }
     }
 
+
+    function esc(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+
+    function number(value) {
+        const n = Number(value);
+
+        return Number.isFinite(n) ? n : 0;
+    }
+
+
     function money(value) {
-        const number = Number(value || 0);
-        return "₹" + number.toLocaleString("en-IN", {
+        const n = number(value);
+
+        return "₹" + n.toLocaleString("en-IN", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
     }
 
-    function today() {
-        const d = new Date();
-        const offset = d.getTimezoneOffset();
-        return new Date(d.getTime() - offset * 60000)
-            .toISOString()
-            .slice(0, 10);
-    }
 
     function formatDate(value) {
-        if (!value) return "—";
-        const parts = String(value).slice(0, 10).split("-");
-        if (parts.length !== 3) return value;
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
 
-    async function request(url, options = {}) {
-        const response = await fetch(url, {
-            credentials: "same-origin",
-            cache: "no-store",
-            ...options,
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-                ...(options.headers || {})
-            }
-        });
-
-        let result = {};
-        try {
-            result = await response.json();
-        } catch (_) {
-            throw new Error("Server returned an invalid response.");
+        if (!value) {
+            return "—";
         }
 
-        if (!response.ok || result.success === false) {
-            throw new Error(
-                result.message ||
-                `Request failed (${response.status}).`
-            );
+        const raw = String(value).slice(0, 10);
+
+        const parts = raw.split("-");
+
+        if (parts.length === 3) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
 
-        return result;
+        return String(value);
     }
+
+
+    function inputDate(value) {
+
+        if (!value) {
+            return "";
+        }
+
+        const raw = String(value).slice(0, 10);
+
+        /*
+         * Already YYYY-MM-DD
+         */
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+            return raw;
+        }
+
+        /*
+         * DD/MM/YYYY
+         */
+        const parts = raw.split("/");
+
+        if (
+            parts.length === 3 &&
+            parts[0].length === 2 &&
+            parts[1].length === 2 &&
+            parts[2].length === 4
+        ) {
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+
+        return "";
+    }
+
 
     function showError(message) {
-        $("billingSuccess").hidden = true;
-        $("billingError").hidden = false;
-        $("billingError").textContent = message;
+
+        const box = $("billingError");
+
+        if (!box) {
+            return;
+        }
+
+        box.textContent = message;
+        box.hidden = false;
+
+        const success = $("billingSuccess");
+
+        if (success) {
+            success.hidden = true;
+        }
     }
+
 
     function showSuccess(message) {
-        $("billingError").hidden = true;
-        $("billingSuccess").hidden = false;
-        $("billingSuccess").textContent = message;
+
+        const box = $("billingSuccess");
+
+        if (!box) {
+            return;
+        }
+
+        box.textContent = message;
+        box.hidden = false;
+
+        const error = $("billingError");
+
+        if (error) {
+            error.hidden = true;
+        }
 
         setTimeout(() => {
-            $("billingSuccess").hidden = true;
-        }, 3000);
+
+            if (box) {
+                box.hidden = true;
+            }
+
+        }, 2500);
     }
+
 
     function clearMessages() {
-        $("billingError").hidden = true;
-        $("billingSuccess").hidden = true;
+
+        const error = $("billingError");
+        const success = $("billingSuccess");
+
+        if (error) {
+            error.hidden = true;
+        }
+
+        if (success) {
+            success.hidden = true;
+        }
     }
 
-    function getStatus(record) {
-        const chargeable = Number(record.chargeableAmount || 0);
-        const amount = Number(record.amount || 0);
-        const advance = Number(record.advanceAmount || 0);
-        const balance = Math.max(
-            0,
-            chargeable - amount - advance
+
+    /* ============================================================
+       COMPLETED + BILLABLE CHECK
+    ============================================================ */
+
+    function isCompleted(record) {
+
+        const status = String(
+            record.status ??
+            record.taskStatus ??
+            ""
+        )
+            .trim()
+            .toLowerCase();
+
+        /*
+         * Your backend already returns completed billing records.
+         *
+         * Accept all common spellings.
+         */
+        return (
+            status === "completed" ||
+            status === "complete"
         );
-
-        if (chargeable > 0 && balance === 0) {
-            return "paid";
-        }
-
-        if (amount + advance > 0) {
-            return "partial";
-        }
-
-        return "pending";
     }
 
-    function statusText(status) {
-        if (status === "paid") return "Paid";
-        if (status === "partial") return "Partially Paid";
-        return "Pending";
-    }
 
-    function calculateBalance() {
-        const chargeable = Number($("chargeableAmount").value || 0);
-        const amount = Number($("amount").value || 0);
-        const advance = Number($("advanceAmount").value || 0);
+    function isBillable(record) {
 
-        const balance = Math.max(
-            0,
-            chargeable - amount - advance
+        const value =
+            record.billable ??
+            record.billing ??
+            record.billingStatus ??
+            record.isBillable;
+
+        if (value === true || value === 1) {
+            return true;
+        }
+
+        const text = String(value ?? "")
+            .trim()
+            .toLowerCase();
+
+        return (
+            text === "billable" ||
+            text === "yes" ||
+            text === "true" ||
+            text === "chargeable"
         );
-
-        const balanceInput = $("balanceAmount");
-        const statusTextEl = $("paymentStatus");
-        const field = document.querySelector(".balance-field");
-
-        if (!chargeable) {
-            balanceInput.value = "";
-            balanceInput.placeholder = "—";
-            field.classList.remove("paid");
-            statusTextEl.textContent =
-                "Enter the chargeable amount.";
-            return;
-        }
-
-        balanceInput.value =
-            balance === 0 ? "" : money(balance);
-        balanceInput.placeholder =
-            balance === 0 ? "—" : "";
-
-        if (balance === 0) {
-            field.classList.add("paid");
-            statusTextEl.textContent = "Paid in full.";
-        } else if (amount + advance > 0) {
-            field.classList.remove("paid");
-            statusTextEl.textContent =
-                `${money(balance)} still outstanding.`;
-        } else {
-            field.classList.remove("paid");
-            statusTextEl.textContent =
-                "No payment recorded yet.";
-        }
     }
 
-    function populateEligibleTasks(selectedId = "") {
-        const select = $("billingTask");
 
-        select.innerHTML = `
-            <option value="">Select completed billable task</option>
-        `;
+    /*
+     * IMPORTANT:
+     *
+     * If the API already returns ONLY completed + billable records,
+     * do not accidentally remove records because the API omitted
+     * status/billable fields.
+     */
+    function eligibleForBilling(record) {
 
-        eligibleTasks
-            .filter(task =>
-                !task.alreadyBilled ||
-                (
-                    editingId &&
-                    task.billingId &&
-                    String(task.billingId) === String(editingId)
-                )
-            )
-            .forEach(task => {
-                const option = document.createElement("option");
-                option.value = task.id;
-                option.textContent =
-                    `${task.title} — ${task.clientName || "No client"}`;
-                option.dataset.clientId = task.clientId || "";
-                select.appendChild(option);
-            });
+        const hasStatus =
+            record.status !== undefined ||
+            record.taskStatus !== undefined;
 
-        if (selectedId) {
-            select.value = selectedId;
+        const hasBillable =
+            record.billable !== undefined ||
+            record.billing !== undefined ||
+            record.billingStatus !== undefined ||
+            record.isBillable !== undefined;
+
+        if (!hasStatus && !hasBillable) {
+            return true;
         }
 
-        if (!eligibleTasks.length) {
-            select.innerHTML = `
-                <option value="">
-                    No completed billable tasks available
-                </option>
-            `;
-            select.disabled = true;
-            $("taskEligibilityMessage").textContent =
-                "A task appears here only after it is marked Complete and Billable.";
-        } else {
-            select.disabled = false;
-            $("taskEligibilityMessage").textContent =
-                `${eligibleTasks.length} completed billable task(s) available.`;
-        }
-    }
-
-    function applyTaskToForm() {
-        const taskId = $("billingTask").value;
-        const task = eligibleTasks.find(
-            item => String(item.id) === String(taskId)
-        );
-
-        if (!task) {
-            $("billingClient").value = "";
-            return;
+        if (hasStatus && !isCompleted(record)) {
+            return false;
         }
 
-        $("billingClient").value =
-            task.clientName || "—";
-
-        if (!editingId) {
-            $("chargeableAmount").value =
-                task.chargeableAmount ?? "";
+        if (hasBillable && !isBillable(record)) {
+            return false;
         }
+
+        return true;
     }
 
-    async function loadEligibleTasks() {
-        const result = await request(
-            `${API}/eligible-tasks`
-        );
 
-        eligibleTasks =
-            Array.isArray(result.tasks)
-                ? result.tasks
-                : [];
+    /* ============================================================
+       SEARCH + DATE FILTER
+    ============================================================ */
 
-        populateEligibleTasks();
-    }
+    function filteredRecords() {
 
-    async function loadNextSerial() {
-        const result = await request(
-            `${API}/next-serial`
-        );
+        const searchElement = $("billingSearch");
+        const fromElement = $("billingDateFrom");
+        const toElement = $("billingDateTo");
 
-        return result.serialNumber;
-    }
+        const search = searchElement
+            ? searchElement.value.trim().toLowerCase()
+            : "";
 
-    async function loadBilling() {
-        const result = await request(API);
+        const from = fromElement
+            ? fromElement.value
+            : "";
 
-        billingRecords =
-            Array.isArray(result.records)
-                ? result.records
-                : [];
+        const to = toElement
+            ? toElement.value
+            : "";
 
-        renderTable();
-        updateSummary();
-    }
+        return records.filter(record => {
 
-    function getFilteredRecords() {
-        const search =
-            $("billingSearch").value.trim().toLowerCase();
+            /*
+             * Completed + billable only.
+             */
+            if (!eligibleForBilling(record)) {
+                return false;
+            }
 
-        const from =
-            $("billingDateFrom").value;
 
-        const to =
-            $("billingDateTo").value;
-
-        return billingRecords.filter(record => {
+            /*
+             * Search.
+             */
             const searchable = [
                 record.serialNumber,
                 record.clientName,
+                record.name,
                 record.pan,
-                record.taskName
+                record.taskName,
+                record.task,
+                record.nameOfTask
             ]
-                .filter(Boolean)
+                .filter(value => value !== undefined && value !== null)
                 .join(" ")
                 .toLowerCase();
+
 
             if (
                 search &&
@@ -285,597 +341,1717 @@
                 return false;
             }
 
-            const date =
-                String(record.receiptDate || "");
 
-            if (from && date < from) {
+            /*
+             * Receipt date filter.
+             */
+            const receiptDate =
+                String(
+                    record.receiptDate ||
+                    record.dateOfReceipt ||
+                    ""
+                ).slice(0, 10);
+
+
+            if (
+                from &&
+                receiptDate &&
+                receiptDate < from
+            ) {
                 return false;
             }
 
-            if (to && date > to) {
+
+            if (
+                to &&
+                receiptDate &&
+                receiptDate > to
+            ) {
                 return false;
             }
+
 
             return true;
         });
     }
 
-    function renderTable() {
-        const tbody = $("billingTableBody");
-        const records = getFilteredRecords();
 
-        if (!records.length) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="13" class="empty-cell">
-                        No billing records found.
-                    </td>
-                </tr>
+    /* ============================================================
+       BALANCE
+    ============================================================ */
+
+    function calculateBalance(record) {
+
+        const chargeable = Math.max(
+            0,
+            number(record.chargeableAmount)
+        );
+
+        const received = Math.max(
+            0,
+            number(record.amount)
+        );
+
+        const advance = Math.max(
+            0,
+            number(record.advanceAmount)
+        );
+
+        const balance =
+            chargeable -
+            received -
+            advance;
+
+        return Math.max(0, balance);
+    }
+
+
+    function balanceHTML(balance) {
+
+        if (balance <= 0) {
+
+            return `
+                <span class="balance-paid">
+                    NIL
+                </span>
             `;
+        }
+
+        return `
+            <span class="balance-due">
+                ${esc(money(balance))}
+            </span>
+        `;
+    }
+
+
+    /* ============================================================
+       MODE OPTIONS
+    ============================================================ */
+
+    function modeSelect(
+        field,
+        selected
+    ) {
+
+        const value = String(
+            selected || ""
+        ).toLowerCase();
+
+        return `
+            <select
+                class="billing-select"
+                data-field="${field}"
+            >
+
+                <option value="">
+                    Select
+                </option>
+
+                <option
+                    value="online"
+                    ${value === "online" ? "selected" : ""}
+                >
+                    Online
+                </option>
+
+                <option
+                    value="cash"
+                    ${value === "cash" ? "selected" : ""}
+                >
+                    Cash
+                </option>
+
+            </select>
+        `;
+    }
+
+
+    /* ============================================================
+       RENDER TABLE
+    ============================================================ */
+
+    function render() {
+
+        const tbody = $("billingTableBody");
+
+        const visible = filteredRecords();
+
+
+        /*
+         * Counter.
+         */
+        setText(
+            "visibleCount",
+            visible.length
+        );
+
+
+        setText(
+            "registerState",
+            visible.length
+                ? `${visible.length} record(s)`
+                : "No records"
+        );
+
+
+        if (!tbody) {
+
+            console.warn(
+                "Billing: #billingTableBody does not exist."
+            );
+
             return;
         }
 
-        tbody.innerHTML = records.map(record => {
-            const status = getStatus(record);
-            const balance = Number(record.balance || 0);
+
+        /*
+         * Empty state.
+         */
+        if (!visible.length) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td
+                        colspan="11"
+                        class="empty"
+                    >
+                        No completed and billable
+                        billing records found.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        /*
+         * Render every row.
+         *
+         * IMPORTANT:
+         *
+         * The order here EXACTLY matches billing.html:
+         *
+         * 1 Serial Number
+         * 2 Name
+         * 3 Name of Task
+         * 4 Chargeable Amount
+         * 5 Date of Receipt
+         * 6 Amount
+         * 7 Mode
+         * 8 Date of Advance Payment
+         * 9 Advance Paid Amount
+         * 10 Advance Payment Mode
+         * 11 Balance
+         */
+        tbody.innerHTML = visible.map((record, index) => {
+
+            const chargeableAmount =
+                number(
+                    record.chargeableAmount
+                );
+
+
+            const amount =
+                number(
+                    record.amount
+                );
+
+
+            const advanceAmount =
+                number(
+                    record.advanceAmount
+                );
+
+
+            const balance =
+                calculateBalance(record);
+
+
+            const clientName =
+                record.clientName ||
+                record.name ||
+                "—";
+
+
+            const taskName =
+                record.taskName ||
+                record.task ||
+                record.nameOfTask ||
+                "—";
+
+
+            const pan =
+                record.pan ||
+                "";
+
+
+            const receiptDate =
+                inputDate(
+                    record.receiptDate ||
+                    record.dateOfReceipt
+                );
+
+
+            const advanceDate =
+                inputDate(
+                    record.advancePaymentDate ||
+                    record.dateOfAdvancePayment
+                );
+
+
+            const paymentMode =
+                record.paymentMode ||
+                record.mode ||
+                "";
+
+
+            const advancePaymentMode =
+                record.advancePaymentMode ||
+                record.advanceMode ||
+                "";
+
+
+            /*
+             * ID used when saving.
+             */
+            const rowId =
+                record.id ??
+                record.billingId ??
+                record.taskId ??
+                record.task_id ??
+                "";
+
 
             return `
-                <tr>
+                <tr
+                    data-id="${esc(rowId)}"
+                    data-task-id="${esc(
+                        record.taskId ??
+                        record.task_id ??
+                        ""
+                    )}"
+                >
+
+                    <!-- 1. SERIAL NUMBER -->
                     <td>
-                        <strong>${escapeHtml(record.serialNumber)}</strong>
+                        <strong>
+                            ${esc(
+                                record.serialNumber ||
+                                String(index + 1).padStart(4, "0")
+                            )}
+                        </strong>
                     </td>
 
+
+                    <!-- 2. NAME -->
                     <td>
-                        <strong>${escapeHtml(record.clientName || "—")}</strong>
+                        <span class="client-name">
+                            ${esc(clientName)}
+                        </span>
+
                         ${
-                            record.pan
-                                ? `<small>PAN: ${escapeHtml(record.pan)}</small>`
+                            pan
+                                ? `
+                                    <small class="pan">
+                                        PAN: ${esc(pan)}
+                                    </small>
+                                  `
                                 : ""
                         }
                     </td>
 
-                    <td>
-                        ${escapeHtml(record.taskName || "—")}
-                    </td>
 
+                    <!-- 3. NAME OF TASK -->
                     <td>
-                        ${money(record.chargeableAmount)}
-                    </td>
-
-                    <td>
-                        ${formatDate(record.receiptDate)}
-                    </td>
-
-                    <td>
-                        ${money(record.amount)}
-                    </td>
-
-                    <td>
-                        ${record.paymentMode
-                            ? escapeHtml(
-                                record.paymentMode.charAt(0).toUpperCase() +
-                                record.paymentMode.slice(1)
-                              )
-                            : "—"}
-                    </td>
-
-                    <td>
-                        ${formatDate(record.advancePaymentDate)}
-                    </td>
-
-                    <td>
-                        ${money(record.advanceAmount)}
-                    </td>
-
-                    <td>
-                        ${record.advancePaymentMode
-                            ? escapeHtml(
-                                record.advancePaymentMode.charAt(0).toUpperCase() +
-                                record.advancePaymentMode.slice(1)
-                              )
-                            : "—"}
-                    </td>
-
-                    <td class="${balance > 0 ? "balance-due" : "balance-zero"}">
-                        ${balance > 0 ? money(balance) : "—"}
-                    </td>
-
-                    <td>
-                        <span class="status ${status}">
-                            ${statusText(status)}
+                        <span class="task-name">
+                            ${esc(taskName)}
                         </span>
                     </td>
 
+
+                    <!-- 4. CHARGEABLE AMOUNT -->
                     <td>
-                        <button
-                            type="button"
-                            class="edit-billing"
-                            data-id="${escapeHtml(record.id)}"
+                        <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            class="billing-input money-input"
+                            data-field="chargeableAmount"
+                            value="${esc(chargeableAmount)}"
                         >
-                            Edit
-                        </button>
                     </td>
+
+
+                    <!-- 5. DATE OF RECEIPT -->
+                    <td>
+                        <input
+                            type="date"
+                            class="billing-input"
+                            data-field="receiptDate"
+                            value="${esc(receiptDate)}"
+                        >
+                    </td>
+
+
+                    <!-- 6. AMOUNT -->
+                    <td>
+                        <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            class="billing-input money-input"
+                            data-field="amount"
+                            value="${esc(amount)}"
+                        >
+                    </td>
+
+
+                    <!-- 7. MODE -->
+                    <td>
+                        ${modeSelect(
+                            "paymentMode",
+                            paymentMode
+                        )}
+                    </td>
+
+
+                    <!-- 8. DATE OF ADVANCE PAYMENT -->
+                    <td>
+                        <input
+                            type="date"
+                            class="billing-input"
+                            data-field="advancePaymentDate"
+                            value="${esc(advanceDate)}"
+                        >
+                    </td>
+
+
+                    <!-- 9. ADVANCE PAID AMOUNT -->
+                    <td>
+                        <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            class="billing-input money-input"
+                            data-field="advanceAmount"
+                            value="${esc(advanceAmount)}"
+                        >
+                    </td>
+
+
+                    <!-- 10. ADVANCE PAYMENT MODE -->
+                    <td>
+                        ${modeSelect(
+                            "advancePaymentMode",
+                            advancePaymentMode
+                        )}
+                    </td>
+
+
+                    <!-- 11. BALANCE -->
+                    <td
+                        class="
+                            balance-cell
+                            ${balance > 0
+                                ? "balance-due"
+                                : "balance-paid"
+                            }
+                        "
+                        data-balance
+                    >
+                        ${balanceHTML(balance)}
+                    </td>
+
                 </tr>
             `;
+
         }).join("");
+
+
+        /*
+         * Attach events after rendering.
+         */
+        attachTableEvents();
     }
 
-    function updateSummary() {
-        const records = getFilteredRecords();
 
-        const charged = records.reduce(
-            (sum, r) => sum + Number(r.chargeableAmount || 0),
-            0
-        );
+    /* ============================================================
+       LIVE BALANCE
+    ============================================================ */
 
-        const received = records.reduce(
-            (sum, r) =>
-                sum +
-                Number(r.amount || 0) +
-                Number(r.advanceAmount || 0),
-            0
-        );
+    function updateRowBalance(row) {
 
-        const outstanding = records.reduce(
-            (sum, r) => sum + Number(r.balance || 0),
-            0
-        );
-
-        $("billingTotal").textContent = records.length;
-        $("billingCharged").textContent = money(charged);
-        $("billingReceived").textContent = money(received);
-        $("billingOutstanding").textContent =
-            outstanding > 0 ? money(outstanding) : "—";
-    }
-
-    function resetForm() {
-        editingId = null;
-
-        $("billingForm").reset();
-
-        $("billingId").value = "";
-        $("receiptDate").value = today();
-        $("amount").value = "0";
-        $("advanceAmount").value = "0";
-
-        $("saveBilling").textContent =
-            "Save Billing Record";
-
-        $("cancelBillingEdit").hidden = true;
-
-        $("billingTask").disabled =
-            eligibleTasks.length === 0;
-
-        populateEligibleTasks();
-
-        calculateBalance();
-        clearMessages();
-    }
-
-    function editRecord(id) {
-        const record =
-            billingRecords.find(
-                item => String(item.id) === String(id)
-            );
-
-        if (!record) {
+        if (!row) {
             return;
         }
 
-        editingId = record.id;
 
-        populateEligibleTasks(record.taskId);
+        const chargeableInput =
+            row.querySelector(
+                '[data-field="chargeableAmount"]'
+            );
 
-        $("billingId").value = record.id;
-        $("billingTask").value = record.taskId;
-        $("billingClient").value = record.clientName || "";
-        $("chargeableAmount").value =
-            record.chargeableAmount ?? "";
-        $("receiptDate").value =
-            record.receiptDate || today();
-        $("amount").value =
-            record.amount ?? 0;
-        $("paymentMode").value =
-            record.paymentMode || "";
-        $("advancePaymentDate").value =
-            record.advancePaymentDate || "";
-        $("advanceAmount").value =
-            record.advanceAmount ?? 0;
-        $("advancePaymentMode").value =
-            record.advancePaymentMode || "";
 
-        $("saveBilling").textContent =
-            "Update Billing Record";
+        const amountInput =
+            row.querySelector(
+                '[data-field="amount"]'
+            );
 
-        $("cancelBillingEdit").hidden = false;
 
-        calculateBalance();
+        const advanceInput =
+            row.querySelector(
+                '[data-field="advanceAmount"]'
+            );
 
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
-        });
-    }
 
-    async function saveBilling(event) {
-        event.preventDefault();
+        const balanceCell =
+            row.querySelector(
+                "[data-balance]"
+            );
 
-        clearMessages();
+
+        if (
+            !chargeableInput ||
+            !amountInput ||
+            !advanceInput ||
+            !balanceCell
+        ) {
+            return;
+        }
+
 
         const chargeable =
-            Number($("chargeableAmount").value || 0);
+            Math.max(
+                0,
+                number(chargeableInput.value)
+            );
+
 
         const amount =
-            Number($("amount").value || 0);
+            Math.max(
+                0,
+                number(amountInput.value)
+            );
+
 
         const advance =
-            Number($("advanceAmount").value || 0);
-
-        if (chargeable < 0) {
-            showError("Chargeable amount cannot be negative.");
-            return;
-        }
-
-        if (amount < 0 || advance < 0) {
-            showError("Payment amounts cannot be negative.");
-            return;
-        }
-
-        if (amount + advance > chargeable) {
-            showError(
-                "Amount received plus advance cannot exceed the chargeable amount."
+            Math.max(
+                0,
+                number(advanceInput.value)
             );
-            return;
-        }
 
-        if (amount > 0 && !$("paymentMode").value) {
-            showError("Please select the payment mode.");
-            return;
-        }
 
-        if (advance > 0) {
-            if (!$("advancePaymentDate").value) {
-                showError("Please enter the advance payment date.");
-                return;
-            }
-
-            if (!$("advancePaymentMode").value) {
-                showError("Please select the advance payment mode.");
-                return;
-            }
-        }
-
-        const taskId = $("billingTask").value;
-
-        if (!taskId) {
-            showError(
-                "Select a completed billable task."
+        const balance =
+            Math.max(
+                0,
+                chargeable -
+                amount -
+                advance
             );
+
+
+        balanceCell.classList.remove(
+            "balance-due",
+            "balance-paid"
+        );
+
+
+        if (balance === 0) {
+
+            balanceCell.classList.add(
+                "balance-paid"
+            );
+
+            balanceCell.innerHTML = `
+                <span class="balance-paid">
+                    NIL
+                </span>
+            `;
+
+        } else {
+
+            balanceCell.classList.add(
+                "balance-due"
+            );
+
+            balanceCell.innerHTML = `
+                <span class="balance-due">
+                    ${esc(money(balance))}
+                </span>
+            `;
+        }
+    }
+
+
+    /* ============================================================
+       READ ROW
+    ============================================================ */
+
+    function readRow(row) {
+
+        const get =
+            field =>
+                row.querySelector(
+                    `[data-field="${field}"]`
+                );
+
+
+        return {
+
+            chargeableAmount:
+                Math.max(
+                    0,
+                    number(
+                        get("chargeableAmount")?.value
+                    )
+                ),
+
+            receiptDate:
+                get("receiptDate")?.value || null,
+
+            amount:
+                Math.max(
+                    0,
+                    number(
+                        get("amount")?.value
+                    )
+                ),
+
+            paymentMode:
+                get("paymentMode")?.value || null,
+
+            advancePaymentDate:
+                get("advancePaymentDate")?.value || null,
+
+            advanceAmount:
+                Math.max(
+                    0,
+                    number(
+                        get("advanceAmount")?.value
+                    )
+                ),
+
+            advancePaymentMode:
+                get("advancePaymentMode")?.value || null
+        };
+    }
+
+
+    /* ============================================================
+       VALIDATE ROW
+    ============================================================ */
+
+    function validateRow(data) {
+
+        if (data.chargeableAmount < 0) {
+
+            return {
+                valid: false,
+                message:
+                    "Chargeable amount cannot be negative."
+            };
+        }
+
+
+        if (data.amount < 0) {
+
+            return {
+                valid: false,
+                message:
+                    "Amount cannot be negative."
+            };
+        }
+
+
+        if (data.advanceAmount < 0) {
+
+            return {
+                valid: false,
+                message:
+                    "Advance amount cannot be negative."
+            };
+        }
+
+
+        /*
+         * Do not allow payments above the chargeable amount.
+         */
+        if (
+            data.amount +
+            data.advanceAmount >
+            data.chargeableAmount
+        ) {
+
+            return {
+                valid: false,
+                message:
+                    "Amount received plus advance paid amount cannot exceed the chargeable amount."
+            };
+        }
+
+
+        return {
+            valid: true,
+            message: ""
+        };
+    }
+
+
+    /* ============================================================
+       SAVE ROW
+    ============================================================ */
+
+    async function saveRow(row) {
+
+        if (!row) {
             return;
         }
+
+
+        const id =
+            row.dataset.taskId ||
+            row.dataset.id;
+
+
+        if (!id) {
+
+            console.warn(
+                "Billing: row does not have an ID.",
+                row
+            );
+
+            showError(
+                "This billing record has no ID and cannot be saved."
+            );
+
+            return;
+        }
+
+
+        const data =
+            readRow(row);
+
+
+        const validation =
+            validateRow(data);
+
+
+        if (!validation.valid) {
+
+            showError(
+                validation.message
+            );
+
+            return;
+        }
+
 
         const payload = {
-            taskId,
-            chargeableAmount: chargeable,
-            receiptDate: $("receiptDate").value,
-            amount,
+
+            chargeableAmount:
+                data.chargeableAmount,
+
+            receiptDate:
+                data.receiptDate,
+
+            amount:
+                data.amount,
+
             paymentMode:
-                $("paymentMode").value || null,
+                data.paymentMode,
+
             advancePaymentDate:
-                $("advancePaymentDate").value || null,
-            advanceAmount: advance,
+                data.advancePaymentDate,
+
+            advanceAmount:
+                data.advanceAmount,
+
             advancePaymentMode:
-                $("advancePaymentMode").value || null
+                data.advancePaymentMode
         };
 
-        const button = $("saveBilling");
-        button.disabled = true;
-        button.textContent =
-            editingId
-                ? "Updating..."
-                : "Saving...";
+
+        /*
+         * Save indicator.
+         *
+         * Since there is no separate Action column,
+         * the row gets a small temporary visual state.
+         */
+        row.classList.add("saving");
+
 
         try {
-            if (editingId) {
-                await request(
-                    `${API}/${encodeURIComponent(editingId)}`,
+
+            const response =
+                await fetch(
+                    `${API}/${encodeURIComponent(id)}`,
                     {
                         method: "PUT",
-                        body: JSON.stringify(payload)
+
+                        credentials:
+                            "same-origin",
+
+                        headers: {
+                            "Accept":
+                                "application/json",
+
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(payload)
                     }
                 );
 
-                showSuccess(
-                    "Billing record updated successfully."
-                );
-            } else {
-                await request(API, {
-                    method: "POST",
-                    body: JSON.stringify(payload)
-                });
 
-                showSuccess(
-                    "Billing record created successfully."
+            let result = {};
+
+            try {
+                result =
+                    await response.json();
+            } catch (_) {}
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    result.message ||
+                    `Billing update failed with HTTP ${response.status}.`
                 );
             }
 
-            resetForm();
 
-            await Promise.all([
-                loadEligibleTasks(),
-                loadBilling()
-            ]);
+            /*
+             * Update local record.
+             */
+            const localRecord =
+                records.find(record => {
+
+                    const recordId =
+                        String(
+                            record.id ??
+                            record.billingId ??
+                            record.taskId ??
+                            record.task_id ??
+                            ""
+                        );
+
+                    return recordId === String(id);
+                });
+
+
+            if (localRecord) {
+
+                Object.assign(
+                    localRecord,
+                    payload
+                );
+
+
+                localRecord.balance =
+                    Math.max(
+                        0,
+                        data.chargeableAmount -
+                        data.amount -
+                        data.advanceAmount
+                    );
+            }
+
+
+            row.classList.remove("saving");
+            row.classList.add("saved");
+
+
+            setTimeout(() => {
+
+                row.classList.remove("saved");
+
+            }, 1200);
+
+
+            updateRowBalance(row);
+
+
+            showSuccess(
+                "Billing record saved."
+            );
+
+
         } catch (error) {
-            console.error("Billing save error:", error);
-            showError(error.message);
-        } finally {
-            button.disabled = false;
-            button.textContent =
-                editingId
-                    ? "Update Billing Record"
-                    : "Save Billing Record";
+
+            row.classList.remove(
+                "saving"
+            );
+
+
+            console.error(
+                "Billing save error:",
+                error
+            );
+
+
+            showError(
+                error.message
+            );
         }
     }
 
+
+    /* ============================================================
+       AUTO SAVE
+    ============================================================ */
+
+    function scheduleSave(row) {
+
+        if (!row) {
+            return;
+        }
+
+
+        const id =
+            row.dataset.id ||
+            row.dataset.taskId ||
+            Math.random();
+
+
+        /*
+         * Cancel previous timer for same row.
+         */
+        if (savingTimers.has(id)) {
+
+            clearTimeout(
+                savingTimers.get(id)
+            );
+        }
+
+
+        /*
+         * Small delay prevents multiple API
+         * requests while the user is typing.
+         */
+        const timer =
+            setTimeout(
+                () => {
+
+                    saveRow(row);
+
+                    savingTimers.delete(id);
+
+                },
+                650
+            );
+
+
+        savingTimers.set(
+            id,
+            timer
+        );
+    }
+
+
+    /* ============================================================
+       TABLE EVENTS
+    ============================================================ */
+
+    function attachTableEvents() {
+
+        const tbody =
+            $("billingTableBody");
+
+
+        if (!tbody) {
+            return;
+        }
+
+
+        const controls =
+            tbody.querySelectorAll(
+                "[data-field]"
+            );
+
+
+        controls.forEach(control => {
+
+            /*
+             * Live balance while typing.
+             */
+            control.addEventListener(
+                "input",
+                event => {
+
+                    const row =
+                        event.target.closest("tr");
+
+                    updateRowBalance(row);
+
+                    /*
+                     * Don't auto-save every single
+                     * keystroke immediately.
+                     */
+                    scheduleSave(row);
+                }
+            );
+
+
+            /*
+             * Select/date changes save immediately.
+             */
+            control.addEventListener(
+                "change",
+                event => {
+
+                    const row =
+                        event.target.closest("tr");
+
+                    updateRowBalance(row);
+
+                    scheduleSave(row);
+                }
+            );
+
+
+            /*
+             * Save when leaving an input.
+             */
+            control.addEventListener(
+                "blur",
+                event => {
+
+                    const row =
+                        event.target.closest("tr");
+
+                    updateRowBalance(row);
+
+                    scheduleSave(row);
+                }
+            );
+
+        });
+    }
+
+
+    /* ============================================================
+       LOAD RECORDS
+    ============================================================ */
+
+    async function loadRecords() {
+
+        clearMessages();
+
+        setText(
+            "registerState",
+            "Loading..."
+        );
+
+
+        const tbody =
+            $("billingTableBody");
+
+
+        if (tbody) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td
+                        colspan="11"
+                        class="empty"
+                    >
+                        Loading billing records...
+                    </td>
+                </tr>
+            `;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    API,
+                    {
+                        method: "GET",
+
+                        credentials:
+                            "same-origin",
+
+                        headers: {
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
+
+
+            let data = {};
+
+
+            try {
+
+                data =
+                    await response.json();
+
+            } catch (_) {}
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.message ||
+                    `Billing API returned HTTP ${response.status}.`
+                );
+            }
+
+
+            records =
+                Array.isArray(
+                    data.records
+                )
+                    ? data.records
+                    : [];
+
+
+            /*
+             * Normalize records.
+             */
+            records =
+                records.map(record => {
+
+                    return {
+
+                        ...record,
+
+                        serialNumber:
+                            record.serialNumber ||
+                            record.serial ||
+                            "",
+
+                        clientName:
+                            record.clientName ||
+                            record.name ||
+                            "",
+
+                        taskName:
+                            record.taskName ||
+                            record.task ||
+                            record.nameOfTask ||
+                            "",
+
+                        pan:
+                            record.pan ||
+                            "",
+
+                        chargeableAmount:
+                            number(
+                                record.chargeableAmount
+                            ),
+
+                        receiptDate:
+                            record.receiptDate ||
+                            record.dateOfReceipt ||
+                            "",
+
+                        amount:
+                            number(
+                                record.amount
+                            ),
+
+                        paymentMode:
+                            record.paymentMode ||
+                            record.mode ||
+                            "",
+
+                        advancePaymentDate:
+                            record.advancePaymentDate ||
+                            record.dateOfAdvancePayment ||
+                            "",
+
+                        advanceAmount:
+                            number(
+                                record.advanceAmount
+                            ),
+
+                        advancePaymentMode:
+                            record.advancePaymentMode ||
+                            record.advanceMode ||
+                            "",
+
+                        balance:
+                            Math.max(
+                                0,
+                                number(
+                                    record.chargeableAmount
+                                ) -
+                                number(
+                                    record.amount
+                                ) -
+                                number(
+                                    record.advanceAmount
+                                )
+                            )
+                    };
+                });
+
+
+            render();
+
+
+        } catch (error) {
+
+            console.error(
+                "Billing record load error:",
+                error
+            );
+
+
+            setText(
+                "registerState",
+                "Unable to load records"
+            );
+
+
+            showError(
+                error.message
+            );
+
+
+            if (tbody) {
+
+                tbody.innerHTML = `
+                    <tr>
+                        <td
+                            colspan="11"
+                            class="empty"
+                        >
+                            Unable to load billing records.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+    }
+
+
+    /* ============================================================
+       EXPORT EXCEL
+    ============================================================ */
+
     function exportExcel() {
-        const records = getFilteredRecords();
 
-        if (!records.length) {
-            showError("No billing records are available to export.");
+        const rows =
+            filteredRecords();
+
+
+        if (!rows.length) {
+
+            alert(
+                "There are no billing records to export."
+            );
+
             return;
         }
 
-        if (typeof XLSX === "undefined") {
-            showError("Excel export library is not loaded.");
+
+        if (!window.XLSX) {
+
+            alert(
+                "Excel export library is not loaded."
+            );
+
             return;
         }
 
-        const rows = records.map(record => ({
-            "Serial Number": record.serialNumber || "",
-            "Name": record.clientName || "",
-            "PAN": record.pan || "",
-            "Name of Task": record.taskName || "",
-            "Chargeable Amount": Number(record.chargeableAmount || 0),
-            "Date of Receipt": record.receiptDate || "",
-            "Amount": Number(record.amount || 0),
-            "Mode": record.paymentMode || "",
-            "Date of Advance Payment": record.advancePaymentDate || "",
-            "Advance Paid Amount": Number(record.advanceAmount || 0),
-            "Advance Payment Mode": record.advancePaymentMode || "",
-            "Balance": Number(record.balance || 0),
-            "Status": statusText(getStatus(record))
-        }));
+
+        const data =
+            rows.map(record => {
+
+                const balance =
+                    calculateBalance(record);
+
+
+                return {
+
+                    "Serial Number":
+                        record.serialNumber || "",
+
+                    "Name":
+                        record.clientName || "",
+
+                    "PAN":
+                        record.pan || "",
+
+                    "Name of Task":
+                        record.taskName || "",
+
+                    "Chargeable Amount":
+                        number(
+                            record.chargeableAmount
+                        ),
+
+                    "Date of Receipt":
+                        record.receiptDate || "",
+
+                    "Amount":
+                        number(
+                            record.amount
+                        ),
+
+                    "Mode":
+                        record.paymentMode || "",
+
+                    "Date of Advance Payment":
+                        record.advancePaymentDate || "",
+
+                    "Advance Paid Amount":
+                        number(
+                            record.advanceAmount
+                        ),
+
+                    "Advance Payment Mode":
+                        record.advancePaymentMode || "",
+
+                    "Balance":
+                        balance === 0
+                            ? "NIL"
+                            : balance
+                };
+            });
+
 
         const worksheet =
-            XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.json_to_sheet(
+                data
+            );
+
+
+        /*
+         * Excel column widths.
+         */
+        worksheet["!cols"] = [
+            { wch: 15 },
+            { wch: 25 },
+            { wch: 30 },
+            { wch: 18 },
+            { wch: 16 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 12 },
+            { wch: 23 },
+            { wch: 20 },
+            { wch: 23 },
+            { wch: 15 }
+        ];
+
 
         const workbook =
             XLSX.utils.book_new();
 
+
         XLSX.utils.book_append_sheet(
             workbook,
             worksheet,
-            "Billing Record"
+            "Billing Records"
         );
+
 
         XLSX.writeFile(
             workbook,
-            `billing-record-${today()}.xlsx`
+            "billing-records.xlsx"
         );
     }
+
+
+    /* ============================================================
+       EXPORT PDF
+    ============================================================ */
 
     function exportPdf() {
-        const records = getFilteredRecords();
 
-        if (!records.length) {
-            showError("No billing records are available to export.");
+        const rows =
+            filteredRecords();
+
+
+        if (!rows.length) {
+
+            alert(
+                "There are no billing records to export."
+            );
+
             return;
         }
 
-        if (
-            !window.jspdf ||
-            !window.jspdf.jsPDF
-        ) {
-            showError("PDF export library is not loaded.");
+
+        const JsPDF =
+            window.jspdf?.jsPDF;
+
+
+        if (!JsPDF) {
+
+            alert(
+                "PDF export library is not loaded."
+            );
+
             return;
         }
 
-        const doc =
-            new window.jspdf.jsPDF({
-                orientation: "landscape",
-                unit: "mm",
-                format: "a4"
-            });
 
-        doc.setFontSize(17);
-        doc.text(
-            "CA Office - Billing Record",
+        const pdf =
+            new JsPDF(
+                "landscape",
+                "mm",
+                "a4"
+            );
+
+
+        pdf.setFontSize(16);
+
+        pdf.text(
+            "Billing Records",
             12,
-            14
+            13
         );
 
-        doc.setFontSize(8);
-        doc.text(
-            `Generated: ${new Date().toLocaleString("en-IN")}`,
+
+        pdf.setFontSize(8);
+
+        pdf.text(
+            "Completed + Billable",
             12,
-            20
+            18
         );
 
-        const rows = records.map(record => [
-            record.serialNumber || "",
-            record.clientName || "",
-            record.taskName || "",
-            money(record.chargeableAmount),
-            formatDate(record.receiptDate),
-            money(record.amount),
-            record.paymentMode || "—",
-            formatDate(record.advancePaymentDate),
-            money(record.advanceAmount),
-            record.advancePaymentMode || "—",
-            Number(record.balance || 0) > 0
-                ? money(record.balance)
-                : "—",
-            statusText(getStatus(record))
-        ]);
 
-        doc.autoTable({
-            startY: 25,
+        pdf.autoTable({
+
+            startY: 23,
+
             head: [[
+
                 "Serial",
+
                 "Name",
+
                 "Task",
+
                 "Chargeable",
+
                 "Receipt",
+
                 "Amount",
+
                 "Mode",
+
                 "Advance Date",
+
                 "Advance",
+
                 "Advance Mode",
-                "Balance",
-                "Status"
+
+                "Balance"
             ]],
-            body: rows,
+
+
+            body:
+                rows.map(record => {
+
+                    const balance =
+                        calculateBalance(
+                            record
+                        );
+
+
+                    return [
+
+                        record.serialNumber ||
+                            "—",
+
+                        record.clientName ||
+                            "—",
+
+                        record.taskName ||
+                            "—",
+
+                        money(
+                            record.chargeableAmount
+                        ),
+
+                        formatDate(
+                            record.receiptDate
+                        ),
+
+                        money(
+                            record.amount
+                        ),
+
+                        record.paymentMode ||
+                            "—",
+
+                        formatDate(
+                            record.advancePaymentDate
+                        ),
+
+                        money(
+                            record.advanceAmount
+                        ),
+
+                        record.advancePaymentMode ||
+                            "—",
+
+                        balance === 0
+                            ? "NIL"
+                            : money(balance)
+                    ];
+                }),
+
+
             styles: {
-                fontSize: 6.5,
-                cellPadding: 2,
-                overflow: "linebreak"
+                fontSize: 7,
+                cellPadding: 2
             },
+
+
             headStyles: {
-                fontSize: 6.5,
+                fontSize: 7,
                 fontStyle: "bold"
             },
-            margin: {
-                left: 8,
-                right: 8
+
+
+            columnStyles: {
+
+                0: {
+                    cellWidth: 18
+                },
+
+                1: {
+                    cellWidth: 30
+                },
+
+                2: {
+                    cellWidth: 35
+                },
+
+                3: {
+                    cellWidth: 24
+                },
+
+                4: {
+                    cellWidth: 22
+                },
+
+                5: {
+                    cellWidth: 22
+                },
+
+                6: {
+                    cellWidth: 18
+                },
+
+                7: {
+                    cellWidth: 28
+                },
+
+                8: {
+                    cellWidth: 24
+                },
+
+                9: {
+                    cellWidth: 28
+                },
+
+                10: {
+                    cellWidth: 24
+                }
             }
         });
 
-        doc.save(
-            `billing-record-${today()}.pdf`
+
+        pdf.save(
+            "billing-records.pdf"
         );
     }
 
-    function bindEvents() {
-        $("billingTask").addEventListener(
-            "change",
-            applyTaskToForm
-        );
 
-        [
-            "chargeableAmount",
-            "amount",
-            "advanceAmount"
-        ].forEach(id => {
-            $(id).addEventListener(
-                "input",
-                calculateBalance
-            );
-        });
+    /* ============================================================
+       RESET FILTERS
+    ============================================================ */
 
-        $("billingForm").addEventListener(
-            "submit",
-            saveBilling
-        );
+    function resetFilters() {
 
-        $("cancelBillingEdit").addEventListener(
-            "click",
-            resetForm
-        );
+        const search =
+            $("billingSearch");
 
-        $("billingSearch").addEventListener(
+        const from =
+            $("billingDateFrom");
+
+        const to =
+            $("billingDateTo");
+
+
+        if (search) {
+            search.value = "";
+        }
+
+
+        if (from) {
+            from.value = "";
+        }
+
+
+        if (to) {
+            to.value = "";
+        }
+
+
+        clearMessages();
+
+        render();
+    }
+
+
+    /* ============================================================
+       REFRESH
+    ============================================================ */
+
+    async function refreshRecords() {
+
+        const button =
+            $("refreshBilling");
+
+
+        if (button) {
+
+            button.disabled = true;
+            button.textContent = "Refreshing...";
+        }
+
+
+        try {
+
+            await loadRecords();
+
+        } finally {
+
+            if (button) {
+
+                button.disabled = false;
+                button.textContent = "↻ Refresh";
+            }
+        }
+    }
+
+
+    /* ============================================================
+       INIT
+    ============================================================ */
+
+    function init() {
+
+        const search =
+            $("billingSearch");
+
+        const from =
+            $("billingDateFrom");
+
+        const to =
+            $("billingDateTo");
+
+        const reset =
+            $("resetBillingFilters");
+
+        const excel =
+            $("exportBillingExcel");
+
+        const pdf =
+            $("exportBillingPdf");
+
+        const refresh =
+            $("refreshBilling");
+
+
+        /*
+         * Search.
+         */
+        search?.addEventListener(
             "input",
-            () => {
-                renderTable();
-                updateSummary();
-            }
+            render
         );
 
-        $("billingDateFrom").addEventListener(
+
+        /*
+         * Date filters.
+         */
+        from?.addEventListener(
             "change",
-            () => {
-                renderTable();
-                updateSummary();
-            }
+            render
         );
 
-        $("billingDateTo").addEventListener(
+        to?.addEventListener(
             "change",
-            () => {
-                renderTable();
-                updateSummary();
-            }
+            render
         );
 
-        $("resetBillingFilters").addEventListener(
+
+        /*
+         * Reset.
+         */
+        reset?.addEventListener(
             "click",
-            () => {
-                $("billingSearch").value = "";
-                $("billingDateFrom").value = "";
-                $("billingDateTo").value = "";
-                renderTable();
-                updateSummary();
-            }
+            resetFilters
         );
 
-        $("billingTableBody").addEventListener(
-            "click",
-            event => {
-                const button =
-                    event.target.closest(
-                        "[data-id]"
-                    );
 
-                if (!button) return;
-
-                editRecord(
-                    button.dataset.id
-                );
-            }
-        );
-
-        $("exportBillingExcel").addEventListener(
+        /*
+         * Exports.
+         */
+        excel?.addEventListener(
             "click",
             exportExcel
         );
 
-        $("exportBillingPdf").addEventListener(
+        pdf?.addEventListener(
             "click",
             exportPdf
         );
+
+
+        /*
+         * Refresh.
+         */
+        refresh?.addEventListener(
+            "click",
+            refreshRecords
+        );
+
+
+        /*
+         * Initial load.
+         */
+        loadRecords();
     }
 
-    async function init() {
-        $("receiptDate").value = today();
 
-        bindEvents();
-        calculateBalance();
+    /* ============================================================
+       START
+    ============================================================ */
 
-        try {
-            await Promise.all([
-                loadEligibleTasks(),
-                loadBilling()
-            ]);
+    if (
+        document.readyState ===
+        "loading"
+    ) {
 
-            const serial = await loadNextSerial();
-            if (serial) {
-                $("taskEligibilityMessage").textContent +=
-                    ` Next billing serial: ${serial}.`;
+        document.addEventListener(
+            "DOMContentLoaded",
+            init,
+            {
+                once: true
             }
-        } catch (error) {
-            console.error(
-                "Billing initialization error:",
-                error
-            );
+        );
 
-            showError(
-                error.message ||
-                "Unable to load billing data."
-            );
-        }
+    } else {
+
+        init();
     }
 
-    document.addEventListener(
-        "DOMContentLoaded",
-        init
-    );
 })();

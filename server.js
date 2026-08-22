@@ -13,6 +13,7 @@ const PORT = Number(process.env.PORT || 5000);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
+app.use(express.static(__dirname))
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api', require('./routes/signup'));

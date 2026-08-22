@@ -26,8 +26,6 @@
     const billableSelect =
         document.getElementById('billable');
 
-    const statusSelect =
-        document.getElementById('taskStatus');
 
     const saveButton =
         document.getElementById('saveTaskButton');
@@ -35,8 +33,6 @@
     const searchInput =
         document.getElementById('taskSearch');
 
-    const statusFilter =
-        document.getElementById('taskStatusFilter');
 
     const workTypeFilter =
         document.getElementById('taskWorkTypeFilter');
@@ -149,7 +145,6 @@
             new Date(`${assignedDate}T00:00:00`);
 
         const end =
-            status === 'completed' &&
             completionDate
                 ? new Date(`${completionDate}T00:00:00`)
                 : new Date();
@@ -369,8 +364,6 @@
         const search =
             clean(searchInput?.value).toLowerCase();
 
-        const status =
-            clean(statusFilter?.value).toLowerCase();
 
         const workType =
             clean(workTypeFilter?.value).toLowerCase();
@@ -405,12 +398,6 @@
                 return false;
             }
 
-            if (
-                status &&
-                task.status !== status
-            ) {
-                return false;
-            }
 
             if (
                 workType &&
@@ -459,13 +446,17 @@
     }
 
 
-    function statusLabel(status) {
+    function taskStatus(task) {
+        return clean(task?.completionDate)
+            ? 'completed'
+            : 'wip';
+    }
 
-        if (status === 'completed') {
-            return 'Complete';
-        }
 
-        return 'W.I.P';
+    function statusLabel(task) {
+        return taskStatus(task) === 'completed'
+            ? 'Complete'
+            : 'W.I.P';
     }
 
 
@@ -507,8 +498,11 @@
         tableBody.innerHTML =
             rows.map(task => {
 
+                const computedStatus =
+                    taskStatus(task);
+
                 const status =
-                    statusLabel(task.status);
+                    statusLabel(task);
 
                 const billing =
                     task.billable
@@ -616,7 +610,7 @@
 
                         <!-- 9. Status -->
                         <td data-column="status">
-                            <span class="status-badge status-${escapeHtml(task.status)}">
+                            <span class="status-badge status-${escapeHtml(computedStatus)}">
                                 ${escapeHtml(status)}
                             </span>
                         </td>
@@ -713,8 +707,6 @@
                 billable:
                     Boolean(task.billable),
 
-                status:
-                    clean(task.status)
             };
 
             const response =
@@ -936,9 +928,6 @@
 
         form?.reset();
 
-        if (statusSelect) {
-            statusSelect.value = 'wip';
-        }
 
         setDefaultAssignedDate();
 
@@ -985,8 +974,6 @@
                 ? 'billable'
                 : 'non_billable';
 
-        statusSelect.value =
-            task.status || 'incomplete';
 
         updateClientRequirement();
         updateCompletionRequirement();
@@ -1037,8 +1024,6 @@
             billable:
                 billableSelect?.value === 'billable',
 
-            status:
-                clean(statusSelect?.value)
         };
 
         if (!data.taskName) {
@@ -1074,12 +1059,6 @@
             return;
         }
 
-        if (!['wip', 'completed'].includes(data.status)) {
-            showError(
-                'Please select W.I.P or Complete.'
-            );
-            return;
-        }
 
         if (!data.assignedDate) {
             showError(
@@ -1099,8 +1078,8 @@
         }
 
         /*
-         * Status is only W.I.P or Complete.
-         * Completion date is optional and is available from Edit Task.
+         * Status is derived automatically from Date of Completion.
+         * No status value is sent from the Task form.
          */
 
         if (saveButton) {
@@ -1217,7 +1196,7 @@
                     task.numberOfDays,
 
                 'Status':
-                    statusLabel(task.status),
+                    statusLabel(task),
 
                 'Assigned By':
                     task.assignedByName
@@ -1378,7 +1357,6 @@
     function resetFilters() {
 
         if (searchInput) searchInput.value = '';
-        if (statusFilter) statusFilter.value = '';
         if (workTypeFilter) workTypeFilter.value = '';
         if (billableFilter) billableFilter.value = '';
         if (dateFromFilter) dateFromFilter.value = '';
@@ -1395,10 +1373,6 @@
         updateClientRequirement
     );
 
-    statusSelect?.addEventListener(
-        'change',
-        updateCompletionRequirement
-    );
 
     form?.addEventListener(
         'submit',
@@ -1415,7 +1389,6 @@
 
     [
         searchInput,
-        statusFilter,
         workTypeFilter,
         billableFilter,
         dateFromFilter,
