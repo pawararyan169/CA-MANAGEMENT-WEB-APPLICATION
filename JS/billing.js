@@ -1011,6 +1011,7 @@
 
 
         const id =
+            row.dataset.serialNumber ||
             row.dataset.taskId ||
             row.dataset.id;
 
@@ -1196,6 +1197,8 @@
             showError(
                 error.message
             );
+
+            throw error;
         }
     }
 
@@ -1287,11 +1290,7 @@
 
                     updateRowBalance(row);
 
-                    /*
-                     * Don't auto-save every single
-                     * keystroke immediately.
-                     */
-                    scheduleSave(row);
+
                 }
             );
 
@@ -1308,7 +1307,7 @@
 
                     updateRowBalance(row);
 
-                    scheduleSave(row);
+
                 }
             );
 
@@ -1325,7 +1324,7 @@
 
                     updateRowBalance(row);
 
-                    scheduleSave(row);
+
                 }
             );
 
@@ -1910,6 +1909,91 @@
     }
 
 
+
+    /* ============================================================
+       SAVE ALL BILLING RECORDS
+    ============================================================ */
+
+    async function saveAllBillingRecords() {
+
+        const button =
+            $("saveBillingRecords");
+
+        const tbody =
+            $("billingTableBody");
+
+        if (!tbody) {
+            return;
+        }
+
+        const rows =
+            [...tbody.querySelectorAll("tr[data-id], tr[data-task-id]")];
+
+        if (!rows.length) {
+            showError("There are no billing records to save.");
+            return;
+        }
+
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Saving...";
+        }
+
+        clearMessages();
+
+        let successCount = 0;
+        let failedCount = 0;
+        let firstError = "";
+
+        try {
+
+            /*
+             * Save every visible row using the same backend
+             * endpoint used by individual billing records.
+             */
+            for (const row of rows) {
+
+                try {
+
+                    await saveRow(row);
+                    successCount++;
+
+                } catch (error) {
+
+                    failedCount++;
+
+                    if (!firstError) {
+                        firstError =
+                            error?.message ||
+                            "Unable to save billing record.";
+                    }
+                }
+            }
+
+            if (failedCount === 0) {
+
+                showSuccess(
+                    `${successCount} billing record${successCount === 1 ? "" : "s"} saved successfully.`
+                );
+
+            } else {
+
+                showError(
+                    `${successCount} saved, ${failedCount} failed. ${firstError}`
+                );
+            }
+
+        } finally {
+
+            if (button) {
+
+                button.disabled = false;
+                button.textContent = "Save";
+            }
+        }
+    }
+
+
     /* ============================================================
        REFRESH
     ============================================================ */
@@ -1966,8 +2050,8 @@
         const pdf =
             $("exportBillingPdf");
 
-        const refresh =
-            $("refreshBilling");
+        const saveBilling =
+            $("saveBillingRecords");
 
 
         /*
@@ -2003,6 +2087,15 @@
 
 
         /*
+         * Save all billing rows.
+         */
+        saveBilling?.addEventListener(
+            "click",
+            saveAllBillingRecords
+        );
+
+
+        /*
          * Exports.
          */
         excel?.addEventListener(
@@ -2019,10 +2112,6 @@
         /*
          * Refresh.
          */
-        refresh?.addEventListener(
-            "click",
-            refreshRecords
-        );
 
 
         /*

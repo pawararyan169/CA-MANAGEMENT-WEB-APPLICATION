@@ -207,13 +207,57 @@ router.get(
 
             `).all();
 
+            const assignmentRows = db.prepare(`
+                SELECT
+                    ca.client_id,
+                    u.id,
+                    u.username,
+                    u.first_name,
+                    u.middle_name,
+                    u.last_name,
+                    u.email,
+                    u.designation
+                FROM client_assignments ca
+                JOIN users u
+                    ON u.id = ca.employee_id
+                WHERE
+                    u.role = 'employee'
+                    AND u.status = 'active'
+                ORDER BY
+                    u.first_name,
+                    u.last_name
+            `).all();
+
+            const assignmentsByClient = new Map();
+
+            assignmentRows.forEach(employee => {
+                if (!assignmentsByClient.has(employee.client_id)) {
+                    assignmentsByClient.set(employee.client_id, []);
+                }
+
+                assignmentsByClient.get(employee.client_id).push({
+                    id: employee.id,
+                    username: employee.username,
+                    name: [
+                        employee.first_name,
+                        employee.middle_name,
+                        employee.last_name
+                    ].filter(Boolean).join(" "),
+                    email: employee.email || "",
+                    designation: employee.designation || ""
+                });
+            });
 
             return res.json({
 
                 success: true,
 
                 clients:
-                    rows.map(mapClient)
+                    rows.map(row => ({
+                        ...mapClient(row),
+                        assignedEmployees:
+                            assignmentsByClient.get(row.id) || []
+                    }))
 
             });
 
@@ -327,12 +371,47 @@ router.get(
             }
 
 
+            const assignedEmployees =
+                db.prepare(`
+                    SELECT
+                        u.id,
+                        u.username,
+                        u.first_name,
+                        u.middle_name,
+                        u.last_name,
+                        u.email,
+                        u.designation
+                    FROM client_assignments ca
+                    JOIN users u
+                        ON u.id = ca.employee_id
+                    WHERE
+                        ca.client_id = ?
+                        AND u.role = 'employee'
+                        AND u.status = 'active'
+                    ORDER BY
+                        u.first_name,
+                        u.last_name
+                `).all(req.params.id);
+
             return res.json({
 
                 success: true,
 
-                client:
-                    mapClient(row)
+                client: {
+                    ...mapClient(row),
+                    assignedEmployees:
+                        assignedEmployees.map(employee => ({
+                            id: employee.id,
+                            username: employee.username,
+                            name: [
+                                employee.first_name,
+                                employee.middle_name,
+                                employee.last_name
+                            ].filter(Boolean).join(" "),
+                            email: employee.email || "",
+                            designation: employee.designation || ""
+                        }))
+                }
 
             });
 
@@ -1110,6 +1189,185 @@ router.delete(
 
         }
 
+    }
+);
+
+
+
+/* =========================================================
+   ADMIN - CLIENT EMPLOYEE ASSIGNMENTS
+========================================================= */
+
+router.get(
+    "/clients/:id/assignments",
+    requireAuth,
+    requireRole("admin"),
+    (req, res) => {
+
+        try {
+            const client = db.prepare(`
+                SELECT id
+                FROM clients
+                WHERE id = ?
+                LIMIT 1
+            `).get(req.params.id);
+
+            if (!client) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Client not found."
+                });
+            }
+
+            const employees = db.prepare(`
+                SELECT
+                    u.id,
+                    u.username,
+                    u.first_name,
+                    u.middle_name,
+                    u.last_name,
+                    u.email,
+                    u.designation
+                FROM users u
+                WHERE
+                    u.role = 'employee'
+                    AND u.status = 'active'
+                ORDER BY
+                    u.first_name,
+                    u.last_name,
+                    u.username
+            `).all();
+
+            const assigned = db.prepare(`
+                SELECT employee_id
+                FROM client_assignments
+                WHERE client_id = ?
+            `).all(req.params.id);
+
+            const assignedIds = new Set(
+                assigned.map(row => row.employee_id)
+            );
+
+            return res.json({
+                success: true,
+                employees: employees.map(employee => ({
+                    id: employee.id,
+                    username: employee.username,
+                    name: [
+                        employee.first_name,
+                        employee.middle_name,
+                        employee.last_name
+                    ].filter(Boolean).join(" "),
+                    email: employee.email || "",
+                    designation: employee.designation || "",
+                    assigned: assignedIds.has(employee.id)
+                }))
+            });
+
+        } catch (error) {
+            console.error("Get client assignments error:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Unable to load employee assignments."
+            });
+        }
+    }
+);
+
+
+router.put(
+    "/clients/:id/assignments",
+    requireAuth,
+    requireRole("admin"),
+    (req, res) => {
+
+        try {
+            const clientId = clean(req.params.id);
+            const employeeIds = Array.isArray(req.body?.employeeIds)
+                ? [...new Set(req.body.employeeIds.map(clean).filter(Boolean))]
+                : [];
+
+            const client = db.prepare(`
+                SELECT id
+                FROM clients
+                WHERE id = ?
+                LIMIT 1
+            `).get(clientId);
+
+            if (!client) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Client not found."
+                });
+            }
+
+            if (employeeIds.length) {
+                const placeholders =
+                    employeeIds.map(() => "?").join(",");
+
+                const validEmployees = db.prepare(`
+                    SELECT id
+                    FROM users
+                    WHERE
+                        role = 'employee'
+                        AND status = 'active'
+                        AND id IN (${placeholders})
+                `).all(...employeeIds);
+
+                if (validEmployees.length !== employeeIds.length) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "One or more selected employees are invalid."
+                    });
+                }
+            }
+
+            const now = new Date().toISOString();
+
+            db.transaction(() => {
+                db.prepare(`
+                    DELETE FROM client_assignments
+                    WHERE client_id = ?
+                `).run(clientId);
+
+                const insert = db.prepare(`
+                    INSERT INTO client_assignments
+                    (
+                        id,
+                        client_id,
+                        employee_id,
+                        assigned_by,
+                        assigned_at
+                    )
+                    VALUES (?, ?, ?, ?, ?)
+                `);
+
+                employeeIds.forEach(employeeId => {
+                    insert.run(
+                        `CA${Date.now()}${Math.random().toString(36).slice(2,8)}`,
+                        clientId,
+                        employeeId,
+                        req.user.id,
+                        now
+                    );
+                });
+            })();
+
+            return res.json({
+                success: true,
+                message: employeeIds.length
+                    ? "Employees assigned to client successfully."
+                    : "All employee assignments removed.",
+                employeeIds
+            });
+
+        } catch (error) {
+            console.error("Update client assignments error:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Unable to update client assignments."
+            });
+        }
     }
 );
 

@@ -452,3 +452,80 @@ input {
         margin-left: 0;
     }
 }
+
+
+/* Billing master Save button */
+.btn.save-billing {
+    background: #f80606;
+    border-color: #217346;
+    color: #fff;
+    min-width: 96px;
+}
+
+.btn.save-billing:hover {
+    background: #185c37;
+    border-color: #185c37;
+}
+
+.btn.save-billing:disabled {
+    opacity: .65;
+    cursor: wait;
+}
+
+
+/* =========================================================
+   CA OFFICE — BILLING UI CONSISTENCY
+========================================================= */
+
+.billing-page {
+    min-width: 1180px;
+    padding: 22px !important;
+}
+
+.records-header {
+    min-height: 72px !important;
+}
+
+.header-actions {
+    height: 40px;
+    align-items: center;
+}
+
+.billing-page .btn {
+    height: 40px !important;
+    min-height: 40px !important;
+    min-width: 96px;
+    padding: 0 14px !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.filters-row {
+    min-height: 66px !important;
+    align-items: center !important;
+}
+
+.search-box,
+.date-box input,
+.reset {
+    height: 40px !important;
+    min-height: 40px !important;
+}
+
+.date-box {
+    width: 165px !important;
+}
+
+.table-meta {
+    height: 44px !important;
+}
+
+.billing-table th {
+    height: 48px !important;
+}
+
+.billing-table td {
+    height: 48px !important;
+    padding: 9px 10px !important;
+}

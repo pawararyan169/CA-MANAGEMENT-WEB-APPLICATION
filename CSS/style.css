@@ -5732,3 +5732,226 @@ img {
 .task-table-scroll::-webkit-scrollbar {
     height: 14px;
 }
+
+
+/* =========================================================
+   CA OFFICE — GLOBAL UI CONSISTENCY
+   Applied to Admin + Employee application pages.
+   Do not change these dimensions per page.
+========================================================= */
+
+:root {
+    --app-sidebar-width: 280px;
+    --app-content-max: 100%;
+    --app-control-height: 40px;
+    --app-control-radius: 8px;
+    --app-control-font: 12px;
+    --app-card-radius: 12px;
+    --app-gap: 16px;
+}
+
+/* ---------- APPLICATION WINDOW ---------- */
+
+.dashboard-body {
+    min-width: 1180px;
+    overflow-x: auto;
+}
+
+.dashboard-layout {
+    width: 100%;
+    min-height: 100vh;
+    display: flex !important;
+    align-items: stretch;
+}
+
+.dashboard-main {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    padding: 32px 36px !important;
+}
+
+/* Keep headers identical. */
+.dashboard-header {
+    min-height: 52px;
+    margin-bottom: 24px !important;
+    align-items: center !important;
+}
+
+.dashboard-header h1 {
+    font-size: 28px !important;
+    line-height: 34px !important;
+    font-weight: 650 !important;
+}
+
+.dashboard-header p {
+    font-size: 12px !important;
+    line-height: 18px !important;
+}
+
+/* ---------- ALL COMMON CONTROLS ---------- */
+
+button,
+input,
+select,
+textarea {
+    font-family: var(--font) !important;
+}
+
+button {
+    box-sizing: border-box;
+}
+
+button:not(.icon-button),
+.primary-button,
+.secondary-button,
+.action-button,
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-success,
+.export-button,
+.add-button,
+.save-button,
+.edit-button,
+.delete-button,
+.cancel-button,
+.reset-button,
+.filter-button {
+    min-height: var(--app-control-height);
+    height: var(--app-control-height);
+    padding: 0 14px;
+    border-radius: var(--app-control-radius);
+    font-size: var(--app-control-font);
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* Don't let old width:100% rules make normal action buttons huge. */
+.dashboard-main .primary-button,
+.dashboard-main .secondary-button,
+.dashboard-main .action-button {
+    width: auto;
+}
+
+/* Inputs/selects are identical everywhere. */
+.dashboard-main input:not([type="checkbox"]):not([type="radio"]),
+.dashboard-main select,
+.dashboard-main textarea {
+    border-radius: var(--app-control-radius);
+    font-size: var(--app-control-font);
+}
+
+/* Text fields */
+.dashboard-main input:not([type="checkbox"]):not([type="radio"]),
+.dashboard-main select {
+    height: var(--app-control-height);
+    min-height: var(--app-control-height);
+    padding: 0 11px;
+}
+
+/* ---------- CARDS / PANELS ---------- */
+
+.dashboard-main .card,
+.dashboard-main .panel,
+.dashboard-main .content-card,
+.dashboard-main .table-card,
+.dashboard-main .form-card,
+.dashboard-main .section-card,
+.dashboard-main .stat-card,
+.dashboard-main .employee-card,
+.dashboard-main .client-card {
+    border-radius: var(--app-card-radius);
+}
+
+/* ---------- TOOLBAR / FILTER AREAS ---------- */
+
+.dashboard-main .filters,
+.dashboard-main .filter-row,
+.dashboard-main .toolbar,
+.dashboard-main .table-toolbar,
+.dashboard-main .actions,
+.dashboard-main .header-actions {
+    min-height: 52px;
+    gap: 10px;
+    align-items: center;
+}
+
+/* ---------- TABLE UI ---------- */
+
+.dashboard-main table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.dashboard-main th {
+    height: 46px;
+    padding: 0 12px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.dashboard-main td {
+    min-height: 46px;
+    padding: 10px 12px;
+    font-size: 11px;
+    vertical-align: middle;
+}
+
+/* ---------- MODALS ---------- */
+
+.modal,
+.modal-overlay,
+.dialog-overlay {
+    z-index: 10000 !important;
+}
+
+.modal-content,
+.modal-card,
+.dialog,
+.dialog-content {
+    border-radius: 12px !important;
+}
+
+/* ---------- PREVENT PAGE-SPECIFIC UI SHRINKING ---------- */
+
+.dashboard-main .table-responsive,
+.dashboard-main .table-wrap,
+.dashboard-main .table-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* ---------- SCROLLBARS ---------- */
+
+.dashboard-main ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.dashboard-main ::-webkit-scrollbar-track {
+    background: #eef1f4;
+}
+
+.dashboard-main ::-webkit-scrollbar-thumb {
+    background: #b5bec8;
+    border-radius: 8px;
+    border: 2px solid #eef1f4;
+}
+
+/* ---------- DO NOT RESIZE APP ON SMALL WINDOWS ---------- */
+
+@media (max-width: 1200px) {
+    .dashboard-body {
+        min-width: 1180px;
+    }
+
+    .dashboard-main {
+        padding: 28px 30px !important;
+    }
+}

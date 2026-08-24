@@ -237,6 +237,56 @@ db.exec(`
 `);
 
 
+
+/* =========================================================
+   BILLING RECORDS
+========================================================= */
+
+db.exec(`
+    CREATE TABLE IF NOT EXISTS billing_records (
+
+        id TEXT PRIMARY KEY,
+
+        serial_number TEXT NOT NULL UNIQUE,
+
+        task_id TEXT NOT NULL UNIQUE,
+
+        client_id TEXT NOT NULL,
+
+        chargeable_amount REAL NOT NULL DEFAULT 0,
+
+        receipt_date TEXT,
+
+        amount REAL NOT NULL DEFAULT 0,
+
+        payment_mode TEXT,
+
+        advance_payment_date TEXT,
+
+        advance_amount REAL NOT NULL DEFAULT 0,
+
+        advance_payment_mode TEXT,
+
+        balance REAL NOT NULL DEFAULT 0,
+
+        created_by TEXT,
+
+        created_at TEXT NOT NULL,
+
+        updated_at TEXT NOT NULL,
+
+        FOREIGN KEY (client_id)
+            REFERENCES clients(id)
+
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_billing_task
+        ON billing_records(task_id);
+
+    CREATE INDEX IF NOT EXISTS idx_billing_client
+        ON billing_records(client_id);
+`);
+
 /* =========================================================
    TASKS
 ========================================================= */
