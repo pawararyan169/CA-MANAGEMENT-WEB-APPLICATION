@@ -13,7 +13,7 @@
         rel="stylesheet"
     >
 
-    <link rel="stylesheet" href="/CSS/style.css">
+    <link rel="stylesheet" href="../CSS/style.css">
 
     <style>
 
@@ -635,61 +635,6 @@
         }
 
     </style>
-
-    <!-- Employee sidebar scrolling -->
-    <style id="employee-sidebar-scroll">
-        /* Keep the sidebar fixed to the viewport while allowing the menu itself to scroll. */
-        .sidebar {
-            height: 100vh !important;
-            max-height: 100vh !important;
-            overflow: hidden !important;
-            display: flex !important;
-            flex-direction: column !important;
-        }
-
-        .sidebar-brand {
-            flex: 0 0 auto !important;
-        }
-
-        .sidebar-nav {
-            flex: 1 1 auto !important;
-            min-height: 0 !important;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            overscroll-behavior: contain;
-            scrollbar-width: thin;
-            scrollbar-color: #c8c8c8 transparent;
-            padding-right: 4px;
-        }
-
-        .sidebar-nav::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar-nav::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar-nav::-webkit-scrollbar-thumb {
-            background: #c8c8c8;
-            border-radius: 10px;
-        }
-
-        .sidebar-nav::-webkit-scrollbar-thumb:hover {
-            background: #a9a9a9;
-        }
-
-        .sidebar-bottom {
-            flex: 0 0 auto !important;
-        }
-
-        @media (max-width: 900px) {
-            .sidebar-nav {
-                scrollbar-width: thin;
-            }
-        }
-    </style>
-
 </head>
 
 <body class="dashboard-body">
@@ -1178,13 +1123,15 @@
 
 </div>
 
-<script src="/JS/auth.js"></script>
+<script src="../JS/auth.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 
-<script src="/JS/tasks.js?v=20260822-inlinecompletion"></script>
+<script src="../JS/tasks.js?v=20260822-inlinecompletion"></script>
 
+
+<script src="../JS/unified-sidebar.js"></script>
 </body>
 </html>
