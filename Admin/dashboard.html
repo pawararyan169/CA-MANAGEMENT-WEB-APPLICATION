@@ -20,8 +20,6 @@
 
     <!-- Google Font -->
 
-     <link rel="stylesheet" href="/CSS/shared-sidebar.css">
-
     <link
         rel="preconnect"
         href="https://fonts.googleapis.com"
@@ -49,9 +47,7 @@
 </head>
 
 
-<body class="dashboard-body">
-
-
+<body class="ca-admin-constant-page" class="dashboard-body">
 <div class="dashboard-layout">
 
 
@@ -59,287 +55,7 @@
          SIDEBAR
     ====================================================== -->
 
-    <aside class="sidebar">
-
-
-        <!-- BRAND -->
-
-        <div class="sidebar-brand">
-
-            <div class="logo-mark">
-                CA
-            </div>
-
-            <div class="brand-name">
-
-                <strong>
-                    CA Office
-                </strong>
-
-                <span>
-                    Administration
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <!-- =================================================
-             NAVIGATION
-        ================================================== -->
-
-        <nav class="sidebar-nav">
-
-
-            <!-- OVERVIEW -->
-
-            <span class="nav-section">
-                OVERVIEW
-            </span>
-
-
-            <a
-                href="/admin/dashboard.html"
-                class="nav-item active"
-            >
-
-                <span class="nav-icon">
-                    ⌂
-                </span>
-
-                <span>
-                    Dashboard
-                </span>
-
-            </a>
-
-
-            <!-- MANAGEMENT -->
-
-            <span class="nav-section">
-                MANAGEMENT
-            </span>
-
-
-            <!-- EMPLOYEES -->
-
-            <a
-                href="/admin/employees.html"
-                class="nav-item"
-            >
-
-                <span class="nav-icon">
-                    ◌
-                </span>
-
-                <span>
-                    Employees
-                </span>
-
-            </a>
-
-
-            <!-- =========================================================
-     TAX & REGISTRATIONS
-========================================================= -->
-
-
-
-
-            <!-- CLIENTS -->
-
-            <a
-                href="/admin/clients.html"
-                class="nav-item"
-            >
-
-                <span class="nav-icon">
-                    ◉
-                </span>
-
-                <span>
-                    Clients
-                </span>
-
-            </a>
-
-
-            <!-- TASKS -->
-
-            <a
-                href="/admin/tasks.html"
-                class="nav-item"
-            >
-
-                <span class="nav-icon">
-                    ✓
-                </span>
-
-                <span>
-                    Tasks
-                </span>
-
-            </a>
-
-
-            <!-- SIGNUP REQUESTS -->
-
-            <a
-                href="/admin/signup-requests.html"
-                class="nav-item"
-            >
-
-                <span class="nav-icon">
-                    ◌
-                </span>
-
-                <span>
-                    Signup Requests
-                </span>
-
-            </a>
-
-
-            <!-- LOCATIONS -->
-
-            <a
-                href="/admin/locations.html"
-                class="nav-item"
-            >
-
-                <span class="nav-icon">
-                    ◇
-                </span>
-
-                <span>
-                    Locations
-                </span>
-
-            </a>
-
-
-            <!-- OFFICE -->
-
-            <span class="nav-section">
-                OFFICE
-            </span>
-
-
-            <a
-                href="#"
-                class="nav-item"
-                onclick="return false;"
-            >
-
-                <span class="nav-icon">
-                    ◷
-                </span>
-
-                <span>
-                    Calendar
-                </span>
-
-            </a>
-
-
-            <a
-                href="/admin/documents.html"
-                class="nav-item"
-            >
-
-                <span class="nav-icon">
-                    □
-                </span>
-
-                <span>
-                    Documents
-                </span>
-
-            </a>
-
-
-            <a
-                href="/admin/billing.html"
-                class="nav-item"
-            >
-                <span class="nav-icon">
-                    ₹
-                </span>
-
-                <span>
-                    Billing
-                </span>
-            </a>
-
-
-            <a
-                href="#"
-                class="nav-item"
-                onclick="return false;"
-            >
-
-                <span class="nav-icon">
-                    ◈
-                </span>
-
-                <span>
-                    Reports
-                </span>
-
-            </a>
-
-
-        </nav>
-
-
-        <!-- =================================================
-             SIDEBAR BOTTOM
-        ================================================== -->
-
-        <div class="sidebar-bottom">
-
-
-            <a
-                href="#"
-                class="nav-item"
-                onclick="return false;"
-            >
-
-                <span class="nav-icon">
-                    ⚙
-                </span>
-
-                <span>
-                    Settings
-                </span>
-
-            </a>
-
-
-            <!-- SIGN OUT -->
-
-            <button
-                type="button"
-                class="logout-button"
-                id="logoutButton"
-            >
-
-                <span class="nav-icon">
-                    ↪
-                </span>
-
-                <span>
-                    Sign out
-                </span>
-
-            </button>
-
-
-        </div>
-
-
-    </aside>
+    
 
 
     <!-- =====================================================
@@ -496,81 +212,61 @@
             <!-- BILLING -->
 
 
-
             <a
-
 
 
                 href="/admin/billing.html"
 
 
-
                 class="stat-card"
-
 
 
                 style="text-decoration:none;color:inherit;"
 
 
-
             >
-
 
 
                 <div class="stat-top">
 
 
-
                     <span>
-
 
 
                         Outstanding
 
 
-
                     </span>
-
 
 
                     <span class="stat-icon">
 
 
-
                         ₹
-
 
 
                     </span>
 
 
-
                 </div>
-
 
 
                 <strong>
 
 
-
                     —
-
 
 
                 </strong>
 
 
-
                 <span class="stat-change">
-
 
 
                     Billing module
 
 
-
                 </span>
-
 
 
             </a>
@@ -600,7 +296,7 @@
         </div>
 
         <a
-            href="/admin/cin.html"
+            href="/admin/registrations.html?type=cin"
             id="viewAllRegistrations"
             class="secondary-button"
         >
@@ -616,7 +312,7 @@
         <!-- CIN -->
 
         <a
-            href="/admin/cin.html"
+            href="/admin/registrations.html?type=cin"
             class="registration-dashboard-card"
         >
 
@@ -654,7 +350,7 @@
         <!-- FSSAI -->
 
         <a
-            href="/admin/fssai.html"
+            href="/admin/registrations.html?type=fssai"
             class="registration-dashboard-card"
         >
 
@@ -692,7 +388,7 @@
         <!-- GST -->
 
         <a
-            href="/admin/gst.html"
+            href="/admin/registrations.html?type=gst"
             class="registration-dashboard-card"
         >
 
@@ -730,7 +426,7 @@
         <!-- MSME UDYAM -->
 
         <a
-            href="/admin/udyam.html"
+            href="/admin/registrations.html?type=udyam"
             class="registration-dashboard-card"
         >
 
@@ -768,7 +464,7 @@
         <!-- PTEC -->
 
         <a
-            href="/admin/ptec.html"
+            href="/admin/registrations.html?type=ptec"
             class="registration-dashboard-card"
         >
 
@@ -806,7 +502,7 @@
         <!-- PTRC -->
 
         <a
-            href="/admin/ptrc.html"
+            href="/admin/registrations.html?type=ptrc"
             class="registration-dashboard-card"
         >
 
@@ -844,7 +540,7 @@
         <!-- TAN -->
 
         <a
-            href="/admin/tan.html"
+            href="/admin/registrations.html?type=tan"
             class="registration-dashboard-card"
         >
 
@@ -881,8 +577,6 @@
     </div>
 
 </section>
-
-
 
 
         <!-- =================================================
@@ -1380,8 +1074,16 @@
 
 <script src="/JS/admin.js"></script>
 
-<script src="/JS/unified-sidebar.js"></script>
 
+    <script src="/JS/unified-sidebar.js"></script>
+
+<script>
+document.getElementById("logoutButton")?.addEventListener("click", function () {
+    localStorage.removeItem("caOfficeLoggedIn");
+    localStorage.removeItem("caOfficeUser");
+    window.location.href = "/login.html";
+});
+</script>
 
 </body>
 

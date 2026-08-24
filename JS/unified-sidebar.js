@@ -1,52 +1,43 @@
 /*
- CA OFFICE — CONSTANT SIDEBAR
- ALL OPTIONS ARE ALWAYS VISIBLE.
-
- Replace the old JS/unified-sidebar.js with this file.
- This version deliberately uses a compact fixed layout so the complete
- navigation fits inside the application window instead of scrolling
- different options in/out of view.
-
- Admin:
- Dashboard, Employees, Clients, Tasks, Signup Requests, Locations,
- Calendar, Documents, Billing, Reports, Settings, Sign out
-
- Employee:
- Dashboard, Clients, Tasks, Documents, Billing, CIN, FSSAI, GST,
- MSME Udyam, PTEC, PTRC, TAN, Calendar, Reports, Settings, Sign out
-*/
-
+ * CA OFFICE — UNIFIED SIDEBAR
+ * One sidebar for Admin and Employee pages.
+ *
+ * The page HTML should NOT contain a <aside class="sidebar">.
+ * This script creates the sidebar and keeps only the navigation area
+ * scrollable. Brand and Sign out remain visible.
+ */
 (() => {
     "use strict";
 
     const path = window.location.pathname.toLowerCase();
+
     const isEmployee = path.startsWith("/employee/");
     const isAdmin = path.startsWith("/admin/");
 
     if (!isEmployee && !isAdmin) return;
 
     const ID = "ca-fixed-sidebar";
+    const STYLE_ID = "ca-fixed-sidebar-style";
 
-    /* Remove every previous sidebar instance. */
     function removeOldSidebars() {
         document.querySelectorAll(
-            ".sidebar, aside.sidebar, #unifiedSidebar, #caUnifiedSidebar, #ca-constant-sidebar, #ca-fixed-sidebar"
-        ).forEach(el => {
+            ".sidebar, aside.sidebar, #unifiedSidebar, " +
+            "#caUnifiedSidebar, #ca-constant-sidebar, #CA_ADMIN_CONSTANT_SIDEBAR, #ca-fixed-sidebar"
+        ).forEach((el) => {
             if (el.id !== ID) el.remove();
         });
     }
 
-    /* One CSS definition. Page CSS cannot resize the sidebar. */
-    if (!document.getElementById("ca-fixed-sidebar-style")) {
+    function injectStyles() {
+        if (document.getElementById(STYLE_ID)) return;
+
         const style = document.createElement("style");
-        style.id = "ca-fixed-sidebar-style";
+        style.id = STYLE_ID;
 
         style.textContent = `
             #${ID} {
                 position: fixed !important;
-                left: 0 !important;
-                top: 0 !important;
-                bottom: 0 !important;
+                inset: 0 auto 0 0 !important;
 
                 width: 280px !important;
                 min-width: 280px !important;
@@ -81,14 +72,16 @@
                 color: #536174 !important;
             }
 
-            #${ID} * {
+            #${ID} *,
+            #${ID} *::before,
+            #${ID} *::after {
                 box-sizing: border-box !important;
             }
 
             #${ID} .ca-brand {
+                flex: 0 0 52px !important;
                 height: 52px !important;
                 min-height: 52px !important;
-                flex: 0 0 52px !important;
 
                 display: flex !important;
                 align-items: center !important;
@@ -131,21 +124,47 @@
                 line-height: 12px !important;
             }
 
+            /*
+             * ONLY THIS AREA SCROLLS.
+             * Brand and Sign out stay fixed.
+             */
             #${ID} .ca-nav {
                 flex: 1 1 auto !important;
                 min-height: 0 !important;
 
                 display: flex !important;
                 flex-direction: column !important;
-
                 gap: 1px !important;
-                padding: 3px 0 0 !important;
+
+                padding: 3px 0 8px !important;
                 margin: 0 !important;
 
-                overflow: hidden !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+
+                scrollbar-width: thin !important;
+                scrollbar-color: #cbd2da transparent !important;
+            }
+
+            #${ID} .ca-nav::-webkit-scrollbar {
+                width: 6px !important;
+            }
+
+            #${ID} .ca-nav::-webkit-scrollbar-track {
+                background: transparent !important;
+            }
+
+            #${ID} .ca-nav::-webkit-scrollbar-thumb {
+                background: #cbd2da !important;
+                border-radius: 10px !important;
+            }
+
+            #${ID} .ca-nav::-webkit-scrollbar-thumb:hover {
+                background: #aeb7c3 !important;
             }
 
             #${ID} .ca-section {
+                flex: 0 0 19px !important;
                 height: 19px !important;
                 min-height: 19px !important;
 
@@ -156,7 +175,6 @@
                 margin: 7px 0 1px !important;
 
                 color: #98a2b3 !important;
-
                 font-size: 9px !important;
                 line-height: 11px !important;
                 font-weight: 700 !important;
@@ -172,8 +190,8 @@
 
                 display: flex !important;
                 align-items: center !important;
-
                 gap: 9px !important;
+
                 padding: 0 10px !important;
                 margin: 0 !important;
 
@@ -218,9 +236,9 @@
             }
 
             #${ID} .ca-bottom {
+                flex: 0 0 47px !important;
                 height: 47px !important;
                 min-height: 47px !important;
-                flex: 0 0 47px !important;
 
                 margin-top: 6px !important;
                 padding-top: 6px !important;
@@ -235,8 +253,8 @@
 
                 display: flex !important;
                 align-items: center !important;
-
                 gap: 9px !important;
+
                 padding: 0 10px !important;
 
                 border: 0 !important;
@@ -258,7 +276,6 @@
                 color: #b42318 !important;
             }
 
-            /* Make the application content start after the fixed sidebar. */
             body.ca-fixed-sidebar-page {
                 padding-left: 280px !important;
             }
@@ -268,20 +285,21 @@
                 width: 100% !important;
             }
 
-            /* Never allow an old layout sidebar to consume space. */
             .dashboard-layout > .sidebar,
-            .dashboard-layout > aside.sidebar {
+            .dashboard-layout > aside.sidebar,
+            #CA_ADMIN_CONSTANT_SIDEBAR {
                 display: none !important;
             }
 
-            /* At normal desktop sizes there is NO sidebar scrolling. */
-            @media (min-height: 650px) {
+            @media (max-width: 800px) {
                 #${ID} {
-                    overflow: hidden !important;
+                    width: 240px !important;
+                    min-width: 240px !important;
+                    max-width: 240px !important;
                 }
 
-                #${ID} .ca-nav {
-                    overflow: hidden !important;
+                body.ca-fixed-sidebar-page {
+                    padding-left: 240px !important;
                 }
             }
         `;
@@ -304,29 +322,32 @@
     const admin = [
         ["section", "OVERVIEW"],
         ["link", "/admin/dashboard.html", "Dashboard", "⌂"],
+
         ["section", "MANAGEMENT"],
         ["link", "/admin/employees.html", "Employees", "◌"],
         ["link", "/admin/clients.html", "Clients", "◉"],
         ["link", "/admin/tasks.html", "Tasks", "✓"],
-        ["link", "/admin/signup-requests.html", "Signup Requests", "◌"],
+        ["link", "/admin/signup-requests.html", "Signup Requests", "✉"],
         ["link", "/admin/locations.html", "Locations", "◇"],
+
         ["section", "OFFICE"],
-        ["link", "/admin/dashboard.html#calendar", "Calendar", "◷"],
         ["link", "/admin/documents.html", "Documents", "□"],
         ["link", "/admin/billing.html", "Billing", "₹"],
-        ["link", "/admin/dashboard.html#reports", "Reports", "◈"],
+
         ["section", "SYSTEM"],
         ["link", "/admin/dashboard.html#settings", "Settings", "⚙"]
     ];
 
     const employee = [
         ["section", "OVERVIEW"],
-        ["link", "/employee/Dashboard.html", "Dashboard", "⌂"],
+        ["link", "/employee/dashboard.html", "Dashboard", "⌂"],
+
         ["section", "WORKSPACE"],
         ["link", "/employee/clients.html", "Clients", "◉"],
         ["link", "/employee/tasks.html", "Tasks", "✓"],
         ["link", "/employee/documents.html", "Documents", "□"],
         ["link", "/employee/billing.html", "Billing", "₹"],
+
         ["section", "REGISTRATIONS"],
         ["link", "/employee/cin.html", "CIN", "◇"],
         ["link", "/employee/fssai.html", "FSSAI", "◇"],
@@ -335,15 +356,17 @@
         ["link", "/employee/ptec.html", "PTEC", "◇"],
         ["link", "/employee/ptrc.html", "PTRC", "◇"],
         ["link", "/employee/tan.html", "TAN", "◇"],
+
         ["section", "OFFICE"],
-        ["link", "/employee/Dashboard.html#calendar", "Calendar", "◷"],
-        ["link", "/employee/Dashboard.html#reports", "Reports", "◈"],
+        ["link", "/employee/dashboard.html#calendar", "Calendar", "◷"],
+        ["link", "/employee/dashboard.html#reports", "Reports", "◈"],
+
         ["section", "SYSTEM"],
-        ["link", "/employee/Dashboard.html#settings", "Settings", "⚙"]
+        ["link", "/employee/dashboard.html#settings", "Settings", "⚙"]
     ];
 
     function render(items) {
-        return items.map(item => {
+        return items.map((item) => {
             if (item[0] === "section") {
                 return `<div class="ca-section">${item[1]}</div>`;
             }
@@ -361,10 +384,11 @@
     }
 
     function create() {
+        injectStyles();
         removeOldSidebars();
 
-        const old = document.getElementById(ID);
-        if (old) old.remove();
+        const existing = document.getElementById(ID);
+        if (existing) existing.remove();
 
         const sidebar = document.createElement("aside");
         sidebar.id = ID;
@@ -406,10 +430,6 @@
     function init() {
         create();
 
-        /*
-         * Existing page scripts may try to insert their own sidebar.
-         * Keep the master sidebar in control.
-         */
         const observer = new MutationObserver(() => {
             const current = document.getElementById(ID);
 

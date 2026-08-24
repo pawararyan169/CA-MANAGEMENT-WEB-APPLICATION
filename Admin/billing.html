@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Billing Records</title>
     <link rel="stylesheet" href="/billing.css?v=20260822-51">
+
 </head>
 
-<body>
-
+<body class="ca-admin-constant-page">
 <main class="billing-page">
 
     <!-- ONLY THE LOWER BILLING RECORD SECTION -->
@@ -21,8 +21,8 @@
             </div>
 
             <div class="header-actions">
-                <button id="saveBillingRecords" type="button" class="btn save-billing">
-                    Save
+                <button id="refreshBilling" type="button" class="btn secondary">
+                    ↻ Refresh
                 </button>
 
                 <button id="exportBillingExcel" type="button" class="btn excel">
@@ -117,7 +117,17 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-<script src="/JS/billing.js?v=20260824-savefix" defer></script>
+<script src="/JS/billing.js?v=20260824-final" defer></script>
+
+    <script src="/JS/unified-sidebar.js"></script>
+
+<script>
+document.getElementById("logoutButton")?.addEventListener("click", function () {
+    localStorage.removeItem("caOfficeLoggedIn");
+    localStorage.removeItem("caOfficeUser");
+    window.location.href = "/login.html";
+});
+</script>
 
 </body>
 </html>

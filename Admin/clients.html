@@ -198,85 +198,14 @@
     border-color: #98a2b3;
     background: #f9fafb;
 }
-
-.client-information-button {
-    min-height: 38px;
-    padding: 0 14px;
-    border: 1px solid #2563eb;
-    border-radius: 7px;
-    background: #2563eb;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 700;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
-
-.client-information-button:hover {
-    background: #1d4ed8;
-    border-color: #1d4ed8;
-}
 </style>
+
 </head>
 
-<body class="dashboard-body">
+<body class="ca-admin-constant-page" class="dashboard-body">
 <div class="dashboard-layout">
 
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <div class="logo-mark">CA</div>
-            <div class="brand-name">
-                <strong>CA Office</strong>
-                <span>Administration</span>
-            </div>
-        </div>
-
-        <nav class="sidebar-nav">
-            <span class="nav-section">OVERVIEW</span>
-
-            <a href="/admin/dashboard.html" class="nav-item">
-                <span class="nav-icon">⌂</span>
-                Dashboard
-            </a>
-
-            <span class="nav-section">MANAGEMENT</span>
-
-            <a href="/admin/employees.html" class="nav-item">
-                <span class="nav-icon">◌</span>
-                Employees
-            </a>
-
-            <a href="/admin/clients.html" class="nav-item active">
-                <span class="nav-icon">◉</span>
-                Clients
-            </a>
-
-            <a href="/admin/tasks.html" class="nav-item">
-                <span class="nav-icon">✓</span>
-                Tasks
-            </a>
-
-            <a href="/admin/signup-requests.html" class="nav-item">
-                <span class="nav-icon">✉</span>
-                Signup Requests
-            </a>
-
-            <a href="/admin/locations.html" class="nav-item">
-                <span class="nav-icon">◇</span>
-                Locations
-            </a>
-        </nav>
-
-        <div class="sidebar-bottom">
-            <button id="logoutButton" class="logout-button" type="button">
-                <span class="nav-icon">↪</span>
-                Sign out
-            </button>
-        </div>
-    </aside>
+    
 
     <main class="dashboard-main">
 
@@ -531,6 +460,16 @@
         </div>
     </div>
 </div>
+
+    <script src="/JS/unified-sidebar.js"></script>
+
+<script>
+document.getElementById("logoutButton")?.addEventListener("click", function () {
+    localStorage.removeItem("caOfficeLoggedIn");
+    localStorage.removeItem("caOfficeUser");
+    window.location.href = "/login.html";
+});
+</script>
 
 </body>
 </html>

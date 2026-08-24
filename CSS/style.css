@@ -1283,6 +1283,8 @@ img {
 }
 
 
+/* Sidebar is rendered and styled by /JS/unified-sidebar.js. */
+
 .dashboard-layout {
     min-height: 100vh;
 
@@ -1290,178 +1292,6 @@ img {
 }
 
 
-.sidebar {
-    width: 245px;
-
-    min-height: 100vh;
-
-    flex-shrink: 0;
-
-    display: flex;
-
-    flex-direction: column;
-
-    padding:
-        24px 14px;
-
-    background: #ffffff;
-
-    border-right:
-        1px solid var(--border);
-}
-
-
-.sidebar-brand {
-    display: flex;
-
-    align-items: center;
-
-    gap: 10px;
-
-    padding:
-        0 10px 22px;
-}
-
-
-.sidebar-brand .logo-mark {
-    width: 37px;
-    height: 37px;
-
-    background: var(--primary);
-
-    color: #ffffff;
-
-    border-radius: 9px;
-}
-
-
-.sidebar-brand .brand-name strong {
-    color: var(--text);
-}
-
-
-.sidebar-brand .brand-name span {
-    color: var(--text-muted);
-}
-
-
-.sidebar-nav {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 3px;
-}
-
-
-.nav-section {
-    margin:
-        21px 10px 7px;
-
-    color: #a0a7b3;
-
-    font-size: 9px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.13em;
-}
-
-
-.nav-item {
-    min-height: 40px;
-
-    padding:
-        0 11px;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 11px;
-
-    border-radius: 8px;
-
-    color: #667085;
-
-    font-size: 12px;
-
-    font-weight: 500;
-}
-
-
-.nav-item:hover {
-    background: #f6f7f9;
-
-    color: var(--text);
-}
-
-
-.nav-item.active {
-    background: #f0f3f6;
-
-    color: var(--primary);
-
-    font-weight: 600;
-}
-
-
-.nav-icon {
-    width: 18px;
-
-    flex-shrink: 0;
-
-    text-align: center;
-
-    font-size: 14px;
-}
-
-
-.sidebar-bottom {
-    margin-top: auto;
-
-    padding-top: 15px;
-
-    border-top:
-        1px solid var(--border);
-}
-
-
-.logout-button {
-    width: 100%;
-
-    min-height: 40px;
-
-    padding:
-        0 11px;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 11px;
-
-    border: none;
-
-    background: transparent;
-
-    border-radius: 8px;
-
-    color: #667085;
-
-    font-size: 12px;
-
-    font-weight: 500;
-
-    text-align: left;
-}
-
-
-.logout-button:hover {
-    background: #f6f7f9;
-
-    color: var(--error);
-}
 
 
 /* =========================================================
@@ -1777,9 +1607,6 @@ img {
 .task-status.review {
     background: #557ea4;
 }
-
-
-
 
 
 .task-details {
@@ -3107,31 +2934,7 @@ img {
     .dashboard-layout {
         display: block;
     }
-
-
-    .sidebar {
-        width: 100%;
-
-        min-height: auto;
-
-        border-right: none;
-
-        border-bottom:
-            1px solid var(--border);
-    }
-
-
-    .sidebar-nav {
-        display: none;
-    }
-
-
-    .sidebar-bottom {
-        display: none;
-    }
-
-
-    .dashboard-main {
+.dashboard-main {
         padding:
             28px 22px;
     }

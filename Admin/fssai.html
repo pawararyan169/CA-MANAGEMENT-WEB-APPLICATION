@@ -49,79 +49,123 @@
 @media(max-width:900px){.registration-filter-grid,.detail-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.registration-filter-grid,.summary,.detail-grid{grid-template-columns:1fr}}
 </style>
-</head>
-<body class="dashboard-body">
+/* Constant sidebar with independent vertical scrolling */
+#CA_ADMIN_CONSTANT_SIDEBAR {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #aeb7c4 #f4f6f8 !important;
+}
 
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar-track {
+    background: #f4f6f8 !important;
+    border-radius: 8px !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar-thumb {
+    background: #aeb7c4 !important;
+    border-radius: 8px !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar-thumb:hover {
+    background: #8e99a8 !important;
+}
+
+/* Navigation itself stays intact; only the sidebar viewport scrolls. */
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-nav {
+    overflow: visible !important;
+    flex: 0 0 auto !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-bottom {
+    flex: 0 0 auto !important;
+}
+
+
+/* ============================================================
+   FINAL: SCROLL THE SIDEBAR ITSELF
+   ============================================================ */
+
+#CA_ADMIN_CONSTANT_SIDEBAR {
+    position: fixed !important;
+    inset: 0 auto 0 0 !important;
+
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+
+    height: 100vh !important;
+    max-height: 100vh !important;
+
+    display: block !important;
+
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+
+    box-sizing: border-box !important;
+
+    scrollbar-width: auto !important;
+    scrollbar-color: #8f99a6 #eef1f4 !important;
+
+    overscroll-behavior: contain !important;
+}
+
+/* Do NOT make the inner navigation a scroll container.
+   The OUTER SIDEBAR is the only thing that scrolls. */
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-nav {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+
+    overflow: visible !important;
+
+    flex: none !important;
+}
+
+/* Keep every navigation item in normal document flow. */
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-link,
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-section,
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-bottom {
+    position: static !important;
+}
+
+/* Bottom controls are part of the sidebar's scrollable content. */
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-bottom {
+    height: auto !important;
+    min-height: 0 !important;
+    margin-top: 8px !important;
+    padding-bottom: 12px !important;
+}
+
+/* Visible Chromium scrollbar. */
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar {
+    width: 10px !important;
+    display: block !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar-track {
+    background: #eef1f4 !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar-thumb {
+    background: #8f99a6 !important;
+    border-radius: 8px !important;
+    border: 2px solid #eef1f4 !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar-thumb:hover {
+    background: #6f7a88 !important;
+}
+
+</head>
+<body class="ca-admin-constant-page" class="dashboard-body">
 <div class="dashboard-layout">
 
-<aside class="sidebar">
-
-    <div class="sidebar-brand">
-        <div class="logo-mark">CA</div>
-        <div class="brand-name">
-            <strong>CA Office</strong>
-            <span>Administration</span>
-        </div>
-    </div>
-
-    <nav class="sidebar-nav">
-
-        <span class="nav-section">WORKSPACE</span>
-
-        <a href="/admin/dashboard.html" class="nav-item">
-            <span class="nav-icon">⌂</span>
-            Dashboard
-        </a>
-
-        <a href="/admin/clients.html" class="nav-item">
-            <span class="nav-icon">◉</span>
-            Clients
-        </a>
-
-        <a href="/admin/add-client.html" class="nav-item">
-            <span class="nav-icon">+</span>
-            Add Client
-        </a>
-
-        <div class="registration-section">
-
-            <div class="registration-section-title">
-                TAX & REGISTRATIONS
-            </div>
-
-            <div class="registration-menu">
-                <a href="/admin/cin.html" class="registration-menu-item "><span>CIN</span></a>
-<a href="/admin/fssai.html" class="registration-menu-item active"><span>FSSAI</span></a>
-<a href="/admin/gst.html" class="registration-menu-item "><span>GST</span></a>
-<a href="/admin/udyam.html" class="registration-menu-item "><span>MSME Udyam</span></a>
-<a href="/admin/ptec.html" class="registration-menu-item "><span>PTEC</span></a>
-<a href="/admin/ptrc.html" class="registration-menu-item "><span>PTRC</span></a>
-<a href="/admin/tan.html" class="registration-menu-item "><span>TAN</span></a>
-            </div>
-
-        </div>
-
-        
-        <a href="/admin/employees.html" class="nav-item"><span class="nav-icon">◌</span> Employees</a>
-        <a href="/admin/tasks.html" class="nav-item"><span class="nav-icon">✓</span> Tasks</a>
-        <a href="/admin/signup-requests.html" class="nav-item"><span class="nav-icon">✉</span> Signup Requests</a>
-        <a href="/admin/locations.html" class="nav-item"><span class="nav-icon">◇</span> Locations</a>
-    
-
-    </nav>
-
-    <div class="sidebar-bottom">
-        <button
-            id="logoutButton"
-            type="button"
-            class="logout-button"
-        >
-            <span class="nav-icon">↪</span>
-            Sign out
-        </button>
-    </div>
-
-</aside>
 
 <main class="dashboard-main">
 
@@ -380,6 +424,16 @@
 
 <script src="/JS/auth.js"></script>
 <script src="/JS/registrations.js"></script>
+
+    <script src="/JS/unified-sidebar.js"></script>
+
+<script>
+document.getElementById("logoutButton")?.addEventListener("click", function () {
+    localStorage.removeItem("caOfficeLoggedIn");
+    localStorage.removeItem("caOfficeUser");
+    window.location.href = "/login.html";
+});
+</script>
 
 </body>
 </html>
