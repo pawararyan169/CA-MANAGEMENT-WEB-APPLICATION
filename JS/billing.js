@@ -513,7 +513,7 @@
             tbody.innerHTML = `
                 <tr>
                     <td
-                        colspan="11"
+                        colspan="12"
                         class="empty"
                     >
                         No completed and billable
@@ -627,6 +627,16 @@
             return `
                 <tr
                     data-id="${esc(rowId)}"
+                    data-billing-id="${esc(
+                        record.billingId ??
+                        (
+                            record.id &&
+                            !String(record.id).startsWith("task-")
+                                ? record.id
+                                : ""
+                        ) ??
+                        ""
+                    )}"
                     data-task-id="${esc(
                         record.taskId ??
                         record.task_id ??
@@ -762,6 +772,16 @@
                         data-balance
                     >
                         ${balanceHTML(balance)}
+                    </td>
+
+                    <td class="action-cell">
+                        <button
+                            type="button"
+                            class="billing-remove-btn"
+                            data-remove-billing
+                        >
+                            🗑 Remove
+                        </button>
                     </td>
 
                 </tr>
@@ -909,7 +929,7 @@
                 ),
 
             receiptDate:
-                get("receiptDate")?.value || null,
+                get("receiptDate")?.value || "",
 
             amount:
                 Math.max(
@@ -920,10 +940,10 @@
                 ),
 
             paymentMode:
-                get("paymentMode")?.value || null,
+                get("paymentMode")?.value || "",
 
             advancePaymentDate:
-                get("advancePaymentDate")?.value || null,
+                get("advancePaymentDate")?.value || "",
 
             advanceAmount:
                 Math.max(
@@ -934,7 +954,7 @@
                 ),
 
             advancePaymentMode:
-                get("advancePaymentMode")?.value || null
+                get("advancePaymentMode")?.value || ""
         };
     }
 
@@ -992,6 +1012,57 @@
         }
 
 
+        /*
+         * If advance amount is entered,
+         * require advance date.
+         */
+        if (
+            data.advanceAmount > 0 &&
+            !data.advancePaymentDate
+        ) {
+
+            return {
+                valid: false,
+                message:
+                    "Enter the date of advance payment."
+            };
+        }
+
+
+        /*
+         * If advance amount is entered,
+         * require advance payment mode.
+         */
+        if (
+            data.advanceAmount > 0 &&
+            !data.advancePaymentMode
+        ) {
+
+            return {
+                valid: false,
+                message:
+                    "Select the mode of advance payment."
+            };
+        }
+
+
+        /*
+         * If amount is entered,
+         * require normal payment mode.
+         */
+        if (
+            data.amount > 0 &&
+            !data.paymentMode
+        ) {
+
+            return {
+                valid: false,
+                message:
+                    "Select the payment mode."
+            };
+        }
+
+
         return {
             valid: true,
             message: ""
@@ -1011,9 +1082,9 @@
 
 
         const id =
-            row.dataset.serialNumber ||
-            row.dataset.taskId ||
-            row.dataset.id;
+            row.dataset.billingId ||
+            row.dataset.id ||
+            row.dataset.taskId;
 
 
         if (!id) {
@@ -1085,6 +1156,11 @@
 
         try {
 
+            const controller =
+                new AbortController();
+
+            row.__saveController = controller;
+
             const response =
                 await fetch(
                     `${API}/${encodeURIComponent(id)}`,
@@ -1103,7 +1179,9 @@
                         },
 
                         body:
-                            JSON.stringify(payload)
+                            JSON.stringify(payload),
+                        signal:
+                            controller.signal
                     }
                 );
 
@@ -1144,12 +1222,26 @@
                 });
 
 
+            if (result.billingId) {
+                row.dataset.billingId =
+                    String(result.billingId);
+                row.dataset.id =
+                    String(result.billingId);
+            }
+
             if (localRecord) {
 
                 Object.assign(
                     localRecord,
                     payload
                 );
+
+                if (result.billingId) {
+                    localRecord.billingId =
+                        result.billingId;
+                    localRecord.id =
+                        result.billingId;
+                }
 
 
                 localRecord.balance =
@@ -1197,8 +1289,210 @@
             showError(
                 error.message
             );
+        }
+    }
 
-            throw error;
+
+    /* ============================================================
+       REMOVE BILLING RECORD
+    ============================================================ */
+
+    async function removeBillingRecord(row, button) {
+
+        if (!row) return;
+
+        const reference =
+            row.dataset.billingId ||
+            row.dataset.id;
+
+        if (!reference ||
+            String(reference).startsWith("task-")) {
+            showError(
+                "This billing record has not been saved yet."
+            );
+            return;
+        }
+
+        if (!window.confirm(
+            "Remove this billing record?\n\n" +
+            "All billing/payment data will be deleted.\n\n" +
+            "The original completed task will NOT be deleted."
+        )) {
+            return;
+        }
+
+        row.dataset.deleting = "1";
+
+        /*
+         * Cancel queued auto-save.
+         */
+        [
+            row.dataset.billingId,
+            row.dataset.id,
+            row.dataset.taskId
+        ].filter(Boolean).forEach(key => {
+            if (savingTimers.has(key)) {
+                clearTimeout(savingTimers.get(key));
+                savingTimers.delete(key);
+            }
+        });
+
+        /*
+         * Abort an in-flight PUT so an old edit cannot recreate
+         * the billing record after DELETE.
+         */
+        if (row.__saveController) {
+            try {
+                row.__saveController.abort();
+            } catch (_) {}
+            row.__saveController = null;
+        }
+
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Removing...";
+        }
+
+        try {
+            const response = await fetch(
+                `${API}/${encodeURIComponent(reference)}`,
+                {
+                    method: "DELETE",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                }
+            );
+
+            let result = {};
+            try {
+                result = await response.json();
+            } catch (_) {}
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message ||
+                    `Billing delete failed with HTTP ${response.status}.`
+                );
+            }
+
+            records = records.filter(record => {
+                return ![
+                    record.id,
+                    record.billingId,
+                    record.taskId,
+                    record.task_id
+                ]
+                .filter(v => v !== undefined && v !== null)
+                .map(String)
+                .includes(String(reference));
+            });
+
+            row.remove();
+
+            render();
+
+            showSuccess(
+                "Billing record removed successfully."
+            );
+
+        } catch (error) {
+            console.error(
+                "Billing remove error:",
+                error
+            );
+
+            row.dataset.deleting = "";
+
+            if (button) {
+                button.disabled = false;
+                button.textContent = "🗑 Remove";
+            }
+
+            showError(error.message);
+        }
+    }
+
+
+    /* ============================================================
+       MANUAL SAVE ALL RECORDS
+    ============================================================ */
+
+    async function saveAllRecords() {
+
+        const button = $("saveBillingRecords");
+        const tbody = $("billingTableBody");
+
+        if (!button || !tbody) {
+            return;
+        }
+
+        /*
+         * Cancel pending auto-save timers before manual save.
+         */
+        savingTimers.forEach(timer => clearTimeout(timer));
+        savingTimers.clear();
+
+        const rows = Array.from(
+            tbody.querySelectorAll("tr[data-id], tr[data-task-id]")
+        );
+
+        if (!rows.length) {
+            showError("There are no billing records to save.");
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Saving...";
+        clearMessages();
+
+        let saved = 0;
+        let failed = 0;
+        let firstError = "";
+
+        try {
+
+            for (const row of rows) {
+
+                try {
+
+                    await saveRow(row);
+                    saved++;
+
+                } catch (error) {
+
+                    failed++;
+
+                    if (!firstError) {
+                        firstError = error.message;
+                    }
+
+                    console.error(
+                        "Manual billing save error:",
+                        error
+                    );
+                }
+            }
+
+            if (failed === 0) {
+
+                showSuccess(
+                    `${saved} billing record(s) saved successfully.`
+                );
+
+            } else {
+
+                showError(
+                    `${saved} saved, ${failed} failed.` +
+                    (firstError ? ` ${firstError}` : "")
+                );
+            }
+
+        } finally {
+
+            button.disabled = false;
+            button.textContent = "✓ Save Records";
         }
     }
 
@@ -1209,7 +1503,8 @@
 
     function scheduleSave(row) {
 
-        if (!row) {
+        if (!row ||
+            row.dataset.deleting === "1") {
             return;
         }
 
@@ -1270,6 +1565,37 @@
         }
 
 
+        if (!tbody.dataset.removeHandlerAttached) {
+
+            tbody.addEventListener(
+                "click",
+                event => {
+
+                    const button =
+                        event.target.closest(
+                            "[data-remove-billing]"
+                        );
+
+                    if (!button) return;
+
+                    const row =
+                        button.closest("tr");
+
+                    if (!row ||
+                        row.dataset.deleting === "1") {
+                        return;
+                    }
+
+                    removeBillingRecord(
+                        row,
+                        button
+                    );
+                }
+            );
+
+            tbody.dataset.removeHandlerAttached = "1";
+        }
+
         const controls =
             tbody.querySelectorAll(
                 "[data-field]"
@@ -1290,7 +1616,11 @@
 
                     updateRowBalance(row);
 
-
+                    /*
+                     * Don't auto-save every single
+                     * keystroke immediately.
+                     */
+                    scheduleSave(row);
                 }
             );
 
@@ -1307,7 +1637,7 @@
 
                     updateRowBalance(row);
 
-
+                    scheduleSave(row);
                 }
             );
 
@@ -1324,7 +1654,7 @@
 
                     updateRowBalance(row);
 
-
+                    scheduleSave(row);
                 }
             );
 
@@ -1355,7 +1685,7 @@
             tbody.innerHTML = `
                 <tr>
                     <td
-                        colspan="11"
+                        colspan="12"
                         class="empty"
                     >
                         Loading billing records...
@@ -1521,7 +1851,7 @@
                 tbody.innerHTML = `
                     <tr>
                         <td
-                            colspan="11"
+                            colspan="12"
                             class="empty"
                         >
                             Unable to load billing records.
@@ -1909,91 +2239,6 @@
     }
 
 
-
-    /* ============================================================
-       SAVE ALL BILLING RECORDS
-    ============================================================ */
-
-    async function saveAllBillingRecords() {
-
-        const button =
-            $("saveBillingRecords");
-
-        const tbody =
-            $("billingTableBody");
-
-        if (!tbody) {
-            return;
-        }
-
-        const rows =
-            [...tbody.querySelectorAll("tr[data-id], tr[data-task-id]")];
-
-        if (!rows.length) {
-            showError("There are no billing records to save.");
-            return;
-        }
-
-        if (button) {
-            button.disabled = true;
-            button.textContent = "Saving...";
-        }
-
-        clearMessages();
-
-        let successCount = 0;
-        let failedCount = 0;
-        let firstError = "";
-
-        try {
-
-            /*
-             * Save every visible row using the same backend
-             * endpoint used by individual billing records.
-             */
-            for (const row of rows) {
-
-                try {
-
-                    await saveRow(row);
-                    successCount++;
-
-                } catch (error) {
-
-                    failedCount++;
-
-                    if (!firstError) {
-                        firstError =
-                            error?.message ||
-                            "Unable to save billing record.";
-                    }
-                }
-            }
-
-            if (failedCount === 0) {
-
-                showSuccess(
-                    `${successCount} billing record${successCount === 1 ? "" : "s"} saved successfully.`
-                );
-
-            } else {
-
-                showError(
-                    `${successCount} saved, ${failedCount} failed. ${firstError}`
-                );
-            }
-
-        } finally {
-
-            if (button) {
-
-                button.disabled = false;
-                button.textContent = "Save";
-            }
-        }
-    }
-
-
     /* ============================================================
        REFRESH
     ============================================================ */
@@ -2050,7 +2295,10 @@
         const pdf =
             $("exportBillingPdf");
 
-        const saveBilling =
+        const refresh =
+            $("refreshBilling");
+
+        const saveRecords =
             $("saveBillingRecords");
 
 
@@ -2087,15 +2335,6 @@
 
 
         /*
-         * Save all billing rows.
-         */
-        saveBilling?.addEventListener(
-            "click",
-            saveAllBillingRecords
-        );
-
-
-        /*
          * Exports.
          */
         excel?.addEventListener(
@@ -2112,6 +2351,15 @@
         /*
          * Refresh.
          */
+        refresh?.addEventListener(
+            "click",
+            refreshRecords
+        );
+
+        saveRecords?.addEventListener(
+            "click",
+            saveAllRecords
+        );
 
 
         /*

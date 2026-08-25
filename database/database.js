@@ -251,8 +251,6 @@ db.exec(`
 
         task_id TEXT NOT NULL UNIQUE,
 
-        client_id TEXT NOT NULL,
-
         chargeable_amount REAL NOT NULL DEFAULT 0,
 
         receipt_date TEXT,
@@ -273,19 +271,14 @@ db.exec(`
 
         created_at TEXT NOT NULL,
 
-        updated_at TEXT NOT NULL,
-
-        FOREIGN KEY (client_id)
-            REFERENCES clients(id)
+        updated_at TEXT NOT NULL
 
     );
 
     CREATE INDEX IF NOT EXISTS idx_billing_task
         ON billing_records(task_id);
-
-    CREATE INDEX IF NOT EXISTS idx_billing_client
-        ON billing_records(client_id);
 `);
+
 
 /* =========================================================
    TASKS

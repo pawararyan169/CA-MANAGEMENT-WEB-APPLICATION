@@ -6,6 +6,26 @@
     <title>Billing Records</title>
     <link rel="stylesheet" href="/billing.css?v=20260822-51">
 
+<style>
+.billing-table .action-col,
+.billing-table .action-cell {
+    text-align: center;
+    white-space: nowrap;
+}
+.billing-remove-btn {
+    border: 1px solid #dc2626;
+    background: #fff;
+    color: #b91c1c;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.billing-remove-btn:hover { background: #fef2f2; }
+.billing-remove-btn:disabled { opacity: .55; cursor: wait; }
+</style>
 </head>
 
 <body class="ca-admin-constant-page">
@@ -91,12 +111,13 @@
                         <th>Advance Paid Amount</th>
                         <th>Advance Payment Mode</th>
                         <th>Balance</th>
+                        <th class="action-col">Action</th>
                     </tr>
                 </thead>
 
                 <tbody id="billingTableBody">
                     <tr>
-                        <td colspan="11" class="empty">
+                        <td colspan="12" class="empty">
                             Loading billing records...
                         </td>
                     </tr>
