@@ -1,0 +1,16 @@
+SR NO. 
+FETCH ONLY GST NAME AND GST NUMBER ENTRY THINGS 
+TRADE NAME (MANUAL INPUT) WITH EFFECT FROM ((MANUAL INPUT)) (SHORT FORM W.E.F) DROPDOWN LIST (REGULAR, COMPOSITION) FILING FREQUEENCY DROPDOWN, MONTHLY QUARTERLY DOCUMENT RECIEVED DATE ONLY IF DATE IS ENTERED. 
+
+DAEFAULT STATUS DOCUMENT NOT RECIEVED.
+ IF ENTERED document revieved date THEN CHANGE STATUS TO DOCUMENT RECIEVED 
+date of WORKING entered then change the status to  GSTR -1/ IFF PENDING 
+GSTR-1/IFF FILING DATE if entered then change status to tax penDING, 
+TAX PAYMENT DATE IF ENTRED, 3bFILING PENDING
+if FILING DATE entred change status to set PENDING. 
+if SET DATE entered then the status will be  TRANSFERED TO BILLING 
+no document status, only one status
+EXPORT AND EACH FILTER
+Important
+based on dates, allstatus should change, once date entered date, statuses should change automatically
+for set date use select date.

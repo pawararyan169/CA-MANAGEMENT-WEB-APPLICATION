@@ -333,6 +333,7 @@
         ["section", "OFFICE"],
         ["link", "/admin/documents.html", "Documents", "□"],
         ["link", "/admin/billing.html", "Billing", "₹"],
+        ["link", "/admin/gst-dashboard.html", "GST", "◇"],
 
         ["section", "SYSTEM"],
         ["link", "/admin/dashboard.html#settings", "Settings", "⚙"]
@@ -351,7 +352,7 @@
         ["section", "REGISTRATIONS"],
         ["link", "/employee/cin.html", "CIN", "◇"],
         ["link", "/employee/fssai.html", "FSSAI", "◇"],
-        ["link", "/employee/gst.html", "GST", "◇"],
+        ["link", "/employee/gst-dashboard.html", "GST", "◇"],
         ["link", "/employee/udyam.html", "MSME Udyam", "◇"],
         ["link", "/employee/ptec.html", "PTEC", "◇"],
         ["link", "/employee/ptrc.html", "PTRC", "◇"],

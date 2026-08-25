@@ -45,6 +45,46 @@ db.pragma(
 
 
 /* =========================================================
+   GST DASHBOARD
+   Basic GST details persist; working dates are stored per month.
+========================================================= */
+
+db.exec(`
+    CREATE TABLE IF NOT EXISTS gst_profiles (
+        id TEXT PRIMARY KEY,
+        client_id TEXT NOT NULL UNIQUE,
+        trade_name TEXT NOT NULL DEFAULT '',
+        wef TEXT NOT NULL DEFAULT '',
+        registration_type TEXT NOT NULL DEFAULT 'REGULAR',
+        filing_frequency TEXT NOT NULL DEFAULT 'MONTHLY',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS gst_monthly_records (
+        id TEXT PRIMARY KEY,
+        gst_profile_id TEXT NOT NULL,
+        month_key TEXT NOT NULL,
+        document_received_date TEXT,
+        working_date TEXT,
+        gstr1_iff_filing_date TEXT,
+        tax_payment_date TEXT,
+        three_b_filing_date TEXT,
+        filing_date TEXT,
+        set_date TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE (gst_profile_id, month_key),
+        FOREIGN KEY (gst_profile_id) REFERENCES gst_profiles(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_gst_monthly_month
+        ON gst_monthly_records(month_key);
+`);
+
+
+/* =========================================================
    USERS
 ========================================================= */
 

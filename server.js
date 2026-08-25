@@ -23,6 +23,7 @@ app.use('/api', require('./routes/employees'));
 app.use('/api', require('./routes/tasks'));
 app.use('/api', require('./routes/documents'));
 app.use('/api', require('./routes/billing'));
+app.use('/api', require('./routes/gst-dashboard'));
 
 app.use(express.static(__dirname));
 

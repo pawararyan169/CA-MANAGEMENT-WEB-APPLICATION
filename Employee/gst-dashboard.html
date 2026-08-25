@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>GST Dashboard | CA Office</title>
+<link rel="stylesheet" href="/CSS/style.css">
+<link rel="stylesheet" href="/CSS/gst-dashboard.css">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+<main class="dashboard-main">
+<div class="gst-dashboard-page">
+    <header class="gst-head">
+        <div>
+            <span class="dashboard-eyebrow">TAX MANAGEMENT</span>
+            <h1>GST Dashboard</h1>
+            <p>Monthly GST working register. GST Name and GST Number are fetched from Clients.</p>
+        </div>
+        <div class="gst-actions">
+            <button id="gstCurrentMonth" class="gst-btn" type="button">Current Month</button>
+            <button id="gstExport" class="gst-btn primary" type="button">Export</button>
+            <button id="gstSaveAll" class="gst-btn success" type="button">Save All</button>
+        </div>
+    </header>
+
+    <div id="gstError" class="gst-error"></div>
+
+    <section class="gst-toolbar">
+        <div class="gst-filters">
+            <div class="gst-field"><label>Search</label><input id="gstSearch" type="search" placeholder="GST Name, GST Number, Trade Name..."></div>
+            <div class="gst-field"><label>Month</label><input id="gstMonth" type="month"></div>
+            <div class="gst-field"><label>Type</label><select id="gstRegistrationFilter"><option value="">All Types</option><option value="REGULAR">REGULAR</option><option value="COMPOSITION">COMPOSITION</option></select></div>
+            <div class="gst-field"><label>Filing Frequency</label><select id="gstFrequencyFilter"><option value="">All Frequencies</option><option value="MONTHLY">MONTHLY</option><option value="QUARTERLY">QUARTERLY</option></select></div>
+            <div class="gst-field"><label>Status</label><select id="gstStatusFilter"><option value="">All Statuses</option><option>DOCUMENT NOT RECIEVED</option><option>DOCUMENT RECIEVED</option><option>GSTR -1/ IFF PENDING</option><option>TAX PENDING</option><option>3B FILING PENDING</option><option>FILING PENDING</option><option>SET PENDING</option><option>TRANSFERED TO BILLING</option></select></div>
+            <div class="gst-field"><label>Transferred to Billing</label><select id="gstBillingFilter"><option value="">All</option><option value="YES">YES</option><option value="NO">NO</option></select></div>
+        </div>
+        <div class="gst-note">Month: <strong id="gstMonthLabel"></strong>. Basic GST details remain; monthly date entries are separate for every month.</div>
+    </section>
+
+    <section class="gst-summary">
+        <div class="gst-summary-card"><span>Total GST Records</span><strong id="gstTotal">0</strong></div>
+        <div class="gst-summary-card"><span>Visible Records</span><strong id="gstVisible">0</strong></div>
+    </section>
+
+    <section class="gst-table-card">
+        <div id="gstLoading" class="gst-loading">Loading GST records...</div>
+        <div id="gstEmpty" class="gst-empty" style="display:none">No GST records match the selected filters.</div>
+        <div id="gstTable" class="gst-table-wrap" style="display:none">
+            <table class="gst-table">
+                <thead><tr>
+                    <th>SR NO.</th><th>GST NAME</th><th>GST NUMBER</th><th>TRADE NAME</th><th>W.E.F</th>
+                    <th>TYPE</th><th>FILING FREQUENCY</th><th>DOCUMENT RECEIVED DATE</th><th>WORKING DATE</th>
+                    <th>GSTR-1 / IFF</th><th>TAX PAYMENT DATE</th><th>3B FILING DATE</th><th>FILING DATE</th><th>SET DATE</th>
+                    <th>STATUS</th>
+                </tr></thead>
+                <tbody id="gstTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+</main>
+</div>
+<div id="gstToast" class="gst-toast"></div>
+<script src="/JS/auth.js"></script>
+<script src="/JS/gst-dashboard.js"></script>
+<script src="/JS/unified-sidebar.js"></script>
+</body>
+</html>
