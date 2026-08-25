@@ -1,475 +1,579 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Clients | CA Office Administration</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
     <link rel="stylesheet" href="/CSS/style.css">
-    <style>
-        .filter-grid {
-            display:grid;
-            grid-template-columns:repeat(4,minmax(160px,1fr));
-            gap:14px;
-        }
-        .filter-actions {
-            display:flex;
-            justify-content:flex-end;
-            gap:10px;
-            margin-top:18px;
-            flex-wrap:wrap;
-        }
-        .client-filter-panel {
-            padding:20px;
-            border-top:1px solid #eee;
-            border-bottom:1px solid #eee;
-            background:#fafafa;
-        }
-        .secondary-button {
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            min-height:44px;
-            padding:0 18px;
-            border-radius:8px;
-            border:1px solid #ddd;
-            background:#fff;
-            color:#333;
-            cursor:pointer;
-        }
-        @media(max-width:900px) {
-            .filter-grid { grid-template-columns:repeat(2,minmax(160px,1fr)); }
-        }
-        @media(max-width:600px) {
-            .filter-grid { grid-template-columns:1fr; }
-        }
-    </style>
-<style>
-/* =========================================================
-   CLIENT EMPLOYEE ASSIGNMENT MODAL
-========================================================= */
 
-.assign-modal[aria-hidden="true"] {
-    display: none;
+<style id="client-registration-panel-style">
+.client-registrations-panel { margin-bottom: 20px; }
+.client-registration-grid {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
 }
-
-.assign-modal[aria-hidden="false"] {
-    display: flex;
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
+.client-registration-card {
+    min-width:0;
+    min-height:76px;
+    display:grid;
+    grid-template-columns:38px minmax(0,1fr) auto;
+    align-items:center;
+    gap:10px;
+    padding:12px 13px;
+    box-sizing:border-box;
+    border:1px solid #e5e7eb;
+    border-radius:10px;
+    background:#fff;
+    color:inherit;
+    text-decoration:none;
+    transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease;
 }
-
-.assign-modal-backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(15, 23, 42, .55);
-    backdrop-filter: blur(3px);
+.client-registration-card:hover {
+    border-color:#cbd5e1;
+    background:#f8fafc;
+    box-shadow:0 3px 12px rgba(15,23,42,.06);
+    transform:translateY(-1px);
 }
-
-.assign-modal-card {
-    position: relative;
-    width: min(620px, calc(100vw - 32px));
-    max-height: min(760px, calc(100vh - 40px));
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    box-shadow: 0 24px 70px rgba(15,23,42,.22);
+.client-registration-card-icon {
+    width:38px;height:38px;display:flex;align-items:center;justify-content:center;
+    border-radius:9px;background:#f1f5f9;color:#334155;font-size:13px;font-weight:800;
 }
-
-.assign-modal-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 24px;
-    border-bottom: 1px solid #edf0f3;
+.client-registration-card-body { min-width:0;display:flex;flex-direction:column;gap:3px; }
+.client-registration-card-body strong { font-size:14px;line-height:1.2;color:#1e293b; }
+.client-registration-card-body span {
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-size:11px;line-height:1.2;color:#64748b;
 }
-
-.assign-modal-header h2 {
-    margin: 4px 0 6px;
-    font-size: 22px;
-    color: #172033;
+.client-registration-card-count {
+    min-width:42px;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;padding-left:8px;border-left:1px solid #e5e7eb;
 }
-
-.assign-modal-header p {
-    margin: 0;
-    color: #667085;
-    font-size: 13px;
+.client-registration-card-count strong {
+    font-size:18px;line-height:1;color:#0f172a;font-variant-numeric:tabular-nums;
 }
-
-.assign-close-button {
-    width: 38px;
-    height: 38px;
-    border: 1px solid #e4e7ec;
-    border-radius: 8px;
-    background: #fff;
-    color: #667085;
-    font-size: 24px;
-    cursor: pointer;
+.client-registration-card-count span { margin-top:4px;font-size:9px;color:#64748b; }
+@media (max-width:1100px) {
+    .client-registration-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
-
-.assign-employee-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 24px;
-}
-
-.assign-employee-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 13px 14px;
-    margin-bottom: 8px;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    background: #fff;
-    cursor: pointer;
-}
-
-.assign-employee-item:hover {
-    border-color: #b8c7e8;
-    background: #f8faff;
-}
-
-.assign-employee-item input {
-    width: 18px;
-    height: 18px;
-    flex: 0 0 auto;
-    accent-color: #2563eb;
-}
-
-.assign-employee-main {
-    min-width: 0;
-    flex: 1;
-}
-
-.assign-employee-name {
-    font-weight: 700;
-    color: #172033;
-}
-
-.assign-employee-meta {
-    margin-top: 3px;
-    color: #667085;
-    font-size: 12px;
-}
-
-.assign-modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    padding: 18px 24px;
-    border-top: 1px solid #edf0f3;
-}
-
-.assign-message {
-    margin: 16px 24px 0;
-    padding: 11px 13px;
-    border-radius: 8px;
-    font-size: 13px;
-}
-
-.assign-error {
-    background: #fff1f0;
-    color: #b42318;
-    border: 1px solid #fecdca;
-}
-
-.assign-button {
-    min-height: 38px;
-    padding: 0 13px;
-    border: 1px solid #d0d5dd;
-    border-radius: 7px;
-    background: #fff;
-    color: #344054;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.assign-button:hover {
-    border-color: #98a2b3;
-    background: #f9fafb;
+@media (max-width:650px) {
+    .client-registration-grid { grid-template-columns:1fr; }
 }
 </style>
 
 </head>
 
-<body class="ca-admin-constant-page" class="dashboard-body">
+
+<body class="dashboard-body">
+
+
 <div class="dashboard-layout">
 
-    
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+            <div class="brand-name">
+
+                <strong>
+                    CA Office
+                </strong>
+
+                <span>
+                    Administration
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <span class="nav-section">
+                OVERVIEW
+            </span>
+
+            <a
+                href="/admin/dashboard.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+
+            <span class="nav-section">
+                MANAGEMENT
+            </span>
+
+
+            <a
+                href="/admin/employees.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">◌</span>
+                Employees
+            </a>
+
+
+            <a
+                href="/admin/clients.html"
+                class="nav-item active"
+            >
+                <span class="nav-icon">◉</span>
+                Clients
+            </a>
+
+
+            <a
+                href="/admin/tasks.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">✓</span>
+                Tasks
+            </a>
+
+
+            <a
+                href="/admin/signup-requests.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">✉</span>
+                Signup Requests
+            </a>
+
+
+            <a
+                href="/admin/locations.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">◇</span>
+                Locations
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <button
+                id="logoutButton"
+                class="logout-button"
+                type="button"
+            >
+                <span class="nav-icon">↪</span>
+                Sign out
+            </button>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
 
     <main class="dashboard-main">
 
+
+        <!-- HEADER -->
+
         <header class="dashboard-header">
+
             <div>
-                <span class="dashboard-eyebrow">CLIENT MANAGEMENT</span>
-                <h1>Clients</h1>
-                <p>View, filter and export all active clients of the office.</p>
+
+                <span class="dashboard-eyebrow">
+                    CLIENT MANAGEMENT
+                </span>
+
+                <h1>
+                    Clients
+                </h1>
+
+                <p>
+                    View and manage all active clients of the office.
+                </p>
+
             </div>
+
 
             <div class="user-profile">
-                <div class="avatar" id="adminAvatar">A</div>
-                <div class="user-info">
-                    <strong id="adminName">Administrator</strong>
-                    <span id="adminRole">Administrator</span>
+
+                <div
+                    class="avatar"
+                    id="adminAvatar"
+                >
+                    A
                 </div>
+
+                <div class="user-info">
+
+                    <strong id="adminName">
+                        Administrator
+                    </strong>
+
+                    <span id="adminRole">
+                        Administrator
+                    </span>
+
+                </div>
+
             </div>
+
         </header>
 
+
+
+        <!-- =====================================================
+             CLIENT COUNT
+        ====================================================== -->
+
         <section class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-top">
-                    <span>Active Clients</span>
-                    <span class="stat-icon">◉</span>
-                </div>
-                <strong id="clientCount">—</strong>
-                <span class="stat-change">Live database count</span>
-            </div>
 
             <div class="stat-card">
+
                 <div class="stat-top">
-                    <span>Filtered Records</span>
-                    <span class="stat-icon">▣</span>
+
+                    <span>
+                        Active Clients
+                    </span>
+
+                    <span class="stat-icon">
+                        ◉
+                    </span>
+
                 </div>
-                <strong id="visibleClientCount">—</strong>
-                <span class="stat-change">Currently displayed</span>
+
+                <strong id="clientCount">
+                    —
+                </strong>
+
+                <span class="stat-change">
+                    Live database count
+                </span>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span>
+                        Records
+                    </span>
+
+                    <span class="stat-icon">
+                        ▣
+                    </span>
+
+                </div>
+
+                <strong id="visibleClientCount">
+                    —
+                </strong>
+
+                <span class="stat-change">
+                    Currently displayed
+                </span>
+
+            </div>
+
+        </section>
+
+
+
+        
+        <!-- CLIENT REGISTRATIONS -->
+        <section class="dashboard-panel client-registrations-panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Client Registrations</h2>
+                    <p>Quick access to client registrations. Counts are live from the client database.</p>
+                </div>
+            </div>
+            <div class="client-registration-grid">
+
+                <a href="/admin/cin.html"
+                   class="client-registration-card"
+                   title="Corporate Identification Number">
+                    <div class="client-registration-card-icon">C</div>
+                    <div class="client-registration-card-body">
+                        <strong>CIN</strong>
+                        <span>Corporate Identification Number</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="cin">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                <a href="/admin/fssai.html"
+                   class="client-registration-card"
+                   title="Food Safety Registration">
+                    <div class="client-registration-card-icon">F</div>
+                    <div class="client-registration-card-body">
+                        <strong>FSSAI</strong>
+                        <span>Food Safety Registration</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="fssai">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                <a href="/admin/gst.html"
+                   class="client-registration-card"
+                   title="Goods & Services Tax">
+                    <div class="client-registration-card-icon">G</div>
+                    <div class="client-registration-card-body">
+                        <strong>GST</strong>
+                        <span>Goods & Services Tax</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="gst">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                <a href="/admin/registrations.html?type=udyam"
+                   class="client-registration-card"
+                   title="MSME Udyam Registration">
+                    <div class="client-registration-card-icon">M</div>
+                    <div class="client-registration-card-body">
+                        <strong>MSME Udyam</strong>
+                        <span>MSME Udyam Registration</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="udyam">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                <a href="/admin/registrations.html?type=ptec"
+                   class="client-registration-card"
+                   title="Professional Tax Enrollment">
+                    <div class="client-registration-card-icon">P</div>
+                    <div class="client-registration-card-body">
+                        <strong>PTEC</strong>
+                        <span>Professional Tax Enrollment</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="ptec">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                <a href="/admin/registrations.html?type=ptrc"
+                   class="client-registration-card"
+                   title="Professional Tax Registration">
+                    <div class="client-registration-card-icon">P</div>
+                    <div class="client-registration-card-body">
+                        <strong>PTRC</strong>
+                        <span>Professional Tax Registration</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="ptrc">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                <a href="/admin/registrations.html?type=tan"
+                   class="client-registration-card"
+                   title="Tax Deduction Account Number">
+                    <div class="client-registration-card-icon">T</div>
+                    <div class="client-registration-card-body">
+                        <strong>TAN</strong>
+                        <span>Tax Deduction Account Number</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="tan">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
             </div>
         </section>
+
+<!-- =====================================================
+             CLIENT PANEL
+        ====================================================== -->
 
         <section class="dashboard-panel">
 
             <div class="panel-header">
+
                 <div>
-                    <h2>Client Records</h2>
-                    <p>Filter records and export exactly the records currently shown.</p>
+
+                    <h2>
+                        Client records
+                    </h2>
+
+                    <p>
+                        All active clients registered with the office.
+                    </p>
+
                 </div>
 
-                <a href="/admin/add-client.html"
-                   class="primary-button"
-                   style="width:auto;padding:0 20px;">
+
+                <a
+                    href="/admin/add-client.html"
+                    class="primary-button"
+                    style="width:auto;padding:0 20px;"
+                >
                     + Add Client
                 </a>
+
             </div>
 
-            <div class="client-filter-panel">
 
-                <div class="filter-grid">
+            <!-- ERROR -->
 
-                    <div class="form-group">
-                        <label for="clientSearch">Search Client</label>
-                        <input id="clientSearch"
-                               type="text"
-                               placeholder="Name, PAN, GST, email, phone..."
-                               autocomplete="off">
-                    </div>
+            <div
+                id="clientsError"
+                class="form-alert error-alert"
+                style="margin:20px;"
+            ></div>
 
-                    <div class="form-group">
-                        <label for="filterClientType">Client Type</label>
-                        <select id="filterClientType">
-                            <option value="">All client types</option>
-                            <option value="individual">Individual</option>
-                            <option value="huf">HUF</option>
-                            <option value="partnership">Partnership Firm</option>
-                            <option value="llp">LLP</option>
-                            <option value="private_limited">Private Limited Company</option>
-                            <option value="cooperative_society">Co-operative Society</option>
-                            <option value="trust">Trust</option>
-                        </select>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="filterState">State</label>
-                        <select id="filterState">
-                            <option value="">All states</option>
-                        </select>
-                    </div>
+            <!-- LOADING -->
 
-                    <div class="form-group">
-                        <label for="filterDistrict">District</label>
-                        <select id="filterDistrict" disabled>
-                            <option value="">All districts</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="filterCity">City / Town</label>
-                        <select id="filterCity" disabled>
-                            <option value="">All cities</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="filterStatus">Status</label>
-                        <select id="filterStatus">
-                            <option value="">All statuses</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="filterLocation">Office Location</label>
-                        <select id="filterLocation">
-                            <option value="">All office locations</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" style="display:flex;align-items:end;">
-                        <button id="clearClientFilters"
-                                type="button"
-                                class="secondary-button"
-                                style="width:100%;">
-                            Clear Filters
-                        </button>
-                    </div>
-
-                </div>
-
-                <div class="filter-actions">
-                    <button id="exportClientsExcel"
-                            type="button"
-                            class="primary-button">
-                        Export Excel
-                    </button>
-
-                    <button id="exportClientsPdf"
-                            type="button"
-                            class="primary-button">
-                        Export PDF
-                    </button>
-                </div>
-            </div>
-
-            <div id="clientsError"
-                 class="form-alert error-alert"
-                 style="display:none;margin:20px;"></div>
-
-            <div id="clientsLoading"
-                 style="padding:40px;text-align:center;color:#777;">
+            <div
+                id="clientsLoading"
+                style="
+                    padding:40px;
+                    text-align:center;
+                    color:#777;
+                "
+            >
                 Loading clients...
             </div>
 
-            <div id="clientsTableContainer"
-                 style="display:none;overflow-x:auto;">
 
-                <table style="width:100%;border-collapse:collapse;min-width:1100px;">
+            <!-- TABLE -->
+
+            <div
+                id="clientsTableContainer"
+                style="
+                    display:none;
+                    overflow-x:auto;
+                "
+            >
+
+                <table
+                    style="
+                        width:100%;
+                        border-collapse:collapse;
+                        min-width:850px;
+                    "
+                >
+
                     <thead>
-                    <tr>
-                        <th style="padding:14px;text-align:left;">Client</th>
-                        <th style="padding:14px;text-align:left;">Type</th>
-                        <th style="padding:14px;text-align:left;">Location</th>
-                        <th style="padding:14px;text-align:left;">Contact</th>
-                        <th style="padding:14px;text-align:left;">Assigned Employees</th>
-                        <th style="padding:14px;text-align:left;">Status</th>
-                        <th style="padding:14px;text-align:left;">Action</th>
-                    </tr>
+
+                        <tr>
+
+                            <th style="padding:14px;text-align:left;">
+                                Client
+                            </th>
+
+                            <th style="padding:14px;text-align:left;">
+                                Type
+                            </th>
+
+                            <th style="padding:14px;text-align:left;">
+                                Location
+                            </th>
+
+                            <th style="padding:14px;text-align:left;">
+                                Contact
+                            </th>
+
+                            <th style="padding:14px;text-align:left;">
+                                Assigned Employees
+                            </th>
+
+                            <th style="padding:14px;text-align:left;">
+                                Action
+                            </th>
+
+                        </tr>
+
                     </thead>
-                    <tbody id="clientsTableBody"></tbody>
+
+
+                    <tbody id="clientsTableBody">
+
+                    </tbody>
+
                 </table>
+
             </div>
 
-            <div id="clientsEmpty"
-                 style="display:none;padding:50px;text-align:center;">
-                <h3>No clients found</h3>
-                <p>No client records match the selected filters.</p>
+
+            <!-- EMPTY -->
+
+            <div
+                id="clientsEmpty"
+                style="
+                    display:none;
+                    padding:50px;
+                    text-align:center;
+                "
+            >
+
+                <h3>
+                    No clients found
+                </h3>
+
+                <p>
+                    Add your first client to begin.
+                </p>
+
+                <a
+                    href="/admin/add-client.html"
+                    class="primary-button"
+                    style="
+                        display:inline-flex;
+                        width:auto;
+                        padding:0 20px;
+                        margin-top:15px;
+                    "
+                >
+                    + Add Client
+                </a>
+
             </div>
 
         </section>
+
+
     </main>
+
 </div>
+
 
 <script src="/JS/auth.js"></script>
+
 <script src="/JS/admin.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-<script src="/JS/admin-clients.js"></script>
 
-<!-- =========================================================
-     ASSIGN EMPLOYEES MODAL
-========================================================= -->
-<div
-    id="assignEmployeeModal"
-    class="assign-modal"
-    aria-hidden="true"
->
-    <div class="assign-modal-backdrop" data-close-assign-modal></div>
-
-    <div
-        class="assign-modal-card"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="assignEmployeeTitle"
-    >
-        <div class="assign-modal-header">
-            <div>
-                <span class="dashboard-eyebrow">CLIENT ACCESS</span>
-                <h2 id="assignEmployeeTitle">Assign Employees</h2>
-                <p id="assignEmployeeClientName">
-                    Select employees who should have access to this client.
-                </p>
-            </div>
-
-            <button
-                type="button"
-                class="assign-close-button"
-                data-close-assign-modal
-                aria-label="Close"
-            >
-                ×
-            </button>
-        </div>
-
-        <div id="assignEmployeeError"
-             class="assign-message assign-error"
-             hidden></div>
-
-        <div
-            id="assignEmployeeList"
-            class="assign-employee-list"
-        >
-            Loading employees...
-        </div>
-
-        <div class="assign-modal-footer">
-            <button
-                type="button"
-                class="secondary-button"
-                data-close-assign-modal
-            >
-                Cancel
-            </button>
-
-            <button
-                type="button"
-                id="saveClientAssignments"
-                class="primary-button"
-                style="width:auto;padding:0 22px;"
-            >
-                Save Assignments
-            </button>
-        </div>
-    </div>
-</div>
-
-    <script src="/JS/unified-sidebar.js"></script>
-
-<script>
-document.getElementById("logoutButton")?.addEventListener("click", function () {
-    localStorage.removeItem("caOfficeLoggedIn");
-    localStorage.removeItem("caOfficeUser");
-    window.location.href = "/login.html";
-});
-</script>
-
+<script src="/JS/admin-clients.js?v=client-reg-panel-2"></script>
+<script src="../JS/unified-sidebar.js"></script>
 </body>
+
 </html>
