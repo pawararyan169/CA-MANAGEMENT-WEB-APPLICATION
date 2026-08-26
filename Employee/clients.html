@@ -95,6 +95,63 @@
     font-size:18px;line-height:1;color:#0f172a;font-variant-numeric:tabular-nums;
 }
 .client-registration-card-count span { margin-top:4px;font-size:9px;color:#64748b; }
+.client-registration-panel-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:24px;
+}
+.client-registration-heading {
+    min-width:0;
+}
+.client-registration-filter-row {
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    margin:0;
+}
+.client-registration-filter-row label {
+    margin:0;
+    white-space:nowrap;
+    font-size:12px;
+    font-weight:600;
+    color:#475569;
+}
+.client-registration-filter-row select {
+    width:220px;
+    min-width:220px;
+    height:38px;
+    padding:0 36px 0 12px;
+    border:1px solid #dbe2ea;
+    border-radius:9px;
+    background:#fff;
+    color:#1e293b;
+    font:inherit;
+    font-size:13px;
+    outline:none;
+    cursor:pointer;
+    box-sizing:border-box;
+}
+.client-registration-filter-row select:focus {
+    border-color:#94a3b8;
+    box-shadow:0 0 0 3px rgba(148,163,184,.16);
+}
+@media (max-width:760px) {
+    .client-registration-panel-header {
+        align-items:stretch;
+        flex-direction:column;
+        gap:14px;
+    }
+    .client-registration-filter-row {
+        justify-content:flex-start;
+    }
+    .client-registration-filter-row select {
+        width:100%;
+        max-width:260px;
+    }
+}
 @media (max-width:1100px) {
     .client-registration-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
@@ -215,10 +272,26 @@
         
         <!-- CLIENT REGISTRATIONS -->
         <section class="dashboard-panel client-registrations-panel">
-            <div class="panel-header">
-                <div>
+            <div class="panel-header client-registration-panel-header">
+                <div class="client-registration-heading">
                     <h2>Client Registrations</h2>
                     <p>Quick access to client registrations. Counts are live from the client database.</p>
+                </div>
+
+                <div class="client-registration-filter-row">
+                    <label for="filterApplicableRegistration">
+                        Applicable Registration
+                    </label>
+                    <select id="filterApplicableRegistration" aria-label="Filter clients by applicable registration">
+                        <option value="">All Registrations</option>
+                        <option value="cin">CIN</option>
+                        <option value="fssai">FSSAI</option>
+                        <option value="gst">GST</option>
+                        <option value="udyam">MSME Udyam</option>
+                        <option value="ptec">PTEC</option>
+                        <option value="ptrc">PTRC</option>
+                        <option value="tan">TAN</option>
+                    </select>
                 </div>
             </div>
             <div class="client-registration-grid">
@@ -474,7 +547,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-<script src="/JS/employee-clients.js?v=client-reg-panel-2"></script>
+<script src="/JS/employee-clients.js?v=client-reg-panel-3"></script>
 <script src="../JS/unified-sidebar.js"></script>
 </body>
 </html>

@@ -55,85 +55,7 @@
          SIDEBAR
     ====================================================== -->
 
-    <aside class="sidebar">
-
-        <div class="sidebar-brand">
-            <div class="logo-mark">CA</div>
-            <div class="brand-name">
-                <strong>CA Office</strong>
-                <span>Administration</span>
-            </div>
-        </div>
-
-        <nav class="sidebar-nav">
-
-            <span class="nav-section">OVERVIEW</span>
-
-            <a href="/admin/dashboard.html" class="nav-item active">
-                <span class="nav-icon">⌂</span>
-                Dashboard
-            </a>
-
-            <span class="nav-section">MANAGEMENT</span>
-
-            <a href="/admin/employees.html" class="nav-item">
-                <span class="nav-icon">◌</span>
-                Employees
-            </a>
-
-            <a href="/admin/clients.html" class="nav-item">
-                <span class="nav-icon">◉</span>
-                Clients
-            </a>
-
-            <a href="/admin/tasks.html" class="nav-item">
-                <span class="nav-icon">✓</span>
-                Tasks
-            </a>
-
-            <a href="/admin/signup-requests.html" class="nav-item">
-                <span class="nav-icon">✉</span>
-                Signup Requests
-            </a>
-
-            <a href="/admin/locations.html" class="nav-item">
-                <span class="nav-icon">◇</span>
-                Locations
-            </a>
-
-            <span class="nav-section">OFFICE</span>
-
-            <a href="/admin/documents.html" class="nav-item">
-                <span class="nav-icon">□</span>
-                Documents
-            </a>
-
-            <a href="/admin/billing.html" class="nav-item">
-                <span class="nav-icon">₹</span>
-                Billing
-            </a>
-
-            <a href="/admin/gst-dashboard.html" class="nav-item">
-                <span class="nav-icon">◇</span>
-                GST
-            </a>
-
-            <span class="nav-section">SYSTEM</span>
-
-            <a href="/admin/dashboard.html#settings" class="nav-item">
-                <span class="nav-icon">⚙</span>
-                Settings
-            </a>
-
-        </nav>
-
-        <div class="sidebar-bottom">
-            <button id="logoutButton" class="logout-button" type="button">
-                <span class="nav-icon">↪</span>
-                Sign out
-            </button>
-        </div>
-
+    
 
 
     <!-- =====================================================
@@ -1151,10 +1073,11 @@
 <script src="/JS/auth.js"></script>
 
 <script src="/JS/admin.js"></script>
+<script src="/JS/dashboard-registrations.js"></script>
 
 
+    <script src="../JS/unified-sidebar.js"></script>
 
-    
 <script>
 document.getElementById("logoutButton")?.addEventListener("click", function () {
     localStorage.removeItem("caOfficeLoggedIn");

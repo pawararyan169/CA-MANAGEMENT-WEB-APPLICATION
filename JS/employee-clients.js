@@ -56,6 +56,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const locationFilter =
         document.getElementById("filterLocation");
 
+    const applicableRegistrationFilter =
+        document.getElementById("filterApplicableRegistration");
+
     const clearFiltersButton =
         document.getElementById("clearClientFilters");
 
@@ -436,6 +439,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     ? result.clients
                     : [];
 
+            // Keep the Client Registrations panel live with the
+            // same fresh client data loaded by this page.
+            updateClientRegistrationCounts(allClients);
+
             if (clientCountElement) {
                 clientCountElement.textContent =
                     allClients.length;
@@ -482,6 +489,53 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    /* =========================================================
+       CLIENT REGISTRATION COUNTS
+       Counts are calculated from the same live /api/clients
+       response used by this page. The API returns only active
+       clients, so these numbers represent active clients with
+       each registration value present.
+    ========================================================= */
+
+    function updateClientRegistrationCounts(clients) {
+
+        const registrationFields = [
+            "cin",
+            "fssai",
+            "gst",
+            "udyam",
+            "ptec",
+            "ptrc",
+            "tan"
+        ];
+
+        registrationFields.forEach(field => {
+
+            const count = clients.reduce(
+                (total, client) => {
+                    const value = client?.[field];
+
+                    return total +
+                        (value !== null &&
+                         value !== undefined &&
+                         String(value).trim() !== ""
+                            ? 1
+                            : 0);
+                },
+                0
+            );
+
+            document
+                .querySelectorAll(
+                    `[data-registration-count="${field}"]`
+                )
+                .forEach(element => {
+                    element.textContent = count;
+                });
+        });
+    }
+
+
     function applyFilters() {
 
         const search =
@@ -506,6 +560,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const location =
             locationFilter?.value || "";
+
+        const applicableRegistration =
+            applicableRegistrationFilter?.value || "";
 
 
         filteredClients =
@@ -631,6 +688,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (
                         clientLocation !==
                         String(location)
+                    ) {
+                        return false;
+                    }
+                }
+
+                // Applicable Registration filter. A client is included
+                // when the selected registration field contains a value.
+                if (applicableRegistration) {
+                    const registrationValue =
+                        client?.[applicableRegistration];
+
+                    if (
+                        registrationValue === null ||
+                        registrationValue === undefined ||
+                        String(registrationValue).trim() === ""
                     ) {
                         return false;
                     }
@@ -823,6 +895,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (locationFilter) {
             locationFilter.value = "";
+        }
+
+        if (applicableRegistrationFilter) {
+            applicableRegistrationFilter.value = "";
         }
 
         populateDistrictFilter();
@@ -1333,6 +1409,11 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     locationFilter?.addEventListener(
+        "change",
+        applyFilters
+    );
+
+    applicableRegistrationFilter?.addEventListener(
         "change",
         applyFilters
     );

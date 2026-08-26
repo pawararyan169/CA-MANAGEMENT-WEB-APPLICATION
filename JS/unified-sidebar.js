@@ -319,27 +319,37 @@
         return target === current;
     }
 
+    // Admin uses the same navigation structure/UI as Employee.
+    // Only the destination paths differ. GST intentionally opens the new GST dashboard.
     const admin = [
         ["section", "OVERVIEW"],
         ["link", "/admin/dashboard.html", "Dashboard", "⌂"],
 
-        ["section", "MANAGEMENT"],
-        ["link", "/admin/employees.html", "Employees", "◌"],
+        ["section", "WORKSPACE"],
         ["link", "/admin/clients.html", "Clients", "◉"],
         ["link", "/admin/tasks.html", "Tasks", "✓"],
-        ["link", "/admin/signup-requests.html", "Signup Requests", "✉"],
-        ["link", "/admin/locations.html", "Locations", "◇"],
-
-        ["section", "OFFICE"],
         ["link", "/admin/documents.html", "Documents", "□"],
         ["link", "/admin/billing.html", "Billing", "₹"],
+
+        ["section", "REGISTRATIONS"],
+        ["link", "/admin/cin.html", "CIN", "◇"],
+        ["link", "/admin/fssai.html", "FSSAI", "◇"],
         ["link", "/admin/gst-dashboard.html", "GST", "◇"],
+        ["link", "/admin/udyam.html", "MSME Udyam", "◇"],
+        ["link", "/admin/ptec.html", "PTEC", "◇"],
+        ["link", "/admin/ptrc.html", "PTRC", "◇"],
+        ["link", "/admin/tan.html", "TAN", "◇"],
+
+        ["section", "OFFICE"],
+        ["link", "/admin/dashboard.html#calendar", "Calendar", "◷"],
+        ["link", "/admin/dashboard.html#reports", "Reports", "◈"],
 
         ["section", "SYSTEM"],
         ["link", "/admin/dashboard.html#settings", "Settings", "⚙"]
     ];
 
     const employee = [
+
         ["section", "OVERVIEW"],
         ["link", "/employee/dashboard.html", "Dashboard", "⌂"],
 
@@ -352,7 +362,7 @@
         ["section", "REGISTRATIONS"],
         ["link", "/employee/cin.html", "CIN", "◇"],
         ["link", "/employee/fssai.html", "FSSAI", "◇"],
-        ["link", "/employee/gst-dashboard.html", "GST", "◇"],
+        ["link", "/employee/gst.html", "GST", "◇"],
         ["link", "/employee/udyam.html", "MSME Udyam", "◇"],
         ["link", "/employee/ptec.html", "PTEC", "◇"],
         ["link", "/employee/ptrc.html", "PTRC", "◇"],

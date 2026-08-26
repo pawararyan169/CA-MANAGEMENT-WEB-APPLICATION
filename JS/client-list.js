@@ -429,7 +429,65 @@ document.addEventListener(
         }
 
 
+        async function loadLiveStats() {
+            try {
+                const response = await fetch("/api/dashboard/stats", {
+                    method: "GET",
+                    credentials: "include",
+                    headers: { Accept: "application/json" },
+                    cache: "no-store"
+                });
+
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Unable to load live dashboard counts.");
+                }
+
+                // The dashboard-stats API returns its values under `counts`.
+                // Keep a fallback to `stats` so older backend responses still work.
+                const stats = result.counts || result.stats || {};
+
+                setLiveCount(
+                    "clientCountLive",
+                    stats.clients ?? stats.activeClients
+                );
+                setLiveCount(
+                    "clientTaskCount",
+                    stats.tasks ?? stats.totalTasks
+                );
+                setLiveCount("clientCompletedTaskCount", stats.completedTasks);
+                setLiveCount("clientPendingTaskCount", stats.pendingTasks);
+
+                const registrations = stats.registrations || {
+                    cin: stats.cin,
+                    fssai: stats.fssai,
+                    gst: stats.gst,
+                    udyam: stats.udyam,
+                    ptec: stats.ptec,
+                    ptrc: stats.ptrc,
+                    tan: stats.tan
+                };
+                setLiveCount("clientCinCount", registrations.cin);
+                setLiveCount("clientFssaiCount", registrations.fssai);
+                setLiveCount("clientGstCount", registrations.gst);
+                setLiveCount("clientUdyamCount", registrations.udyam);
+                setLiveCount("clientPtecCount", registrations.ptec);
+                setLiveCount("clientPtrcCount", registrations.ptrc);
+                setLiveCount("clientTanCount", registrations.tan);
+            } catch (error) {
+                console.error("Client live dashboard count error:", error);
+            }
+        }
+
+        function setLiveCount(id, value) {
+            const element = document.getElementById(id);
+            if (element) element.textContent = Number(value || 0);
+        }
+
         loadClients();
+        loadLiveStats();
+        const liveStatsTimer = window.setInterval(loadLiveStats, 10000);
+        window.addEventListener("beforeunload", () => window.clearInterval(liveStatsTimer));
 
     }
 );

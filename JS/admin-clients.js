@@ -56,6 +56,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const locationFilter =
         document.getElementById("filterLocation");
 
+    const applicableRegistrationFilter =
+        document.getElementById("filterApplicableRegistration");
+
     const clearFiltersButton =
         document.getElementById("clearClientFilters");
 
@@ -392,6 +395,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    /* =========================================================
+       LIVE CLIENT REGISTRATION COUNTS
+    ========================================================= */
+
+    function updateRegistrationCounts() {
+
+        const registrations = {
+            cin: "cin",
+            fssai: "fssai",
+            gst: "gst",
+            udyam: "udyam",
+            ptec: "ptec",
+            ptrc: "ptrc",
+            tan: "tan"
+        };
+
+        Object.entries(registrations).forEach(([key, field]) => {
+
+            const count = allClients.filter(client => {
+                const value = client?.[field];
+
+                return value !== null &&
+                       value !== undefined &&
+                       String(value).trim() !== "";
+            }).length;
+
+            document
+                .querySelectorAll(`[data-registration-count="${key}"]`)
+                .forEach(element => {
+                    element.textContent = String(count);
+                });
+        });
+    }
+
+
     async function loadClients() {
 
         if (loadingClients) {
@@ -440,6 +478,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 clientCountElement.textContent =
                     allClients.length;
             }
+
+            updateRegistrationCounts();
 
             populateStateFilter();
             populateDistrictFilter();
@@ -506,6 +546,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const location =
             locationFilter?.value || "";
+
+        const applicableRegistration =
+            applicableRegistrationFilter?.value || "";
 
 
         filteredClients =
@@ -631,6 +674,20 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (
                         clientLocation !==
                         String(location)
+                    ) {
+                        return false;
+                    }
+                }
+
+
+                if (applicableRegistration) {
+                    const value =
+                        client?.[applicableRegistration];
+
+                    if (
+                        value === null ||
+                        value === undefined ||
+                        String(value).trim() === ""
                     ) {
                         return false;
                     }
@@ -825,6 +882,10 @@ document.addEventListener("DOMContentLoaded", () => {
             locationFilter.value = "";
         }
 
+        if (applicableRegistrationFilter) {
+            applicableRegistrationFilter.value = "";
+        }
+
         populateDistrictFilter();
         populateCityFilter();
 
@@ -856,6 +917,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const locationText =
             locationFilter?.selectedOptions
+                ?. [0]
+                ?.textContent || "";
+
+        const registrationText =
+            applicableRegistrationFilter?.selectedOptions
                 ?. [0]
                 ?.textContent || "";
 
@@ -903,6 +969,15 @@ document.addEventListener("DOMContentLoaded", () => {
             filters.push(
                 "Office: " +
                 locationText
+            );
+        }
+
+        if (registrationText &&
+            applicableRegistrationFilter?.value) {
+
+            filters.push(
+                "Registration: " +
+                registrationText
             );
         }
 
@@ -1333,6 +1408,11 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     locationFilter?.addEventListener(
+        "change",
+        applyFilters
+    );
+
+    applicableRegistrationFilter?.addEventListener(
         "change",
         applyFilters
     );
