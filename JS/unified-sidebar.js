@@ -337,8 +337,10 @@
         ["link", "/admin/gst-dashboard.html", "GST", "◇"],
         ["link", "/admin/udyam.html", "MSME Udyam", "◇"],
         ["link", "/admin/ptec.html", "PTEC", "◇"],
+        ["link", "/admin/income_tax.html", "PAN", "◇"],
         ["link", "/admin/ptrc.html", "PTRC", "◇"],
         ["link", "/admin/tan.html", "TAN", "◇"],
+        
 
         ["section", "OFFICE"],
         ["link", "/admin/dashboard.html#calendar", "Calendar", "◷"],
@@ -364,9 +366,11 @@
         ["link", "/employee/fssai.html", "FSSAI", "◇"],
         ["link", "/employee/gst.html", "GST", "◇"],
         ["link", "/employee/udyam.html", "MSME Udyam", "◇"],
+        ["link", "/employee/Income_tax.html", "PAN", "◇"],
         ["link", "/employee/ptec.html", "PTEC", "◇"],
         ["link", "/employee/ptrc.html", "PTRC", "◇"],
         ["link", "/employee/tan.html", "TAN", "◇"],
+        
 
         ["section", "OFFICE"],
         ["link", "/employee/dashboard.html#calendar", "Calendar", "◷"],

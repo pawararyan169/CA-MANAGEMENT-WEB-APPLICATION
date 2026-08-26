@@ -1,1 +1,297 @@
-.gst-dashboard-page{max-width:1800px;margin:0 auto;padding:28px 30px 40px}.gst-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:20px}.gst-head h1{margin:4px 0 6px;font-size:28px;color:#172033}.gst-head p{margin:0;color:#7b8493}.gst-actions{display:flex;gap:10px;flex-wrap:wrap}.gst-btn{height:40px;padding:0 15px;border:1px solid #d8dee7;border-radius:8px;background:#fff;color:#253044;font-weight:700;cursor:pointer}.gst-btn:hover{background:#f5f7fa}.gst-btn.primary{background:#172033;color:#fff;border-color:#172033}.gst-toolbar{background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:16px;margin-bottom:18px;box-shadow:0 2px 8px rgba(16,24,40,.03)}.gst-filters{display:grid;grid-template-columns:1.8fr 180px 170px 170px 220px 170px;gap:12px}.gst-field label{display:block;font-size:11px;font-weight:800;color:#667085;margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em}.gst-field input,.gst-field select,.gst-table input,.gst-table select{width:100%;height:36px;border:1px solid #d8dee7;border-radius:7px;background:#fff;padding:0 9px;color:#1f2937;font:inherit;font-size:12px;box-sizing:border-box}.gst-table input:focus,.gst-table select:focus,.gst-field input:focus,.gst-field select:focus{outline:none;border-color:#718096;box-shadow:0 0 0 2px rgba(113,128,150,.12)}.gst-summary{display:flex;gap:12px;margin-bottom:18px}.gst-summary-card{background:#fff;border:1px solid #e4e8ee;border-radius:10px;padding:13px 17px;min-width:150px}.gst-summary-card span{display:block;color:#7b8493;font-size:11px;font-weight:700}.gst-summary-card strong{display:block;margin-top:3px;font-size:21px;color:#172033}.gst-table-card{background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden}.gst-table-wrap{overflow:auto}.gst-table{width:100%;min-width:2050px;border-collapse:separate;border-spacing:0}.gst-table th{position:sticky;top:0;z-index:2;background:#f7f8fa;color:#667085;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:11px 9px;border-bottom:1px solid #e4e8ee;white-space:nowrap}.gst-table td{padding:9px;border-bottom:1px solid #edf0f3;vertical-align:middle;background:#fff}.gst-table tr:hover td{background:#fbfcfd}.gst-sr{font-weight:800;color:#667085;text-align:center}.gst-readonly{font-weight:700;color:#172033;line-height:17px}.gst-number{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#2563eb;font-weight:800;white-space:nowrap}.gst-status{display:inline-flex;align-items:center;min-height:30px;padding:5px 9px;border-radius:7px;font-size:10px;font-weight:800;line-height:13px;white-space:nowrap}.gst-status.s0{background:#f1f3f5;color:#667085}.gst-status.s1{background:#eef6ff;color:#2563eb}.gst-status.s2{background:#fff8e6;color:#9a6700}.gst-status.s3{background:#fff1e8;color:#c2410c}.gst-status.s4{background:#f4f0ff;color:#6d28d9}.gst-status.s5{background:#eefbf3;color:#15803d}.gst-status.s6{background:#eaf8f1;color:#047857}.gst-save{height:34px;padding:0 11px;border:0;border-radius:7px;background:#172033;color:#fff;font-weight:800;font-size:11px;cursor:pointer}.gst-save:hover{background:#2c3850}.gst-save:disabled{opacity:.55;cursor:wait}.gst-empty,.gst-loading{padding:50px;text-align:center;color:#7b8493}.gst-error{display:none;margin-bottom:15px;padding:11px 13px;border-radius:8px;background:#fff0f0;color:#b42318;border:1px solid #f2caca;font-size:12px}.gst-toast{position:fixed;right:22px;bottom:22px;z-index:99999;padding:11px 15px;border-radius:8px;background:#172033;color:#fff;font-size:12px;font-weight:700;box-shadow:0 8px 25px rgba(0,0,0,.16);display:none}.gst-toast.show{display:block}.gst-note{font-size:11px;color:#98a2b3;margin-top:9px}.gst-table .date-input{min-width:128px}.gst-table .trade-input{min-width:155px}.gst-table .wef-input{min-width:125px}.gst-table .select-input{min-width:120px}.gst-table .status-col{min-width:160px}.gst-table .action-col{min-width:75px}@media(max-width:1200px){.gst-filters{grid-template-columns:1fr 1fr 1fr}.gst-head{align-items:flex-start;flex-direction:column}}@media(max-width:700px){.gst-dashboard-page{padding:20px 14px}.gst-filters{grid-template-columns:1fr}.gst-summary{flex-wrap:wrap}}
+
+/* =========================================================
+   GST DASHBOARD — CLEAN UI
+========================================================= */
+.gst-clean-ui{
+  width:100%;
+  max-width:1920px;
+  margin:0 auto;
+  padding:28px 30px 42px;
+  box-sizing:border-box;
+  color:#172033;
+}
+
+.gst-clean-ui *{box-sizing:border-box}
+
+.gst-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  padding:4px 0 20px;
+  border-bottom:1px solid #e8ecf1;
+  margin-bottom:18px;
+}
+
+.gst-head h1{
+  margin:5px 0 6px;
+  font-size:28px;
+  line-height:1.2;
+  font-weight:750;
+  letter-spacing:-.02em;
+}
+
+.gst-head p{
+  margin:0;
+  color:#667085;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.gst-actions{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex-shrink:0;
+}
+
+.gst-btn{
+  min-height:40px;
+  padding:0 15px;
+  border:1px solid #d8dee7;
+  border-radius:8px;
+  background:#fff;
+  color:#253044;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  transition:.15s ease;
+}
+
+.gst-btn:hover{background:#f7f9fb;border-color:#c7ced8}
+.gst-btn.primary{background:#172033;color:#fff;border-color:#172033}
+.gst-btn.primary:hover{background:#29354a}
+
+.gst-error{
+  display:none;
+  margin:0 0 16px;
+  padding:11px 13px;
+  border:1px solid #f2caca;
+  border-radius:9px;
+  background:#fff5f5;
+  color:#b42318;
+  font-size:12px;
+}
+
+.gst-toolbar{
+  background:#fff;
+  border:1px solid #e3e8ef;
+  border-radius:12px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 2px 7px rgba(16,24,40,.025);
+}
+
+.gst-filters{
+  display:grid;
+  grid-template-columns:minmax(220px,1.7fr) repeat(5,minmax(145px,1fr));
+  gap:12px;
+}
+
+.gst-field label{
+  display:block;
+  margin:0 0 6px;
+  color:#667085;
+  font-size:10px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+
+.gst-field input,
+.gst-field select,
+.gst-table input,
+.gst-table select{
+  width:100%;
+  height:37px;
+  padding:0 9px;
+  border:1px solid #d7dee7;
+  border-radius:7px;
+  outline:none;
+  background:#fff;
+  color:#1f2937;
+  font:inherit;
+  font-size:12px;
+  transition:border-color .15s,box-shadow .15s;
+}
+
+.gst-field input:focus,
+.gst-field select:focus,
+.gst-table input:focus,
+.gst-table select:focus{
+  border-color:#7b8798;
+  box-shadow:0 0 0 3px rgba(123,135,152,.10);
+}
+
+.gst-note{
+  margin-top:10px;
+  color:#98a2b3;
+  font-size:11px;
+}
+
+.gst-summary{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(160px,220px));
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.gst-summary-card{
+  padding:13px 16px;
+  background:#fff;
+  border:1px solid #e3e8ef;
+  border-radius:10px;
+}
+
+.gst-summary-card span{
+  display:block;
+  color:#667085;
+  font-size:11px;
+  font-weight:700;
+}
+
+.gst-summary-card strong{
+  display:block;
+  margin-top:4px;
+  color:#172033;
+  font-size:22px;
+  line-height:1;
+}
+
+.gst-table-card{
+  overflow:hidden;
+  background:#fff;
+  border:1px solid #e3e8ef;
+  border-radius:12px;
+  box-shadow:0 2px 7px rgba(16,24,40,.025);
+}
+
+.gst-loading,
+.gst-empty{
+  padding:52px 20px;
+  text-align:center;
+  color:#667085;
+  font-size:13px;
+}
+
+.gst-table-wrap{
+  width:100%;
+  overflow:auto;
+  max-height:calc(100vh - 360px);
+}
+
+.gst-table{
+  width:100%;
+  min-width:2150px;
+  border-collapse:separate;
+  border-spacing:0;
+}
+
+.gst-table th{
+  position:sticky;
+  top:0;
+  z-index:3;
+  padding:11px 9px;
+  background:#f7f9fb;
+  border-bottom:1px solid #dfe5ec;
+  color:#667085;
+  font-size:9.5px;
+  font-weight:800;
+  text-align:left;
+  text-transform:uppercase;
+  letter-spacing:.045em;
+  white-space:nowrap;
+}
+
+.gst-table td{
+  padding:8px 9px;
+  border-bottom:1px solid #edf0f3;
+  background:#fff;
+  color:#344054;
+  font-size:11.5px;
+  vertical-align:middle;
+}
+
+.gst-table tbody tr:last-child td{border-bottom:0}
+.gst-table tbody tr:hover td{background:#fafbfc}
+
+.gst-table th:first-child,
+.gst-table td:first-child{
+  position:sticky;
+  left:0;
+  z-index:2;
+  background:#fff;
+}
+
+.gst-table th:first-child{
+  z-index:4;
+  background:#f7f9fb;
+}
+
+.gst-table td:nth-child(2),
+.gst-table td:nth-child(3){
+  font-weight:700;
+  color:#172033;
+}
+
+.gst-table td:nth-child(3){
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:#2563eb;
+  white-space:nowrap;
+}
+
+.gst-table input[type="date"]{min-width:128px}
+.gst-table td:nth-child(4) input{min-width:155px}
+.gst-table select{min-width:118px}
+
+.gst-status-cell{
+  min-width:170px;
+  font-weight:800;
+  color:#344054;
+  white-space:nowrap;
+}
+
+.save-btn{
+  min-width:62px;
+  height:32px;
+  padding:0 11px;
+  border:0;
+  border-radius:7px;
+  background:#172033;
+  color:#fff;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.save-btn:hover{background:#2b374c}
+.save-btn:disabled{opacity:.55;cursor:wait}
+
+.gst-toast{
+  position:fixed;
+  right:22px;
+  bottom:22px;
+  z-index:99999;
+  display:none;
+  padding:11px 15px;
+  border-radius:8px;
+  background:#172033;
+  color:#fff;
+  font-size:12px;
+  font-weight:700;
+  box-shadow:0 10px 28px rgba(0,0,0,.16);
+}
+
+.gst-toast.show{display:block}
+
+@media (max-width:1250px){
+  .gst-filters{grid-template-columns:repeat(3,minmax(170px,1fr))}
+  .gst-head{align-items:flex-start;flex-direction:column}
+}
+
+@media (max-width:720px){
+  .gst-clean-ui{padding:20px 14px 30px}
+  .gst-filters{grid-template-columns:1fr}
+  .gst-summary{grid-template-columns:1fr 1fr}
+  .gst-table-wrap{max-height:none}
+}

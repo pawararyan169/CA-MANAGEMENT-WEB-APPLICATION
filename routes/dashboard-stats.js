@@ -4,82 +4,104 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-function safeCount(sql, params = []) {
-    try {
-        const row = db.prepare(sql).get(...params);
-        return Number(row?.count || 0);
-    } catch (error) {
-        console.error('Dashboard stats query error:', error.message);
-        return 0;
-    }
+/* =========================================================
+   LIVE DASHBOARD STATISTICS
+   Shared by Admin + Employee dashboards.
+   Counts are calculated directly from the current database,
+   so every request reflects the latest saved records.
+========================================================= */
+
+function countRegistration(column) {
+    const allowed = new Set([
+        'pan', 'cin', 'fssai', 'gst', 'udyam', 'ptec', 'ptrc', 'tan'
+    ]);
+
+    if (!allowed.has(column)) return 0;
+
+    const row = db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM clients
+        WHERE status = 'active'
+          AND ${column} IS NOT NULL
+          AND TRIM(${column}) <> ''
+    `).get();
+
+    return Number(row?.count || 0);
 }
 
 router.get('/dashboard/stats', requireAuth, (req, res) => {
     try {
-        const isAdmin = req.user.role === 'admin';
-
-        const activeClients = safeCount(`
+        const activeClients = Number(db.prepare(`
             SELECT COUNT(*) AS count
             FROM clients
-            WHERE COALESCE(status, 'active') = 'active'
-        `);
+            WHERE status = 'active'
+        `).get()?.count || 0);
 
-        const employees = safeCount(`
+        const activeEmployees = Number(db.prepare(`
             SELECT COUNT(*) AS count
             FROM users
-            WHERE role = 'employee' AND status = 'active'
-        `);
+            WHERE role = 'employee'
+              AND status = 'active'
+        `).get()?.count || 0);
 
-        const taskScope = isAdmin
-            ? ''
-            : ' AND assigned_employee_id = ?';
-        const taskParams = isAdmin ? [] : [req.user.id];
+        let totalTasks = 0;
+        let pendingTasks = 0;
+        let completedTasks = 0;
 
-        const totalTasks = safeCount(`
-            SELECT COUNT(*) AS count
-            FROM office_tasks
-            WHERE 1=1${taskScope}
-        `, taskParams);
+        if (req.user.role === 'employee') {
+            const taskRows = db.prepare(`
+                SELECT
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN completion_date IS NULL OR TRIM(completion_date) = '' THEN 1 ELSE 0 END) AS pending,
+                    SUM(CASE WHEN completion_date IS NOT NULL AND TRIM(completion_date) <> '' THEN 1 ELSE 0 END) AS completed
+                FROM office_tasks
+                WHERE assigned_employee_id = ?
+            `).get(req.user.id);
 
-        const completedTasks = safeCount(`
-            SELECT COUNT(*) AS count
-            FROM office_tasks
-            WHERE status = 'completed'${taskScope}
-        `, taskParams);
+            totalTasks = Number(taskRows?.total || 0);
+            pendingTasks = Number(taskRows?.pending || 0);
+            completedTasks = Number(taskRows?.completed || 0);
+        } else {
+            const taskRows = db.prepare(`
+                SELECT
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN completion_date IS NULL OR TRIM(completion_date) = '' THEN 1 ELSE 0 END) AS pending,
+                    SUM(CASE WHEN completion_date IS NOT NULL AND TRIM(completion_date) <> '' THEN 1 ELSE 0 END) AS completed
+                FROM office_tasks
+            `).get();
 
-        const pendingTasks = safeCount(`
-            SELECT COUNT(*) AS count
-            FROM office_tasks
-            WHERE status <> 'completed'${taskScope}
-        `, taskParams);
+            totalTasks = Number(taskRows?.total || 0);
+            pendingTasks = Number(taskRows?.pending || 0);
+            completedTasks = Number(taskRows?.completed || 0);
+        }
 
-        const registrations = {
-            cin: safeCount(`SELECT COUNT(*) AS count FROM clients WHERE COALESCE(status, 'active') = 'active' AND TRIM(COALESCE(cin, '')) <> ''`),
-            fssai: safeCount(`SELECT COUNT(*) AS count FROM clients WHERE COALESCE(status, 'active') = 'active' AND TRIM(COALESCE(fssai, '')) <> ''`),
-            gst: safeCount(`SELECT COUNT(*) AS count FROM clients WHERE COALESCE(status, 'active') = 'active' AND TRIM(COALESCE(gst, '')) <> ''`),
-            udyam: safeCount(`SELECT COUNT(*) AS count FROM clients WHERE COALESCE(status, 'active') = 'active' AND TRIM(COALESCE(udyam, '')) <> ''`),
-            ptec: safeCount(`SELECT COUNT(*) AS count FROM clients WHERE COALESCE(status, 'active') = 'active' AND TRIM(COALESCE(ptec, '')) <> ''`),
-            ptrc: safeCount(`SELECT COUNT(*) AS count FROM clients WHERE COALESCE(status, 'active') = 'active' AND TRIM(COALESCE(ptrc, '')) <> ''`),
-            tan: safeCount(`SELECT COUNT(*) AS count FROM clients WHERE COALESCE(status, 'active') = 'active' AND TRIM(COALESCE(tan, '')) <> ''`)
-        };
-
-        res.json({
+        return res.json({
             success: true,
             role: req.user.role,
-            counts: {
-                employees,
-                clients: activeClients,
-                tasks: isAdmin ? pendingTasks : totalTasks,
-                completedTasks,
+            stats: {
+                activeClients,
+                activeEmployees,
+                totalTasks,
                 pendingTasks,
-                ...registrations
+                completedTasks,
+                registrations: {
+                    pan: countRegistration('pan'),
+                    cin: countRegistration('cin'),
+                    fssai: countRegistration('fssai'),
+                    gst: countRegistration('gst'),
+                    udyam: countRegistration('udyam'),
+                    ptec: countRegistration('ptec'),
+                    ptrc: countRegistration('ptrc'),
+                    tan: countRegistration('tan')
+                },
+                updatedAt: new Date().toISOString()
             }
         });
     } catch (error) {
         console.error('Dashboard stats error:', error);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
-            message: 'Unable to load dashboard statistics.'
+            message: 'Unable to load live dashboard statistics.'
         });
     }
 });

@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const locationFilter =
         document.getElementById("filterLocation");
 
-    const applicableRegistrationFilter =
+    const registrationFilter =
         document.getElementById("filterApplicableRegistration");
 
     const clearFiltersButton =
@@ -395,6 +395,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    function updateRegistrationCounts() {
+        const fields = ["pan","cin","fssai","gst","udyam","ptec","ptrc","tan"];
+
+        fields.forEach(field => {
+            const element = document.querySelector(
+                `[data-registration-count="${field}"]`
+            );
+            if (element) {
+                const count = allClients.filter(client =>
+                    String(client?.[field] ?? "").trim() !== ""
+                ).length;
+                element.textContent = count;
+            }
+        });
+    }
+
     async function loadClients() {
 
         if (loadingClients) {
@@ -439,9 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     ? result.clients
                     : [];
 
-            // Keep the Client Registrations panel live with the
-            // same fresh client data loaded by this page.
-            updateClientRegistrationCounts(allClients);
+            updateRegistrationCounts();
 
             if (clientCountElement) {
                 clientCountElement.textContent =
@@ -489,53 +503,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /* =========================================================
-       CLIENT REGISTRATION COUNTS
-       Counts are calculated from the same live /api/clients
-       response used by this page. The API returns only active
-       clients, so these numbers represent active clients with
-       each registration value present.
-    ========================================================= */
-
-    function updateClientRegistrationCounts(clients) {
-
-        const registrationFields = [
-            "cin",
-            "fssai",
-            "gst",
-            "udyam",
-            "ptec",
-            "ptrc",
-            "tan"
-        ];
-
-        registrationFields.forEach(field => {
-
-            const count = clients.reduce(
-                (total, client) => {
-                    const value = client?.[field];
-
-                    return total +
-                        (value !== null &&
-                         value !== undefined &&
-                         String(value).trim() !== ""
-                            ? 1
-                            : 0);
-                },
-                0
-            );
-
-            document
-                .querySelectorAll(
-                    `[data-registration-count="${field}"]`
-                )
-                .forEach(element => {
-                    element.textContent = count;
-                });
-        });
-    }
-
-
     function applyFilters() {
 
         const search =
@@ -560,9 +527,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const location =
             locationFilter?.value || "";
-
-        const applicableRegistration =
-            applicableRegistrationFilter?.value || "";
+        const registration =
+            registrationFilter?.value || "";
 
 
         filteredClients =
@@ -693,21 +659,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
 
-                // Applicable Registration filter. A client is included
-                // when the selected registration field contains a value.
-                if (applicableRegistration) {
-                    const registrationValue =
-                        client?.[applicableRegistration];
 
-                    if (
-                        registrationValue === null ||
-                        registrationValue === undefined ||
-                        String(registrationValue).trim() === ""
-                    ) {
-                        return false;
-                    }
+                if (registration) {
+                    const registrationValue = client[registration] ?? "";
+                    if (String(registrationValue).trim() === "") return false;
                 }
-
 
                 return true;
             });
@@ -897,8 +853,8 @@ document.addEventListener("DOMContentLoaded", () => {
             locationFilter.value = "";
         }
 
-        if (applicableRegistrationFilter) {
-            applicableRegistrationFilter.value = "";
+        if (registrationFilter) {
+            registrationFilter.value = "";
         }
 
         populateDistrictFilter();
@@ -980,6 +936,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 "Office: " +
                 locationText
             );
+        }
+
+        const registrationLabel =
+            registrationFilter?.selectedOptions?.[0]?.textContent || "";
+
+        if (registrationFilter?.value) {
+            filters.push("Registration: " + registrationLabel);
         }
 
         return filters;
@@ -1413,7 +1376,7 @@ document.addEventListener("DOMContentLoaded", () => {
         applyFilters
     );
 
-    applicableRegistrationFilter?.addEventListener(
+    registrationFilter?.addEventListener(
         "change",
         applyFilters
     );

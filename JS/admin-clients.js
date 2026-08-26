@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const locationFilter =
         document.getElementById("filterLocation");
 
-    const applicableRegistrationFilter =
+    const registrationFilter =
         document.getElementById("filterApplicableRegistration");
 
     const clearFiltersButton =
@@ -395,40 +395,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /* =========================================================
-       LIVE CLIENT REGISTRATION COUNTS
-    ========================================================= */
-
     function updateRegistrationCounts() {
+        const fields = ["pan","cin","fssai","gst","udyam","ptec","ptrc","tan"];
 
-        const registrations = {
-            cin: "cin",
-            fssai: "fssai",
-            gst: "gst",
-            udyam: "udyam",
-            ptec: "ptec",
-            ptrc: "ptrc",
-            tan: "tan"
-        };
-
-        Object.entries(registrations).forEach(([key, field]) => {
-
-            const count = allClients.filter(client => {
-                const value = client?.[field];
-
-                return value !== null &&
-                       value !== undefined &&
-                       String(value).trim() !== "";
-            }).length;
-
-            document
-                .querySelectorAll(`[data-registration-count="${key}"]`)
-                .forEach(element => {
-                    element.textContent = String(count);
-                });
+        fields.forEach(field => {
+            const element = document.querySelector(
+                `[data-registration-count="${field}"]`
+            );
+            if (element) {
+                const count = allClients.filter(client =>
+                    String(client?.[field] ?? "").trim() !== ""
+                ).length;
+                element.textContent = count;
+            }
         });
     }
-
 
     async function loadClients() {
 
@@ -474,12 +455,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     ? result.clients
                     : [];
 
+            updateRegistrationCounts();
+
             if (clientCountElement) {
                 clientCountElement.textContent =
                     allClients.length;
             }
-
-            updateRegistrationCounts();
 
             populateStateFilter();
             populateDistrictFilter();
@@ -546,9 +527,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const location =
             locationFilter?.value || "";
-
-        const applicableRegistration =
-            applicableRegistrationFilter?.value || "";
+        const registration =
+            registrationFilter?.value || "";
 
 
         filteredClients =
@@ -680,19 +660,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
 
-                if (applicableRegistration) {
-                    const value =
-                        client?.[applicableRegistration];
-
-                    if (
-                        value === null ||
-                        value === undefined ||
-                        String(value).trim() === ""
-                    ) {
-                        return false;
-                    }
+                if (registration) {
+                    const registrationValue = client[registration] ?? "";
+                    if (String(registrationValue).trim() === "") return false;
                 }
-
 
                 return true;
             });
@@ -882,8 +853,8 @@ document.addEventListener("DOMContentLoaded", () => {
             locationFilter.value = "";
         }
 
-        if (applicableRegistrationFilter) {
-            applicableRegistrationFilter.value = "";
+        if (registrationFilter) {
+            registrationFilter.value = "";
         }
 
         populateDistrictFilter();
@@ -917,11 +888,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const locationText =
             locationFilter?.selectedOptions
-                ?. [0]
-                ?.textContent || "";
-
-        const registrationText =
-            applicableRegistrationFilter?.selectedOptions
                 ?. [0]
                 ?.textContent || "";
 
@@ -972,13 +938,11 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
 
-        if (registrationText &&
-            applicableRegistrationFilter?.value) {
+        const registrationLabel =
+            registrationFilter?.selectedOptions?.[0]?.textContent || "";
 
-            filters.push(
-                "Registration: " +
-                registrationText
-            );
+        if (registrationFilter?.value) {
+            filters.push("Registration: " + registrationLabel);
         }
 
         return filters;
@@ -1412,7 +1376,7 @@ document.addEventListener("DOMContentLoaded", () => {
         applyFilters
     );
 
-    applicableRegistrationFilter?.addEventListener(
+    registrationFilter?.addEventListener(
         "change",
         applyFilters
     );

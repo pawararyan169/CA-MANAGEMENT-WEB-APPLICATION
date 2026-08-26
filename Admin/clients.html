@@ -151,23 +151,10 @@
     }
 
     .client-filter-panel .filter-actions button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: auto;
         min-width: 132px;
-        height: 44px;
-        min-height: 44px;
-        padding: 0 18px;
-        margin: 0;
+        min-height: 42px;
         box-sizing: border-box;
-        line-height: 1;
-        font-family: inherit;
-        font-size: 13px;
-        font-weight: 600;
-        text-align: center;
-        white-space: nowrap;
-        vertical-align: middle;
     }
 
     .client-filter-panel .filter-actions #clearClientFilters {
@@ -205,6 +192,14 @@
     }
 </style>
 
+<style id="button-alignment-pan-fix">
+.primary-button,.secondary-button,#clearClientFilters,#exportClientsExcel,#exportClientsPdf{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ text-align:center!important;vertical-align:middle!important;line-height:1!important;
+ box-sizing:border-box!important;white-space:nowrap!important;
+}
+#clearClientFilters,#exportClientsExcel,#exportClientsPdf{height:44px!important;min-height:44px!important;margin:0!important;padding:0 18px!important;}
+</style>
 </head>
 
 
@@ -449,6 +444,20 @@
                 </div>
             </div>
             <div class="client-registration-grid">
+                <a href="/admin/Pan-dashboard.html"
+                   class="client-registration-card"
+                   title="Permanent Account Number">
+                    <div class="client-registration-card-icon">P</div>
+                    <div class="client-registration-card-body">
+                        <strong>PAN</strong>
+                        <span>Permanent Account Number</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="pan">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                
 
                 <a href="/admin/cin.html"
                    class="client-registration-card"
@@ -568,7 +577,7 @@
                 <a
                     href="/admin/add-client.html"
                     class="primary-button"
-                    style="display:inline-flex;align-items:center;justify-content:center;width:auto;min-width:132px;height:44px;padding:0 20px;line-height:1;white-space:nowrap;text-align:center;"
+                    style="width:auto;padding:0 20px;"
                 >
                     + Add Client
                 </a>
@@ -586,7 +595,7 @@
                     <div class="form-group"><label for="filterCity">City / Town</label><select id="filterCity" disabled><option value="">All cities</option></select></div>
                     <div class="form-group"><label for="filterStatus">Status</label><select id="filterStatus"><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
                     <div class="form-group"><label for="filterLocation">Office Location</label><select id="filterLocation"><option value="">All office locations</option></select></div>
-                    <div class="form-group"><label for="filterApplicableRegistration">Applicable Registration</label><select id="filterApplicableRegistration"><option value="">All registrations</option><option value="cin">CIN</option><option value="fssai">FSSAI</option><option value="gst">GST</option><option value="udyam">MSME Udyam</option><option value="ptec">PTEC</option><option value="ptrc">PTRC</option><option value="tan">TAN</option></select></div>
+                    <div class="form-group"><label for="filterApplicableRegistration">Applicable Registration</label><select id="filterApplicableRegistration"><option value="">All registrations</option><option value="pan">PAN</option><option value="cin">CIN</option><option value="fssai">FSSAI</option><option value="gst">GST</option><option value="udyam">MSME Udyam</option><option value="ptec">PTEC</option><option value="ptrc">PTRC</option><option value="tan">TAN</option></select></div>
                 </div>
                 <div class="filter-actions">
                     <button id="clearClientFilters" type="button" class="secondary-button">Clear Filters</button>
@@ -727,7 +736,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-<script src="/JS/admin-clients.js?v=client-filters-5"></script>
+<script src="/JS/admin-clients.js?v=client-filters-4"></script>
 <script src="../JS/unified-sidebar.js"></script>
 </body>
 

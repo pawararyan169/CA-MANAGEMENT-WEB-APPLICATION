@@ -47,7 +47,9 @@
 </head>
 
 
-<body class="ca-admin-constant-page" class="dashboard-body">
+<body class="dashboard-body">
+
+
 <div class="dashboard-layout">
 
 
@@ -55,7 +57,198 @@
          SIDEBAR
     ====================================================== -->
 
-    
+    <aside class="sidebar">
+
+
+        <!-- BRAND -->
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+            <div class="brand-name">
+
+                <strong>
+                    CA Office
+                </strong>
+
+                <span>
+                    Administration
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             NAVIGATION
+        ================================================== -->
+
+        <nav class="sidebar-nav">
+
+
+            <!-- OVERVIEW -->
+
+            <span class="nav-section">
+                OVERVIEW
+            </span>
+
+
+            <a
+                href="/admin/dashboard.html"
+                class="nav-item active"
+            >
+
+                <span class="nav-icon">
+                    ⌂
+                </span>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </a>
+
+
+            <!-- MANAGEMENT -->
+
+            <span class="nav-section">
+                MANAGEMENT
+            </span>
+
+
+            <!-- EMPLOYEES -->
+
+            <a
+                href="/admin/employees.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ◌
+                </span>
+
+                <span>
+                    Employees
+                </span>
+
+            </a>
+
+
+
+           
+
+
+            
+
+            <!-- CLIENTS -->
+
+            <a
+                href="/admin/clients.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ◉
+                </span>
+
+                <span>
+                    Clients
+                </span>
+
+            </a>
+
+
+            <!-- TASKS -->
+
+            <a
+                href="/admin/tasks.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ✓
+                </span>
+
+                <span>
+                    Tasks
+                </span>
+
+            </a>
+
+
+            <!-- SIGNUP REQUESTS -->
+
+            <a
+                href="/admin/signup-requests.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ◌
+                </span>
+
+                <span>
+                    Signup Requests
+                </span>
+
+            </a>
+
+
+            <!-- LOCATIONS -->
+
+            <a
+                href="/admin/locations.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ◇
+                </span>
+
+                <span>
+                    Locations
+                </span>
+
+            </a>
+
+
+        </nav>
+
+
+        <!-- =================================================
+             SIDEBAR BOTTOM
+        ================================================== -->
+
+        <div class="sidebar-bottom">
+
+
+            <!-- SIGN OUT -->
+
+            <button
+                type="button"
+                class="logout-button"
+                id="logoutButton"
+            >
+
+                <span class="nav-icon">
+                    ↪
+                </span>
+
+                <span>
+                    Sign out
+                </span>
+
+            </button>
+
+
+        </div>
+
+
+    </aside>
 
 
     <!-- =====================================================
@@ -211,372 +404,362 @@
 
             <!-- BILLING -->
 
-
-            <a
-
-
-                href="/admin/billing.html"
-
-
-                class="stat-card"
-
-
-                style="text-decoration:none;color:inherit;"
-
-
-            >
-
+            <div class="stat-card">
 
                 <div class="stat-top">
 
-
                     <span>
-
-
                         Outstanding
-
-
                     </span>
-
 
                     <span class="stat-icon">
-
-
                         ₹
-
-
                     </span>
-
 
                 </div>
 
-
                 <strong>
-
-
                     —
-
-
                 </strong>
 
-
                 <span class="stat-change">
-
-
                     Billing module
-
-
                 </span>
 
-
-            </a>
+            </div>
 
 
         </section>
 
-        <!-- =================================================
+
+        <!-- =========================================================
              TAX & REGISTRATIONS
-             MAIN CONTENT PANEL
-        ================================================== -->
-
+        ========================================================= -->
+        
         <section class="dashboard-panel registration-dashboard-panel">
+        
+            <div class="panel-header">
+        
+                <div>
+        
+                    <h2>
+                        Tax & Registrations
+                    </h2>
+        
+                    <p>
+                        Live registration information from your client records.
+                    </p>
+        
+                </div>
+        
+                <a
+                    href="/admin/registrations.html?type=cin"
+                    id="viewAllRegistrations"
+                    class="secondary-button"
+                >
+                    View All Registrations →
+                </a>
+        
+            </div>
+        
+        
+            <div class="registration-dashboard-grid">
+        
+        
+        
 
-    <div class="panel-header">
-
-        <div>
-
-            <h2>
-                Tax & Registrations
-            </h2>
-
-            <p>
-                Live registration information from your client records.
-            </p>
-
-        </div>
+        <!-- PAN -->
 
         <a
-            href="/admin/cin.html"
-            id="viewAllRegistrations"
-            class="secondary-button"
+            href="/admin/registrations.html?type=pan"
+            class="registration-dashboard-card"
         >
-            View All Registrations →
+
+            <div class="registration-dashboard-icon">
+                P
+            </div>
+
+            <div class="registration-dashboard-info">
+                <strong>PAN</strong>
+                <span>Permanent Account Number</span>
+            </div>
+
+            <div class="registration-dashboard-count">
+                <strong id="dashboardPanCount">—</strong>
+                <span>Clients</span>
+            </div>
+
         </a>
-
-    </div>
-
-
-    <div class="registration-dashboard-grid">
-
 
         <!-- CIN -->
-
-        <a
-            href="/admin/cin.html"
-            class="registration-dashboard-card"
-        >
-
-            <div class="registration-dashboard-icon">
-                C
+        
+                <a
+                    href="/admin/registrations.html?type=cin"
+                    class="registration-dashboard-card"
+                >
+        
+                    <div class="registration-dashboard-icon">
+                        C
+                    </div>
+        
+                    <div class="registration-dashboard-info">
+        
+                        <strong>
+                            CIN
+                        </strong>
+        
+                        <span>
+                            Corporate Identification Number
+                        </span>
+        
+                    </div>
+        
+                    <div class="registration-dashboard-count">
+        
+                        <strong id="dashboardCinCount">
+                            —
+                        </strong>
+        
+                        <span>
+                            Clients
+                        </span>
+        
+                    </div>
+        
+                </a>
+        
+        
+                <!-- FSSAI -->
+        
+                <a
+                    href="/admin/registrations.html?type=fssai"
+                    class="registration-dashboard-card"
+                >
+        
+                    <div class="registration-dashboard-icon">
+                        F
+                    </div>
+        
+                    <div class="registration-dashboard-info">
+        
+                        <strong>
+                            FSSAI
+                        </strong>
+        
+                        <span>
+                            Food Safety Registration
+                        </span>
+        
+                    </div>
+        
+                    <div class="registration-dashboard-count">
+        
+                        <strong id="dashboardFssaiCount">
+                            —
+                        </strong>
+        
+                        <span>
+                            Clients
+                        </span>
+        
+                    </div>
+        
+                </a>
+        
+        
+                <!-- GST -->
+        
+                <a
+                    href="/admin/gst.html"
+                    class="registration-dashboard-card"
+                >
+        
+                    <div class="registration-dashboard-icon">
+                        G
+                    </div>
+        
+                    <div class="registration-dashboard-info">
+        
+                        <strong>
+                            GST
+                        </strong>
+        
+                        <span>
+                            Goods & Services Tax
+                        </span>
+        
+                    </div>
+        
+                    <div class="registration-dashboard-count">
+        
+                        <strong id="dashboardGstCount">
+                            —
+                        </strong>
+        
+                        <span>
+                            Clients
+                        </span>
+        
+                    </div>
+        
+                </a>
+        
+        
+                <!-- MSME UDYAM -->
+        
+                <a
+                    href="/admin/registrations.html?type=udyam"
+                    class="registration-dashboard-card"
+                >
+        
+                    <div class="registration-dashboard-icon">
+                        M
+                    </div>
+        
+                    <div class="registration-dashboard-info">
+        
+                        <strong>
+                            MSME Udyam
+                        </strong>
+        
+                        <span>
+                            MSME Udyam Registration
+                        </span>
+        
+                    </div>
+        
+                    <div class="registration-dashboard-count">
+        
+                        <strong id="dashboardUdyamCount">
+                            —
+                        </strong>
+        
+                        <span>
+                            Clients
+                        </span>
+        
+                    </div>
+        
+                </a>
+        
+        
+                <!-- PTEC -->
+        
+                <a
+                    href="/admin/registrations.html?type=ptec"
+                    class="registration-dashboard-card"
+                >
+        
+                    <div class="registration-dashboard-icon">
+                        P
+                    </div>
+        
+                    <div class="registration-dashboard-info">
+        
+                        <strong>
+                            PTEC
+                        </strong>
+        
+                        <span>
+                            Professional Tax Enrollment
+                        </span>
+        
+                    </div>
+        
+                    <div class="registration-dashboard-count">
+        
+                        <strong id="dashboardPtecCount">
+                            —
+                        </strong>
+        
+                        <span>
+                            Clients
+                        </span>
+        
+                    </div>
+        
+                </a>
+        
+        
+                <!-- PTRC -->
+        
+                <a
+                    href="/admin/registrations.html?type=ptrc"
+                    class="registration-dashboard-card"
+                >
+        
+                    <div class="registration-dashboard-icon">
+                        P
+                    </div>
+        
+                    <div class="registration-dashboard-info">
+        
+                        <strong>
+                            PTRC
+                        </strong>
+        
+                        <span>
+                            Professional Tax Registration
+                        </span>
+        
+                    </div>
+        
+                    <div class="registration-dashboard-count">
+        
+                        <strong id="dashboardPtrcCount">
+                            —
+                        </strong>
+        
+                        <span>
+                            Clients
+                        </span>
+        
+                    </div>
+        
+                </a>
+        
+        
+                <!-- TAN -->
+        
+                <a
+                    href="/admin/registrations.html?type=tan"
+                    class="registration-dashboard-card"
+                >
+        
+                    <div class="registration-dashboard-icon">
+                        T
+                    </div>
+        
+                    <div class="registration-dashboard-info">
+        
+                        <strong>
+                            TAN
+                        </strong>
+        
+                        <span>
+                            Tax Deduction Account Number
+                        </span>
+        
+                    </div>
+        
+                    <div class="registration-dashboard-count">
+        
+                        <strong id="dashboardTanCount">
+                            —
+                        </strong>
+        
+                        <span>
+                            Clients
+                        </span>
+        
+                    </div>
+        
+                </a>
+        
             </div>
-
-            <div class="registration-dashboard-info">
-
-                <strong>
-                    CIN
-                </strong>
-
-                <span>
-                    Corporate Identification Number
-                </span>
-
-            </div>
-
-            <div class="registration-dashboard-count">
-
-                <strong id="dashboardCinCount">
-                    —
-                </strong>
-
-                <span>
-                    Clients
-                </span>
-
-            </div>
-
-        </a>
-
-
-        <!-- FSSAI -->
-
-        <a
-            href="/admin/fssai.html"
-            class="registration-dashboard-card"
-        >
-
-            <div class="registration-dashboard-icon">
-                F
-            </div>
-
-            <div class="registration-dashboard-info">
-
-                <strong>
-                    FSSAI
-                </strong>
-
-                <span>
-                    Food Safety Registration
-                </span>
-
-            </div>
-
-            <div class="registration-dashboard-count">
-
-                <strong id="dashboardFssaiCount">
-                    —
-                </strong>
-
-                <span>
-                    Clients
-                </span>
-
-            </div>
-
-        </a>
-
-
-        <!-- GST -->
-
-        <a
-            href="/admin/registrations.html?type=gst"
-            class="registration-dashboard-card"
-        >
-
-            <div class="registration-dashboard-icon">
-                G
-            </div>
-
-            <div class="registration-dashboard-info">
-
-                <strong>
-                    GST
-                </strong>
-
-                <span>
-                    Goods & Services Tax
-                </span>
-
-            </div>
-
-            <div class="registration-dashboard-count">
-
-                <strong id="dashboardGstCount">
-                    —
-                </strong>
-
-                <span>
-                    Clients
-                </span>
-
-            </div>
-
-        </a>
-
-
-        <!-- MSME UDYAM -->
-
-        <a
-            href="/admin/registrations.html?type=udyam"
-            class="registration-dashboard-card"
-        >
-
-            <div class="registration-dashboard-icon">
-                M
-            </div>
-
-            <div class="registration-dashboard-info">
-
-                <strong>
-                    MSME Udyam
-                </strong>
-
-                <span>
-                    MSME Udyam Registration
-                </span>
-
-            </div>
-
-            <div class="registration-dashboard-count">
-
-                <strong id="dashboardUdyamCount">
-                    —
-                </strong>
-
-                <span>
-                    Clients
-                </span>
-
-            </div>
-
-        </a>
-
-
-        <!-- PTEC -->
-
-        <a
-            href="/admin/registrations.html?type=ptec"
-            class="registration-dashboard-card"
-        >
-
-            <div class="registration-dashboard-icon">
-                P
-            </div>
-
-            <div class="registration-dashboard-info">
-
-                <strong>
-                    PTEC
-                </strong>
-
-                <span>
-                    Professional Tax Enrollment
-                </span>
-
-            </div>
-
-            <div class="registration-dashboard-count">
-
-                <strong id="dashboardPtecCount">
-                    —
-                </strong>
-
-                <span>
-                    Clients
-                </span>
-
-            </div>
-
-        </a>
-
-
-        <!-- PTRC -->
-
-        <a
-            href="/admin/registrations.html?type=ptrc"
-            class="registration-dashboard-card"
-        >
-
-            <div class="registration-dashboard-icon">
-                P
-            </div>
-
-            <div class="registration-dashboard-info">
-
-                <strong>
-                    PTRC
-                </strong>
-
-                <span>
-                    Professional Tax Registration
-                </span>
-
-            </div>
-
-            <div class="registration-dashboard-count">
-
-                <strong id="dashboardPtrcCount">
-                    —
-                </strong>
-
-                <span>
-                    Clients
-                </span>
-
-            </div>
-
-        </a>
-
-
-        <!-- TAN -->
-
-        <a
-            href="/admin/registrations.html?type=tan"
-            class="registration-dashboard-card"
-        >
-
-            <div class="registration-dashboard-icon">
-                T
-            </div>
-
-            <div class="registration-dashboard-info">
-
-                <strong>
-                    TAN
-                </strong>
-
-                <span>
-                    Tax Deduction Account Number
-                </span>
-
-            </div>
-
-            <div class="registration-dashboard-count">
-
-                <strong id="dashboardTanCount">
-                    —
-                </strong>
-
-                <span>
-                    Clients
-                </span>
-
-            </div>
-
-        </a>
-
-    </div>
-
-</section>
+        
+        </section>
+        
 
 
         <!-- =================================================
@@ -1072,19 +1255,9 @@
 
 <script src="/JS/auth.js"></script>
 
-<script src="/JS/admin.js"></script>
-<script src="/JS/dashboard-registrations.js"></script>
+<script src="/JS/admin.js?v=20260826-gst-live"></script>
+<script src="/JS/unified-sidebar.js"></script>
 
-
-    <script src="../JS/unified-sidebar.js"></script>
-
-<script>
-document.getElementById("logoutButton")?.addEventListener("click", function () {
-    localStorage.removeItem("caOfficeLoggedIn");
-    localStorage.removeItem("caOfficeUser");
-    window.location.href = "/login.html";
-});
-</script>
 
 </body>
 
