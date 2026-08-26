@@ -22,10 +22,10 @@
 
   function getStatus(r) {
     if (r.setDate) return STATUS[7];
-    if (r.filingDate) return STATUS[6];
+    if (r.setDate) return STATUS[6];
     if (r.threeBFilingDate) return STATUS[5];
     if (r.taxPaymentDate) return STATUS[4];
-    if (r.gstr1FilingDate || r.iffFilingDate) return STATUS[3];
+    if (r.gstr1IffFilingDate) return STATUS[3];
     if (r.workingDate) return STATUS[2];
     if (r.documentReceivedDate) return STATUS[1];
     return STATUS[0];
@@ -66,13 +66,10 @@
         <td>${input('date', r.documentReceivedDate, 'documentReceivedDate')}</td>
         <td>${input('date', r.workingDate, 'workingDate')}</td>
         <td class="gstr-iff-cell">
-          ${input('date', r.gstr1FilingDate, 'gstr1FilingDate')}
-          <span>/</span>
-          ${input('date', r.iffFilingDate, 'iffFilingDate')}
+          ${input('date', r.gstr1IffFilingDate, 'gstr1IffFilingDate')}
         </td>
         <td>${input('date', r.taxPaymentDate, 'taxPaymentDate')}</td>
         <td>${input('date', r.threeBFilingDate, 'threeBFilingDate')}</td>
-        <td>${input('date', r.filingDate, 'filingDate')}</td>
         <td>${input('date', r.setDate, 'setDate')}</td>
         <td class="status">${esc(getStatus(r))}</td>`;
       body.appendChild(tr);
@@ -169,14 +166,14 @@
     const headers = [
       'SR NO.','GST NAME','GST NUMBER','TRADE NAME','W.E.F','TYPE','FILING FREQUENCY',
       'DOCUMENT RECEIVED DATE','WORKING DATE','GSTR-1 / IFF','TAX PAYMENT DATE',
-      '3B FILING DATE','FILING DATE','SET DATE','STATUS','MONTH'
+      '3B FILING DATE','SET DATE','STATUS','MONTH'
     ];
     const q = v => `"${String(v ?? '').replaceAll('"','""')}"`;
     const rows = filtered.map((r,i) => [
       i+1,r.gstName,r.gstNumber,r.tradeName,r.effectiveFrom,r.registrationType,
       r.filingFrequency,r.documentReceivedDate,r.workingDate,
-      `${r.gstr1FilingDate || ''} / ${r.iffFilingDate || ''}`,
-      r.taxPaymentDate,r.threeBFilingDate,r.filingDate,r.setDate,getStatus(r),currentMonth
+      r.gstr1IffFilingDate || '',
+      r.taxPaymentDate,r.threeBFilingDate,r.setDate,getStatus(r),currentMonth
     ]);
     const blob = new Blob([[headers,...rows].map(a=>a.map(q).join(',')).join('\r\n')], {type:'text/csv'});
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob);

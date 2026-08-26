@@ -71,7 +71,6 @@ db.exec(`
         gstr1_iff_filing_date TEXT,
         tax_payment_date TEXT,
         three_b_filing_date TEXT,
-        filing_date TEXT,
         set_date TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
@@ -82,6 +81,23 @@ db.exec(`
     CREATE INDEX IF NOT EXISTS idx_gst_monthly_month
         ON gst_monthly_records(month_key);
 `);
+
+// GST GSTR-1 / IFF uses one filing date. Migrate legacy separate columns if present.
+try {
+    const cols = db.prepare(`PRAGMA table_info(gst_monthly_records)`).all().map(c => c.name);
+    if (!cols.includes("gstr1_iff_filing_date")) {
+        db.exec(`ALTER TABLE gst_monthly_records ADD COLUMN gstr1_iff_filing_date TEXT`);
+    }
+    const cols2 = db.prepare(`PRAGMA table_info(gst_monthly_records)`).all().map(c => c.name);
+    if (cols2.includes("gstr1_filing_date") || cols2.includes("iff_filing_date")) {
+        const g = cols2.includes("gstr1_filing_date") ? "gstr1_filing_date" : "NULL";
+        const i = cols2.includes("iff_filing_date") ? "iff_filing_date" : "NULL";
+        db.exec(`UPDATE gst_monthly_records SET gstr1_iff_filing_date = COALESCE(${g}, ${i}) WHERE gstr1_iff_filing_date IS NULL`);
+    }
+} catch (e) {
+    console.warn("GST GSTR-1/IFF migration warning:", e.message);
+}
+
 
 
 /* =========================================================

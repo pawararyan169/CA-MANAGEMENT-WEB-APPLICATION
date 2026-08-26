@@ -24,11 +24,9 @@ CREATE TABLE IF NOT EXISTS gst_monthly_records (
   month_key TEXT NOT NULL,
   document_received_date TEXT,
   working_date TEXT,
-  gstr1_filing_date TEXT,
-  iff_filing_date TEXT,
+  gstr1_iff_filing_date TEXT,
   tax_payment_date TEXT,
   three_b_filing_date TEXT,
-  filing_date TEXT,
   set_date TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
@@ -41,11 +39,9 @@ CREATE INDEX IF NOT EXISTS idx_gst_monthly_month ON gst_monthly_records(month_ke
 for (const sql of [
   `ALTER TABLE gst_profiles ADD COLUMN effective_from TEXT`,
   `ALTER TABLE gst_monthly_records ADD COLUMN working_date TEXT`,
-  `ALTER TABLE gst_monthly_records ADD COLUMN gstr1_filing_date TEXT`,
-  `ALTER TABLE gst_monthly_records ADD COLUMN iff_filing_date TEXT`,
+  `ALTER TABLE gst_monthly_records ADD COLUMN gstr1_iff_filing_date TEXT`,
   `ALTER TABLE gst_monthly_records ADD COLUMN tax_payment_date TEXT`,
   `ALTER TABLE gst_monthly_records ADD COLUMN three_b_filing_date TEXT`,
-  `ALTER TABLE gst_monthly_records ADD COLUMN filing_date TEXT`,
   `ALTER TABLE gst_monthly_records ADD COLUMN set_date TEXT`
 ]) { try { db.exec(sql); } catch (_) {} }
 
@@ -104,9 +100,9 @@ function ensureMonth(monthKey) {
   const insert = db.prepare(`
     INSERT INTO gst_monthly_records
     (id,gst_profile_id,month_key,document_received_date,working_date,
-     gstr1_filing_date,iff_filing_date,tax_payment_date,three_b_filing_date,
+     gstr1_iff_filing_date,tax_payment_date,three_b_filing_date,
      filing_date,set_date,created_at,updated_at)
-    VALUES (?,?,?,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,?,?)
+    VALUES (?,?,?,NULL,NULL,NULL,NULL,NULL,NULL,NULL,?,?)
   `);
   const now = new Date().toISOString();
 
@@ -122,7 +118,7 @@ function getStatus(row) {
   if (row.filing_date) return "SET PENDING";
   if (row.three_b_filing_date) return "FILING PENDING";
   if (row.tax_payment_date) return "3B FILING PENDING";
-  if (row.gstr1_filing_date || row.iff_filing_date) return "TAX PENDING";
+  if (row.gstr1_iff_filing_date) return "TAX PENDING";
   if (row.working_date) return "GSTR -1/ IFF PENDING";
   if (row.document_received_date) return "DOCUMENT RECIEVED";
   return "DOCUMENT NOT RECIEVED";
@@ -142,11 +138,9 @@ function mapRow(row) {
     month: row.month_key,
     documentReceivedDate: row.document_received_date || "",
     workingDate: row.working_date || "",
-    gstr1FilingDate: row.gstr1_filing_date || "",
-    iffFilingDate: row.iff_filing_date || "",
+    gstr1IffFilingDate: row.gstr1_iff_filing_date || "",
     taxPaymentDate: row.tax_payment_date || "",
     threeBFilingDate: row.three_b_filing_date || "",
-    filingDate: row.filing_date || "",
     setDate: row.set_date || "",
     status: getStatus(row)
   };
@@ -157,9 +151,8 @@ function getRows(monthKey) {
   return db.prepare(`
     SELECT gm.id, gp.id AS profile_id, gp.client_id, gp.trade_name, gp.effective_from,
            gp.registration_type, gp.filing_frequency, gm.month_key,
-           gm.document_received_date, gm.working_date, gm.gstr1_filing_date,
-           gm.iff_filing_date, gm.tax_payment_date, gm.three_b_filing_date,
-           gm.filing_date, gm.set_date,
+           gm.document_received_date, gm.working_date, gm.gstr1_iff_filing_date, gm.tax_payment_date, gm.three_b_filing_date,
+           gm.set_date,
            c.first_name, c.middle_name, c.last_name, c.gst
     FROM gst_monthly_records gm
     JOIN gst_profiles gp ON gp.id = gm.gst_profile_id
@@ -171,8 +164,8 @@ function getRows(monthKey) {
 
 function validatePayload(body) {
   const fields = [
-    "effectiveFrom","documentReceivedDate","workingDate","gstr1FilingDate",
-    "iffFilingDate","taxPaymentDate","threeBFilingDate","filingDate","setDate"
+    "effectiveFrom","documentReceivedDate","workingDate","gstr1IffFilingDate",
+    "taxPaymentDate","threeBFilingDate","setDate"
   ];
   for (const f of fields) {
     if (!validDate(clean(body[f]))) throw new Error(`${f} must use YYYY-MM-DD.`);
@@ -188,11 +181,9 @@ function validatePayload(body) {
     filingFrequency,
     documentReceivedDate: clean(body.documentReceivedDate),
     workingDate: clean(body.workingDate),
-    gstr1FilingDate: clean(body.gstr1FilingDate),
-    iffFilingDate: clean(body.iffFilingDate),
+    gstr1IffFilingDate: clean(body.gstr1IffFilingDate),
     taxPaymentDate: clean(body.taxPaymentDate),
     threeBFilingDate: clean(body.threeBFilingDate),
-    filingDate: clean(body.filingDate),
     setDate: clean(body.setDate)
   };
 }
@@ -218,13 +209,13 @@ function updateOne(id, body) {
 
     db.prepare(`
       UPDATE gst_monthly_records
-      SET document_received_date=?, working_date=?, gstr1_filing_date=?, iff_filing_date=?,
-          tax_payment_date=?, three_b_filing_date=?, filing_date=?, set_date=?, updated_at=?
+      SET document_received_date=?, working_date=?, gstr1_iff_filing_date=?,
+          tax_payment_date=?, three_b_filing_date=?, set_date=?, updated_at=?
       WHERE id=?
     `).run(
-      p.documentReceivedDate || null,p.workingDate || null,p.gstr1FilingDate || null,
-      p.iffFilingDate || null,p.taxPaymentDate || null,p.threeBFilingDate || null,
-      p.filingDate || null,p.setDate || null,now,id
+      p.documentReceivedDate || null,p.workingDate || null,p.gstr1IffFilingDate || null,
+      p.taxPaymentDate || null,p.threeBFilingDate || null,
+      p.setDate || null,now,id
     );
   })();
 
