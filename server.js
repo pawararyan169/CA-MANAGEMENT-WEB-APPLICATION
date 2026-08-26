@@ -25,6 +25,7 @@ app.use('/api', require('./routes/documents'));
 app.use('/api', require('./routes/billing'));
 app.use('/api', require('./routes/gst-dashboard'));
 app.use('/api', require('./routes/dashboard-stats'));
+app.use('/api', require('./routes/income-tax'));
 
 app.use(express.static(__dirname));
 

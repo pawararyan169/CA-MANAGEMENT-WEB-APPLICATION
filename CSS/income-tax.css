@@ -1,0 +1,38 @@
+
+.income-tax-page{width:100%;max-width:1920px;margin:auto;padding:28px 30px 42px;color:#172033}
+.income-tax-page *{box-sizing:border-box}
+.it-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:4px 0 20px;border-bottom:1px solid #e8ecf1;margin-bottom:18px}
+.it-head h1{margin:5px 0 6px;font-size:28px;line-height:1.2;font-weight:750}
+.it-head p{margin:0;color:#667085;font-size:13px}
+.it-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.it-btn{min-height:40px;padding:0 14px;border:1px solid #d8dee7;border-radius:8px;background:#fff;color:#253044;font-size:12px;font-weight:700;cursor:pointer}
+.it-btn:hover{background:#f7f9fb}
+.it-btn.primary{background:#172033;color:#fff;border-color:#172033}
+.it-btn.save{background:#166534;color:#fff;border-color:#166534}
+.it-error{display:none;margin-bottom:14px;padding:11px 13px;border:1px solid #f2caca;border-radius:9px;background:#fff5f5;color:#b42318;font-size:12px}
+.it-toolbar{background:#fff;border:1px solid #e3e8ef;border-radius:12px;padding:16px;margin-bottom:14px}
+.it-filters{display:grid;grid-template-columns:minmax(220px,1.6fr) repeat(7,minmax(130px,1fr));gap:11px}
+.it-field label{display:block;margin-bottom:6px;color:#667085;font-size:10px;font-weight:800;text-transform:uppercase}
+.it-field input,.it-field select,.it-table input,.it-table select{width:100%;height:37px;padding:0 9px;border:1px solid #d7dee7;border-radius:7px;background:#fff;color:#1f2937;font-size:12px}
+.it-field input:focus,.it-field select:focus,.it-table input:focus,.it-table select:focus{outline:none;border-color:#7b8798;box-shadow:0 0 0 3px rgba(123,135,152,.1)}
+.it-note{margin-top:10px;color:#98a2b3;font-size:11px}
+.it-summary{display:grid;grid-template-columns:repeat(2,minmax(160px,220px));gap:12px;margin-bottom:14px}
+.it-summary-card{padding:13px 16px;background:#fff;border:1px solid #e3e8ef;border-radius:10px}
+.it-summary-card span{display:block;color:#667085;font-size:11px;font-weight:700}
+.it-summary-card strong{display:block;margin-top:4px;font-size:22px}
+.it-table-card{overflow:hidden;background:#fff;border:1px solid #e3e8ef;border-radius:12px}
+.it-loading,.it-empty{padding:52px;text-align:center;color:#667085;font-size:13px}
+.it-table-wrap{overflow:auto;max-height:calc(100vh - 355px)}
+.it-table{width:100%;min-width:1450px;border-collapse:separate;border-spacing:0}
+.it-table th{position:sticky;top:0;z-index:3;padding:11px 10px;background:#f7f9fb;border-bottom:1px solid #dfe5ec;color:#667085;font-size:9.5px;font-weight:800;text-align:left;white-space:nowrap}
+.it-table td{padding:8px 10px;border-bottom:1px solid #edf0f3;background:#fff;color:#344054;font-size:11.5px;vertical-align:middle}
+.it-table tbody tr:hover td{background:#fafbfc}
+.it-table td:nth-child(2){font-weight:700;color:#172033;min-width:230px}
+.it-table input[type=date]{min-width:135px}
+.it-table select{min-width:115px}
+.it-status{min-width:190px;font-weight:800;white-space:nowrap}
+.it-toast{position:fixed;right:22px;bottom:22px;display:none;padding:11px 15px;border-radius:8px;background:#172033;color:#fff;font-size:12px;font-weight:700;z-index:99999}
+.it-toast.show{display:block}
+@media(max-width:1400px){.it-filters{grid-template-columns:repeat(4,minmax(160px,1fr))}}
+@media(max-width:800px){.it-head{align-items:flex-start;flex-direction:column}.it-filters{grid-template-columns:repeat(2,minmax(160px,1fr))}}
+@media(max-width:600px){.income-tax-page{padding:20px 14px}.it-filters{grid-template-columns:1fr}}
