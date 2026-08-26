@@ -332,7 +332,7 @@
         ["link", "/admin/billing.html", "Billing", "₹"],
 
         ["section", "REGISTRATIONS"],
-        ["link", "/admin/cin.html", "CIN", "◇"],
+        ["link", "/admin/cin_dashboard.html", "CIN", "◇"],
         ["link", "/admin/fssai.html", "FSSAI", "◇"],
         ["link", "/admin/gst-dashboard.html", "GST", "◇"],
         ["link", "/admin/udyam.html", "MSME Udyam", "◇"],
@@ -362,7 +362,7 @@
         ["link", "/employee/billing.html", "Billing", "₹"],
 
         ["section", "REGISTRATIONS"],
-        ["link", "/employee/cin.html", "CIN", "◇"],
+        ["link", "/employee/cin_dashboard.html", "CIN", "◇"],
         ["link", "/employee/fssai.html", "FSSAI", "◇"],
         ["link", "/employee/gst.html", "GST", "◇"],
         ["link", "/employee/udyam.html", "MSME Udyam", "◇"],

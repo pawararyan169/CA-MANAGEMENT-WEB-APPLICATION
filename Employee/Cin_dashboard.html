@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CIN Dashboard</title>
+
+    <link rel="stylesheet" href="/CSS/style.css">
+    <link rel="stylesheet" href="/CSS/cin_dashboard.css">
+</head>
+
+<body class="dashboard-body">
+
+<div class="dashboard-layout">
+
+    <main class="dashboard-main">
+
+        <div class="cin-page">
+
+            <!-- HEADER -->
+            <header class="cin-header">
+
+                <div>
+                    <span class="dashboard-eyebrow">
+                        COMPANY COMPLIANCE
+                    </span>
+
+                    <h1>CIN Dashboard</h1>
+
+                    <p>
+                        Annual filing register for companies having a CIN.
+                    </p>
+                </div>
+
+                <div class="cin-actions">
+
+                    <button
+                        id="cinExportExcel"
+                        class="cin-btn"
+                        type="button">
+                        Export Excel
+                    </button>
+
+                    <button
+                        id="cinExportPdf"
+                        class="cin-btn"
+                        type="button">
+                        Export PDF
+                    </button>
+
+                    <button
+                        id="cinSaveAll"
+                        class="cin-btn save"
+                        type="button">
+                        Save All
+                    </button>
+
+                </div>
+
+            </header>
+
+
+            <!-- ERROR -->
+            <div
+                id="cinError"
+                class="cin-error">
+            </div>
+
+
+            <!-- FILTERS -->
+            <section class="cin-filter-card">
+
+                <div class="cin-filters">
+
+                    <!-- SEARCH -->
+                    <div class="cin-field">
+
+                        <label>
+                            Search CIN
+                        </label>
+
+                        <input
+                            id="cinSearch"
+                            type="search"
+                            placeholder="Search CIN number...">
+
+                    </div>
+
+
+                    <!-- YEAR -->
+                    <div class="cin-field">
+
+                        <label>
+                            Filing Year
+                        </label>
+
+                        <select id="cinYearFilter">
+
+                            <option value="">
+                                All Years
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- STATUS -->
+                    <div class="cin-field">
+
+                        <label>
+                            Filing Status
+                        </label>
+
+                        <select id="cinStatusFilter">
+
+                            <option value="">
+                                All Statuses
+                            </option>
+
+                            <option value="PENDING">
+                                Pending
+                            </option>
+
+                            <option value="FILED">
+                                Filed
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="cin-filter-info">
+
+                    Showing
+                    <strong id="cinVisibleCount">
+                        0
+                    </strong>
+
+                    of
+
+                    <strong id="cinTotalCount">
+                        0
+                    </strong>
+
+                    CIN records.
+
+                </div>
+
+            </section>
+
+
+            <!-- TABLE -->
+            <section class="cin-table-card">
+
+                <div
+                    id="cinLoading"
+                    class="cin-loading">
+
+                    Loading CIN records...
+
+                </div>
+
+
+                <div
+                    id="cinEmpty"
+                    class="cin-empty"
+                    style="display:none;">
+
+                    No CIN records found.
+
+                </div>
+
+
+                <div
+                    id="cinTableWrap"
+                    class="cin-table-wrap"
+                    style="display:none;">
+
+                    <table class="cin-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    SR. NO.
+                                </th>
+
+                                <th>
+                                    CIN NUMBER
+                                </th>
+
+                                <th>
+                                    ANNUAL FILING DATE
+                                </th>
+
+                                <th>
+                                    STATUS
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="cinTableBody">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<div
+    id="cinToast"
+    class="cin-toast">
+</div>
+
+
+<script src="/JS/auth.js"></script>
+<script src="/JS/cin-dashboard.js"></script>
+<script src="/JS/unified-sidebar.js"></script>
+
+</body>
+</html>
