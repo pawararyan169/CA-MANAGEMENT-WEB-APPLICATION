@@ -333,12 +333,12 @@
 
         ["section", "REGISTRATIONS"],
         ["link", "/admin/cin_dashboard.html", "CIN", "◇"],
-        ["link", "/admin/fssai.html", "FSSAI", "◇"],
+        ["link", "/admin/fssai_dashboard.html", "FSSAI", "◇"],
         ["link", "/admin/gst-dashboard.html", "GST", "◇"],
-        ["link", "/admin/udyam.html", "MSME Udyam", "◇"],
-        ["link", "/admin/ptec.html", "PTEC", "◇"],
+        ["link", "/admin/udyam_dashboard.html", "MSME Udyam", "◇"],
+        ["link", "/admin/ptec_dashboard.html", "PTEC", "◇"],
         ["link", "/admin/income_tax.html", "PAN", "◇"],
-        ["link", "/admin/ptrc.html", "PTRC", "◇"],
+        ["link", "/admin/ptrc_dashboard.html", "PTRC", "◇"],
         ["link", "/admin/tan.html", "TAN", "◇"],
         
 
@@ -363,12 +363,12 @@
 
         ["section", "REGISTRATIONS"],
         ["link", "/employee/cin_dashboard.html", "CIN", "◇"],
-        ["link", "/employee/fssai.html", "FSSAI", "◇"],
+        ["link", "/employee/fssai_dashboard.html", "FSSAI", "◇"],
         ["link", "/employee/gst.html", "GST", "◇"],
-        ["link", "/employee/udyam.html", "MSME Udyam", "◇"],
+        ["link", "/employee/udyam_dashboard.html", "MSME Udyam", "◇"],
         ["link", "/employee/Income_tax.html", "PAN", "◇"],
-        ["link", "/employee/ptec.html", "PTEC", "◇"],
-        ["link", "/employee/ptrc.html", "PTRC", "◇"],
+        ["link", "/employee/ptec_dashboard.html", "PTEC", "◇"],
+        ["link", "/employee/ptrc_dashboard.html", "PTRC", "◇"],
         ["link", "/employee/tan.html", "TAN", "◇"],
         
 

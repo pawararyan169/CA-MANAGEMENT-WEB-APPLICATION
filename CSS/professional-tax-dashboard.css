@@ -1,0 +1,507 @@
+.professional-tax-page {
+    width: 100%;
+    max-width: 1920px;
+
+    margin: auto;
+
+    padding:
+        28px 30px 42px;
+
+    color: #172033;
+}
+
+.professional-tax-page *,
+.professional-tax-page *::before,
+.professional-tax-page *::after {
+    box-sizing: border-box;
+}
+
+
+/* HEADER */
+
+.professional-tax-header {
+    display: flex;
+
+    align-items: flex-end;
+
+    justify-content: space-between;
+
+    gap: 24px;
+
+    padding:
+        4px 0 20px;
+
+    margin-bottom: 18px;
+
+    border-bottom:
+        1px solid #e8ecf1;
+}
+
+.professional-tax-eyebrow {
+    font-size: 10px;
+
+    font-weight: 800;
+
+    letter-spacing: .12em;
+
+    color: #667085;
+}
+
+.professional-tax-header h1 {
+    margin:
+        5px 0 6px;
+
+    font-size: 28px;
+
+    line-height: 1.2;
+
+    font-weight: 750;
+}
+
+.professional-tax-header p {
+    margin: 0;
+
+    color: #667085;
+
+    font-size: 13px;
+}
+
+
+/* BUTTONS */
+
+.professional-tax-actions {
+    display: flex;
+
+    gap: 8px;
+
+    flex-wrap: wrap;
+
+    justify-content: flex-end;
+}
+
+.professional-tax-btn {
+    min-height: 40px;
+
+    padding:
+        0 15px;
+
+    border:
+        1px solid #d8dee7;
+
+    border-radius: 8px;
+
+    background: #fff;
+
+    color: #253044;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.professional-tax-btn:hover {
+    background:
+        #f7f9fb;
+}
+
+.professional-tax-btn.save {
+    background:
+        #166534;
+
+    color:
+        #fff;
+
+    border-color:
+        #166534;
+}
+
+
+/* ERROR */
+
+.professional-tax-error {
+    display: none;
+
+    margin-bottom: 14px;
+
+    padding:
+        11px 13px;
+
+    border:
+        1px solid #f2caca;
+
+    border-radius: 9px;
+
+    background:
+        #fff5f5;
+
+    color:
+        #b42318;
+
+    font-size:
+        12px;
+}
+
+
+/* FILTER */
+
+.professional-tax-filter-card {
+    background:
+        #fff;
+
+    border:
+        1px solid #e3e8ef;
+
+    border-radius:
+        12px;
+
+    padding:
+        16px;
+
+    margin-bottom:
+        14px;
+}
+
+.professional-tax-filters {
+    display:
+        grid;
+
+    grid-template-columns:
+        minmax(170px, 1fr)
+        minmax(280px, 2fr)
+        minmax(180px, 1fr);
+
+    gap:
+        12px;
+}
+
+.professional-tax-field label {
+    display:
+        block;
+
+    margin-bottom:
+        6px;
+
+    color:
+        #667085;
+
+    font-size:
+        10px;
+
+    font-weight:
+        800;
+
+    text-transform:
+        uppercase;
+}
+
+.professional-tax-field input,
+.professional-tax-field select {
+
+    width:
+        100%;
+
+    height:
+        38px;
+
+    padding:
+        0 10px;
+
+    border:
+        1px solid #d7dee7;
+
+    border-radius:
+        7px;
+
+    background:
+        #fff;
+
+    color:
+        #1f2937;
+
+    font-size:
+        12px;
+}
+
+.professional-tax-filter-info {
+    margin-top:
+        12px;
+
+    color:
+        #98a2b3;
+
+    font-size:
+        11px;
+}
+
+
+/* TABLE */
+
+.professional-tax-table-card {
+
+    overflow:
+        hidden;
+
+    background:
+        #fff;
+
+    border:
+        1px solid #e3e8ef;
+
+    border-radius:
+        12px;
+}
+
+.professional-tax-loading,
+.professional-tax-empty {
+
+    padding:
+        52px;
+
+    text-align:
+        center;
+
+    color:
+        #667085;
+
+    font-size:
+        13px;
+}
+
+.professional-tax-table-wrap {
+
+    overflow:
+        auto;
+
+    max-height:
+        calc(100vh - 320px);
+}
+
+.professional-tax-table {
+
+    width:
+        100%;
+
+    min-width:
+        850px;
+
+    border-collapse:
+        separate;
+
+    border-spacing:
+        0;
+}
+
+.professional-tax-table th {
+
+    position:
+        sticky;
+
+    top:
+        0;
+
+    z-index:
+        3;
+
+    padding:
+        12px 10px;
+
+    background:
+        #f7f9fb;
+
+    border-bottom:
+        1px solid #dfe5ec;
+
+    color:
+        #667085;
+
+    font-size:
+        9.5px;
+
+    font-weight:
+        800;
+
+    text-align:
+        left;
+
+    white-space:
+        nowrap;
+}
+
+.professional-tax-table td {
+
+    padding:
+        10px;
+
+    border-bottom:
+        1px solid #edf0f3;
+
+    background:
+        #fff;
+
+    color:
+        #344054;
+
+    font-size:
+        12px;
+
+    vertical-align:
+        middle;
+}
+
+.professional-tax-table tbody tr:hover td {
+
+    background:
+        #fafbfc;
+}
+
+.professional-tax-table td:nth-child(2) {
+
+    min-width:
+        240px;
+
+    font-weight:
+        700;
+
+    color:
+        #172033;
+}
+
+.professional-tax-table td:nth-child(3) {
+
+    min-width:
+        220px;
+
+    font-weight:
+        600;
+}
+
+.professional-tax-table input[type="date"] {
+
+    width:
+        160px;
+
+    height:
+        36px;
+
+    padding:
+        0 9px;
+
+    border:
+        1px solid #d7dee7;
+
+    border-radius:
+        7px;
+
+    font-size:
+        12px;
+}
+
+
+/* STATUS */
+
+.professional-tax-status {
+
+    font-weight:
+        800;
+
+    white-space:
+        nowrap;
+}
+
+.professional-tax-status.payment-done {
+
+    color:
+        #027a48;
+}
+
+.professional-tax-status.payment-pending {
+
+    color:
+        #b54708;
+}
+
+
+/* TOAST */
+
+.professional-tax-toast {
+
+    position:
+        fixed;
+
+    right:
+        22px;
+
+    bottom:
+        22px;
+
+    display:
+        none;
+
+    padding:
+        11px 15px;
+
+    border-radius:
+        8px;
+
+    background:
+        #172033;
+
+    color:
+        #fff;
+
+    font-size:
+        12px;
+
+    font-weight:
+        700;
+
+    z-index:
+        99999;
+}
+
+.professional-tax-toast.show {
+
+    display:
+        block;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+
+    .professional-tax-header {
+
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
+    }
+
+    .professional-tax-filters {
+
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .professional-tax-page {
+
+        padding:
+            20px 14px;
+    }
+
+    .professional-tax-filters {
+
+        grid-template-columns:
+            1fr;
+    }
+
+}

@@ -7,12 +7,16 @@ const crypto = require('crypto');
 require('./database/database');
 const db = require('./database/database');
 
+
 /* =========================================================
    ROUTES
 ========================================================= */
 
 const cinDashboardRoutes =
     require('./routes/cin-dashboard');
+
+const fssaiDashboardRoutes =
+    require('./routes/fssai-dashboard');
 
 
 /* =========================================================
@@ -53,12 +57,40 @@ app.use(
    API ROUTES
 ========================================================= */
 
+
+/*
+ * GST DASHBOARD
+ */
+app.use(
+    '/api',
+    require('./routes/gst-dashboard')
+);
+
+
+/*
+ * DASHBOARD LIVE COUNTS
+ */
+app.use(
+    '/api',
+    require('./routes/dashboard-stats')
+);
+
+
 /*
  * CIN DASHBOARD
  */
 app.use(
     '/api',
     cinDashboardRoutes
+);
+
+
+/*
+ * FSSAI DASHBOARD
+ */
+app.use(
+    '/api',
+    fssaiDashboardRoutes
 );
 
 
@@ -135,30 +167,14 @@ app.use(
 
 
 /*
- * GST DASHBOARD
- */
-app.use(
-    '/api',
-    require('./routes/gst-dashboard')
-);
-
-
-/*
- * DASHBOARD LIVE COUNTS
- */
-app.use(
-    '/api',
-    require('./routes/dashboard-stats')
-);
-
-
-/*
  * INCOME TAX
  */
 app.use(
     '/api',
     require('./routes/income-tax')
 );
+
+app.use('/api',require('./routes/professional-tax'))
 
 
 /* =========================================================
@@ -341,6 +357,25 @@ app.get(
 );
 
 
+/*
+ * ADMIN FSSAI DASHBOARD
+ */
+app.get(
+    '/admin/fssai_dashboard.html',
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                'admin',
+                'fssai_dashboard.html'
+            )
+        );
+
+    }
+);
+
+
 /* =========================================================
    EMPLOYEE
 ========================================================= */
@@ -456,6 +491,25 @@ app.get(
                 __dirname,
                 'employee',
                 'income_tax.html'
+            )
+        );
+
+    }
+);
+
+
+/*
+ * EMPLOYEE FSSAI DASHBOARD
+ */
+app.get(
+    '/employee/fssai_dashboard.html',
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                'employee',
+                'fssai_dashboard.html'
             )
         );
 
