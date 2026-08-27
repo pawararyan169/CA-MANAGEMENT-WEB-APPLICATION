@@ -1,220 +1,184 @@
-const express = require('express');
-const crypto = require('crypto');
+const express = require("express");
+const crypto = require("crypto");
 
-const db = require('../database/database');
-const { requireAuth } = require('../middleware/auth');
+const db = require("../database/database");
+const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
-
-/* =========================================================
-   DOCUMENT REGISTER TABLE
-
-   Created here so the existing database.js does not have to
-   be rewritten. This is intentionally independent of the
-   existing clients/tasks tables.
-========================================================= */
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS office_documents (
-
-        id TEXT PRIMARY KEY,
-
-        serial_no INTEGER NOT NULL UNIQUE,
-
-        client_id TEXT NOT NULL,
-
-        purpose TEXT NOT NULL,
-
-        mode TEXT NOT NULL CHECK (mode IN ('online', 'offline')),
-
-        receipt_date TEXT NOT NULL,
-
-        dispatch_date TEXT,
-
-        receiving_staff_id TEXT,
-
-        delivering_staff_id TEXT,
-
-        created_by TEXT NOT NULL,
-
-        created_at TEXT NOT NULL,
-
-        updated_at TEXT NOT NULL
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_office_documents_client
-        ON office_documents(client_id);
-
-    CREATE INDEX IF NOT EXISTS idx_office_documents_receipt
-        ON office_documents(receipt_date);
-
-    CREATE INDEX IF NOT EXISTS idx_office_documents_mode
-        ON office_documents(mode);
-`);
-
-
-try {
-    const documentColumns =
-        db.prepare(`PRAGMA table_info(office_documents)`).all();
-
-    if (
-        !documentColumns.some(
-            column => column.name === 'assigned_employee_id'
-        )
-    ) {
-        db.exec(`
-            ALTER TABLE office_documents
-            ADD COLUMN assigned_employee_id TEXT
-        `);
-    }
-
-    db.exec(`
-        CREATE INDEX IF NOT EXISTS idx_office_documents_assigned_employee
-            ON office_documents(assigned_employee_id);
-    `);
-} catch (migrationError) {
-    console.error(
-        'Document assigned employee migration error:',
-        migrationError
-    );
-}
-
-/* =========================================================
-   DATE OF COMPLETION MIGRATION
-========================================================= */
-
-try {
-    const documentColumns =
-        db.prepare(`PRAGMA table_info(office_documents)`).all();
-
-    if (
-        !documentColumns.some(
-            column => column.name === 'completion_date'
-        )
-    ) {
-        db.exec(`
-            ALTER TABLE office_documents
-            ADD COLUMN completion_date TEXT
-        `);
-    }
-} catch (completionMigrationError) {
-    console.error(
-        'Document completion date migration error:',
-        completionMigrationError
-    );
-}
 
 /* =========================================================
    HELPERS
 ========================================================= */
 
 function clean(value) {
-    return String(value ?? '').trim();
+    return String(value ?? "").trim();
 }
-
 
 function generateId() {
-    return `DOC${Date.now()}${crypto.randomInt(1000, 9999)}`;
+    return (
+        "DOC" +
+        Date.now() +
+        crypto.randomInt(1000, 9999)
+    );
 }
-
 
 function displayName(first, middle, last) {
     return [
-        first,
-        middle,
-        last
+        clean(first),
+        clean(middle),
+        clean(last)
     ]
         .filter(Boolean)
-        .join(' ')
+        .join(" ")
         .trim();
 }
 
-
-function formatSerial(serial) {
-    return `DOC-${String(serial).padStart(6, '0')}`;
+function formatSerial(number) {
+    return `DOC-${String(number).padStart(6, "0")}`;
 }
 
+/* =========================================================
+   DATABASE MIGRATION
+========================================================= */
 
-function mapDocument(row) {
+db.exec(`
+    CREATE TABLE IF NOT EXISTS office_documents (
+        id TEXT PRIMARY KEY,
+        serial_no INTEGER NOT NULL UNIQUE,
+        client_id TEXT NOT NULL,
+        purpose TEXT NOT NULL,
+        mode TEXT NOT NULL,
+        receipt_date TEXT NOT NULL,
+        dispatch_date TEXT,
+        receiving_staff_id TEXT,
+        delivering_staff_id TEXT,
+        created_by TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    );
+`);
 
-    return {
+/* Assigned employee */
 
-        id: row.id,
+try {
+    const columns = db
+        .prepare(`PRAGMA table_info(office_documents)`)
+        .all();
 
-        serialNumber: row.serial_no,
+    const exists = columns.some(
+        column =>
+            column.name === "assigned_employee_id"
+    );
 
-        serialLabel: formatSerial(row.serial_no),
-
-        clientId: row.client_id,
-
-        clientName: row.client_name || 'Unknown Client',
-
-        clientPan: row.client_pan || '',
-
-        purpose: row.purpose || '',
-
-        mode: row.mode || '',
-
-        receiptDate: row.receipt_date || '',
-
-        dispatchDate: row.dispatch_date || '',
-
-        completionDate:
-            row.completion_date || '',
-
-        status:
-            row.completion_date
-                ? 'COMPLETE'
-                : 'W.I.P',
-
-        receivingStaffId:
-            row.receiving_staff_id || '',
-
-        receivingStaff:
-            row.receiving_staff_name || '',
-
-        deliveringStaffId:
-            row.delivering_staff_id || '',
-
-        deliveringStaff:
-            row.delivering_staff_name || '',
-
-        assignedEmployeeId:
-            row.assigned_employee_id || '',
-
-        assignedEmployee:
-            row.assigned_employee_name || '',
-
-        createdBy:
-            row.created_by || '',
-
-        createdAt:
-            row.created_at || '',
-
-        updatedAt:
-            row.updated_at || ''
-    };
+    if (!exists) {
+        db.exec(`
+            ALTER TABLE office_documents
+            ADD COLUMN assigned_employee_id TEXT
+        `);
+    }
+} catch (error) {
+    console.error(
+        "Assigned employee migration error:",
+        error
+    );
 }
 
+/* Completion date */
+
+try {
+    const columns = db
+        .prepare(`PRAGMA table_info(office_documents)`)
+        .all();
+
+    const exists = columns.some(
+        column =>
+            column.name === "completion_date"
+    );
+
+    if (!exists) {
+        db.exec(`
+            ALTER TABLE office_documents
+            ADD COLUMN completion_date TEXT
+        `);
+    }
+} catch (error) {
+    console.error(
+        "Completion date migration error:",
+        error
+    );
+}
+
+/* Indexes */
+
+try {
+    db.exec(`
+        CREATE INDEX IF NOT EXISTS
+        idx_office_documents_client
+        ON office_documents(client_id);
+
+        CREATE INDEX IF NOT EXISTS
+        idx_office_documents_receipt
+        ON office_documents(receipt_date);
+
+        CREATE INDEX IF NOT EXISTS
+        idx_office_documents_mode
+        ON office_documents(mode);
+
+        CREATE INDEX IF NOT EXISTS
+        idx_office_documents_completion
+        ON office_documents(completion_date);
+
+        CREATE INDEX IF NOT EXISTS
+        idx_office_documents_assigned_employee
+        ON office_documents(assigned_employee_id);
+    `);
+} catch (error) {
+    console.error(
+        "Document indexes error:",
+        error
+    );
+}
+
+/* =========================================================
+   DOCUMENT SELECT
+========================================================= */
 
 function documentQuery() {
-
     return `
         SELECT
 
-            d.*,
+            d.id,
+            d.serial_no,
+            d.client_id,
+            d.purpose,
+            d.mode,
+            d.receipt_date,
+            d.dispatch_date,
+            d.completion_date,
+
+            d.receiving_staff_id,
+            d.delivering_staff_id,
+            d.assigned_employee_id,
+
+            d.created_by,
+            d.created_at,
+            d.updated_at,
+
+            /* CLIENT */
 
             TRIM(
-                COALESCE(c.first_name, '') ||
+                COALESCE(c.first_name, '')
+                ||
                 CASE
                     WHEN c.middle_name IS NOT NULL
-                         AND c.middle_name != ''
+                    AND c.middle_name != ''
                     THEN ' ' || c.middle_name
                     ELSE ''
-                END ||
+                END
+                ||
                 CASE
                     WHEN c.last_name IS NOT NULL
-                         AND c.last_name != ''
+                    AND c.last_name != ''
                     THEN ' ' || c.last_name
                     ELSE ''
                 END
@@ -222,49 +186,61 @@ function documentQuery() {
 
             c.pan AS client_pan,
 
+            /* RECEIVING STAFF */
+
             TRIM(
-                COALESCE(r.first_name, '') ||
+                COALESCE(r.first_name, '')
+                ||
                 CASE
                     WHEN r.middle_name IS NOT NULL
-                         AND r.middle_name != ''
+                    AND r.middle_name != ''
                     THEN ' ' || r.middle_name
                     ELSE ''
-                END ||
+                END
+                ||
                 CASE
                     WHEN r.last_name IS NOT NULL
-                         AND r.last_name != ''
+                    AND r.last_name != ''
                     THEN ' ' || r.last_name
                     ELSE ''
                 END
             ) AS receiving_staff_name,
 
+            /* DELIVERING STAFF */
+
             TRIM(
-                COALESCE(del.first_name, '') ||
+                COALESCE(del.first_name, '')
+                ||
                 CASE
                     WHEN del.middle_name IS NOT NULL
-                         AND del.middle_name != ''
+                    AND del.middle_name != ''
                     THEN ' ' || del.middle_name
                     ELSE ''
-                END ||
+                END
+                ||
                 CASE
                     WHEN del.last_name IS NOT NULL
-                         AND del.last_name != ''
+                    AND del.last_name != ''
                     THEN ' ' || del.last_name
                     ELSE ''
                 END
             ) AS delivering_staff_name,
 
+            /* ASSIGNED EMPLOYEE */
+
             TRIM(
-                COALESCE(ae.first_name, '') ||
+                COALESCE(ae.first_name, '')
+                ||
                 CASE
                     WHEN ae.middle_name IS NOT NULL
-                         AND ae.middle_name != ''
+                    AND ae.middle_name != ''
                     THEN ' ' || ae.middle_name
                     ELSE ''
-                END ||
+                END
+                ||
                 CASE
                     WHEN ae.last_name IS NOT NULL
-                         AND ae.last_name != ''
+                    AND ae.last_name != ''
                     THEN ' ' || ae.last_name
                     ELSE ''
                 END
@@ -286,315 +262,241 @@ function documentQuery() {
     `;
 }
 
+/* =========================================================
+   MAP DOCUMENT
+========================================================= */
+
+function mapDocument(row) {
+
+    if (!row) {
+        return null;
+    }
+
+    return {
+
+        id:
+            row.id || "",
+
+        serialNumber:
+            row.serial_no || "",
+
+        serialLabel:
+            row.serial_no
+                ? formatSerial(row.serial_no)
+                : "",
+
+        clientId:
+            row.client_id || "",
+
+        clientName:
+            row.client_name ||
+            "Unknown Client",
+
+        clientPan:
+            row.client_pan || "",
+
+        purpose:
+            row.purpose || "",
+
+        mode:
+            row.mode || "",
+
+        receiptDate:
+            row.receipt_date || "",
+
+        dispatchDate:
+            row.dispatch_date || "",
+
+        completionDate:
+            row.completion_date || "",
+
+        receivingStaffId:
+            row.receiving_staff_id || "",
+
+        receivingStaffName:
+            row.receiving_staff_name || "",
+
+        deliveringStaffId:
+            row.delivering_staff_id || "",
+
+        deliveringStaffName:
+            row.delivering_staff_name || "",
+
+        assignedEmployeeId:
+            row.assigned_employee_id || "",
+
+        assignedEmployeeName:
+            row.assigned_employee_name || "",
+
+        createdBy:
+            row.created_by || "",
+
+        createdAt:
+            row.created_at || "",
+
+        updatedAt:
+            row.updated_at || "",
+
+        status:
+            row.completion_date
+                ? "COMPLETE"
+                : "W.I.P"
+    };
+}
+
+/* =========================================================
+   NEXT SERIAL
+========================================================= */
 
 function getNextSerialNumber() {
 
-    const result = db.prepare(`
+    const result =
+        db.prepare(`
+            SELECT
+                COALESCE(
+                    MAX(serial_no),
+                    0
+                ) + 1 AS next_serial
+            FROM office_documents
+        `).get();
 
-        SELECT
-            COALESCE(MAX(serial_no), 0) + 1 AS next_serial
-
-        FROM office_documents
-
-    `).get();
-
-
-    return Number(result.next_serial || 1);
+    return Number(
+        result?.next_serial || 1
+    );
 }
 
-
 /* =========================================================
-   GET NEXT SERIAL NUMBER
+   NEXT SERIAL API
 ========================================================= */
 
 router.get(
-    '/documents/next-serial',
+    "/documents/next-serial",
     requireAuth,
     (req, res) => {
 
         try {
 
-            const nextSerial =
+            const serial =
                 getNextSerialNumber();
 
-
             return res.json({
-
                 success: true,
-
-                serialNumber: nextSerial,
-
+                serialNumber: serial,
                 serialLabel:
-                    formatSerial(nextSerial)
+                    formatSerial(serial)
             });
 
-        }
-        catch (error) {
+        } catch (error) {
 
             console.error(
-                'Get next document serial error:',
+                "Next serial error:",
                 error
             );
 
-
             return res.status(500).json({
-
                 success: false,
-
                 message:
-                    'Unable to generate document serial number.'
+                    "Unable to generate document serial."
             });
         }
     }
 );
 
-
 /* =========================================================
-   GET CLIENTS FOR DROPDOWN
+   CLIENTS
 ========================================================= */
 
 router.get(
-    '/documents/clients',
+    "/documents/clients",
     requireAuth,
     (req, res) => {
 
         try {
 
-            const clients = db.prepare(`
-
-                SELECT
-                    id,
-                    first_name,
-                    middle_name,
-                    last_name,
-                    pan
-
-                FROM clients
-
-                WHERE
-                    status = 'active'
-
-                ORDER BY
-                    first_name,
-                    last_name
-
-            `).all();
-
-
-            return res.json({
-
-                success: true,
-
-                clients: clients.map(client => ({
-
-                    id: client.id,
-
-                    name: displayName(
-                        client.first_name,
-                        client.middle_name,
-                        client.last_name
-                    ),
-
-                    pan: client.pan || ''
-                }))
-            });
-
-        }
-        catch (error) {
-
-            console.error(
-                'Get document clients error:',
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    'Unable to load clients.'
-            });
-        }
-    }
-);
-
-
-/* =========================================================
-   GET ACTIVE STAFF
-
-   Both Admin and Employee can select staff. Admin is included
-   because the office administrator can also receive/deliver
-   documents.
-========================================================= */
-
-router.get(
-    '/documents/staff',
-    requireAuth,
-    (req, res) => {
-
-        try {
-
-            const staff = db.prepare(`
-
-                SELECT
-                    id,
-                    username,
-                    first_name,
-                    middle_name,
-                    last_name,
-                    email,
-                    role,
-                    designation
-
-                FROM users
-
-                WHERE
-                    status = 'active'
-
-                ORDER BY
-                    CASE
-                        WHEN role = 'admin' THEN 0
-                        ELSE 1
-                    END,
-                    first_name,
-                    last_name
-
-            `).all();
-
-
-            return res.json({
-
-                success: true,
-
-                staff: staff.map(person => ({
-
-                    id: person.id,
-
-                    name: displayName(
-                        person.first_name,
-                        person.middle_name,
-                        person.last_name
-                    ) || person.username,
-
-                    username:
-                        person.username || '',
-
-                    email:
-                        person.email || '',
-
-                    role:
-                        person.role || 'employee',
-
-                    designation:
-                        person.designation || ''
-                }))
-            });
-
-        }
-        catch (error) {
-
-            console.error(
-                'Get document staff error:',
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    'Unable to load staff.'
-            });
-        }
-    }
-);
-
-
-/* =========================================================
-   GET DOCUMENTS
-
-   Both Admin and Employee can see the office document register.
-========================================================= */
-
-router.get(
-    '/documents',
-    requireAuth,
-    (req, res) => {
-
-        try {
-
-            const rows = db.prepare(`
-
-                ${documentQuery()}
-
-                ORDER BY
-                    d.serial_no DESC
-
-            `).all();
-
-
-            return res.json({
-
-                success: true,
-
-                documents:
-                    rows.map(mapDocument)
-            });
-
-        }
-        catch (error) {
-
-            console.error(
-                'Get documents error:',
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    'Unable to load office documents.'
-            });
-        }
-    }
-);
-
-
-/* =========================================================
-   EMPLOYEES FOR DOCUMENT ASSIGNMENT
-========================================================= */
-
-router.get(
-    '/documents/employees',
-    requireAuth,
-    (req, res) => {
-
-        try {
-
-            const rows = db.prepare(`
-                SELECT
-                    id,
-                    first_name,
-                    middle_name,
-                    last_name,
-                    username
-                FROM users
-                WHERE
-                    role = 'employee'
-                    AND status = 'active'
-                ORDER BY
-                    first_name COLLATE NOCASE,
-                    last_name COLLATE NOCASE
-            `).all();
-
-            return res.json({
-                success: true,
-                employees: rows.map(row => ({
+            const rows =
+                db.prepare(`
+                    SELECT
+                        id,
+                        first_name,
+                        middle_name,
+                        last_name,
+                        pan
+                    FROM clients
+                    WHERE status = 'active'
+                    ORDER BY
+                        first_name COLLATE NOCASE,
+                        last_name COLLATE NOCASE
+                `).all();
+
+            const clients =
+                rows.map(row => ({
                     id: row.id,
+
+                    name:
+                        displayName(
+                            row.first_name,
+                            row.middle_name,
+                            row.last_name
+                        ),
+
+                    pan:
+                        row.pan || ""
+                }));
+
+            return res.json({
+                success: true,
+                clients
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Document clients error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to load clients."
+            });
+        }
+    }
+);
+
+/* =========================================================
+   STAFF
+========================================================= */
+
+router.get(
+    "/documents/staff",
+    requireAuth,
+    (req, res) => {
+
+        try {
+
+            const rows =
+                db.prepare(`
+                    SELECT
+                        id,
+                        username,
+                        first_name,
+                        middle_name,
+                        last_name,
+                        email,
+                        role,
+                        designation
+                    FROM users
+                    WHERE status = 'active'
+                    ORDER BY
+                        first_name COLLATE NOCASE,
+                        last_name COLLATE NOCASE
+                `).all();
+
+            const staff =
+                rows.map(row => ({
+                    id: row.id,
+
                     name:
                         displayName(
                             row.first_name,
@@ -602,40 +504,175 @@ router.get(
                             row.last_name
                         ) ||
                         row.username ||
-                        'Employee'
-                }))
+                        "Staff",
+
+                    username:
+                        row.username || "",
+
+                    email:
+                        row.email || "",
+
+                    role:
+                        row.role || "",
+
+                    designation:
+                        row.designation || ""
+                }));
+
+            return res.json({
+                success: true,
+                staff
             });
 
         } catch (error) {
 
             console.error(
-                'Document employees error:',
+                "Document staff error:",
                 error
             );
 
             return res.status(500).json({
                 success: false,
-                message: 'Unable to load employees.'
+                message:
+                    "Unable to load staff."
             });
         }
     }
 );
 
-
 /* =========================================================
-   CREATE DOCUMENT
-
-   Both Admin and Employee can create a document register entry.
+   EMPLOYEES
 ========================================================= */
 
-router.post(
-    '/documents',
+router.get(
+    "/documents/employees",
     requireAuth,
     (req, res) => {
 
         try {
 
-            const body = req.body || {};
+            const rows =
+                db.prepare(`
+                    SELECT
+                        id,
+                        first_name,
+                        middle_name,
+                        last_name,
+                        username
+                    FROM users
+                    WHERE
+                        role = 'employee'
+                        AND status = 'active'
+                    ORDER BY
+                        first_name COLLATE NOCASE,
+                        last_name COLLATE NOCASE
+                `).all();
+
+            const employees =
+                rows.map(row => ({
+                    id: row.id,
+
+                    name:
+                        displayName(
+                            row.first_name,
+                            row.middle_name,
+                            row.last_name
+                        ) ||
+                        row.username ||
+                        "Employee"
+                }));
+
+            return res.json({
+                success: true,
+                employees
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Document employees error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to load employees."
+            });
+        }
+    }
+);
+
+/* =========================================================
+   GET DOCUMENTS
+   THIS IS THE LIVE REGISTER API
+========================================================= */
+
+router.get(
+    "/documents",
+    requireAuth,
+    (req, res) => {
+
+        try {
+
+            const rows =
+                db.prepare(`
+                    ${documentQuery()}
+
+                    ORDER BY
+                        d.serial_no DESC
+                `).all();
+
+            const documents =
+                rows
+                    .map(mapDocument)
+                    .filter(Boolean);
+
+            return res.json({
+
+                success: true,
+
+                documents,
+
+                total:
+                    documents.length,
+
+                timestamp:
+                    new Date().toISOString()
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Get documents error:",
+                error
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    error.message ||
+                    "Unable to load documents."
+            });
+        }
+    }
+);
+
+/* =========================================================
+   CREATE DOCUMENT
+========================================================= */
+
+router.post(
+    "/documents",
+    requireAuth,
+    (req, res) => {
+
+        try {
+
+            const body =
+                req.body || {};
 
             const clientId =
                 clean(body.clientId);
@@ -644,118 +681,77 @@ router.post(
                 clean(body.purpose);
 
             const mode =
-                clean(body.mode).toLowerCase();
+                clean(body.mode)
+                    .toLowerCase();
 
             const receiptDate =
                 clean(body.receiptDate);
 
-            const requestedDispatchDate =
+            let dispatchDate =
                 clean(body.dispatchDate);
 
             const completionDate =
                 clean(body.completionDate);
 
-            /*
-             * Online documents never have a dispatch date.
-             * Enforce this on the server as well so the rule
-             * cannot be bypassed by a direct API request.
-             */
-            const dispatchDate =
-                mode === 'online'
-                    ? ''
-                    : requestedDispatchDate;
-
             const receivingStaffId =
-                clean(body.receivingStaffId);
+                clean(
+                    body.receivingStaffId
+                );
 
             const deliveringStaffId =
-                clean(body.deliveringStaffId);
+                clean(
+                    body.deliveringStaffId
+                );
 
             const assignedEmployeeId =
-                clean(body.assignedEmployeeId);
+                clean(
+                    body.assignedEmployeeId
+                );
 
-            if (!assignedEmployeeId) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Please select the employee assigned to this document.'
-                });
+            /* ONLINE */
+
+            if (mode === "online") {
+                dispatchDate = "";
             }
 
-            const assignedEmployee =
-                db.prepare(`
-                    SELECT id
-                    FROM users
-                    WHERE
-                        id = ?
-                        AND role = 'employee'
-                        AND status = 'active'
-                    LIMIT 1
-                `).get(assignedEmployeeId);
-
-            if (!assignedEmployee) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Selected employee is not available.'
-                });
-            }
-
+            /* VALIDATION */
 
             if (!clientId) {
 
                 return res.status(400).json({
                     success: false,
-                    message: 'Please select a client.'
+                    message:
+                        "Please select a client."
                 });
             }
-
 
             if (!purpose) {
 
                 return res.status(400).json({
                     success: false,
-                    message: 'Please select the document purpose.'
+                    message:
+                        "Please select document purpose."
                 });
             }
 
-
-            if (!['online', 'offline'].includes(mode)) {
+            if (
+                mode !== "online" &&
+                mode !== "offline"
+            ) {
 
                 return res.status(400).json({
                     success: false,
-                    message: 'Please select a valid document mode.'
+                    message:
+                        "Please select Online or Offline."
                 });
             }
-
 
             if (!receiptDate) {
 
                 return res.status(400).json({
                     success: false,
-                    message: 'Date of receipt is required.'
-                });
-            }
-
-
-            if (
-                completionDate &&
-                completionDate < receiptDate
-            ) {
-                return res.status(400).json({
-                    success: false,
                     message:
-                        'Date of completion cannot be earlier than the date of receipt.'
-                });
-            }
-
-            if (
-                dispatchDate &&
-                completionDate &&
-                completionDate < dispatchDate
-            ) {
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        'Date of completion cannot be earlier than the date of dispatch.'
+                        "Date of receipt is required."
                 });
             }
 
@@ -767,183 +763,257 @@ router.post(
                 return res.status(400).json({
                     success: false,
                     message:
-                        'Date of dispatch cannot be earlier than the date of receipt.'
+                        "Dispatch date cannot be earlier than receipt date."
                 });
             }
 
+            if (
+                completionDate &&
+                completionDate < receiptDate
+            ) {
 
-            const client = db.prepare(`
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Completion date cannot be earlier than receipt date."
+                });
+            }
 
-                SELECT id
+            if (
+                completionDate &&
+                dispatchDate &&
+                completionDate < dispatchDate
+            ) {
 
-                FROM clients
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Completion date cannot be earlier than dispatch date."
+                });
+            }
 
-                WHERE
-                    id = ?
-                    AND status = 'active'
+            /* CLIENT */
 
-                LIMIT 1
-
-            `).get(clientId);
-
+            const client =
+                db.prepare(`
+                    SELECT id
+                    FROM clients
+                    WHERE
+                        id = ?
+                        AND status = 'active'
+                    LIMIT 1
+                `).get(clientId);
 
             if (!client) {
 
                 return res.status(400).json({
                     success: false,
-                    message: 'Selected client is not available.'
+                    message:
+                        "Selected client is not available."
                 });
             }
 
+            /* ASSIGNED EMPLOYEE */
+
+            if (!assignedEmployeeId) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Please select the employee assigned to this document."
+                });
+            }
+
+            const employee =
+                db.prepare(`
+                    SELECT id
+                    FROM users
+                    WHERE
+                        id = ?
+                        AND role = 'employee'
+                        AND status = 'active'
+                    LIMIT 1
+                `).get(
+                    assignedEmployeeId
+                );
+
+            if (!employee) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Selected employee is not available."
+                });
+            }
+
+            /* RECEIVING STAFF */
 
             if (receivingStaffId) {
 
-                const staff = db.prepare(`
-
-                    SELECT id
-                    FROM users
-                    WHERE
-                        id = ?
-                        AND status = 'active'
-                    LIMIT 1
-
-                `).get(receivingStaffId);
-
+                const staff =
+                    db.prepare(`
+                        SELECT id
+                        FROM users
+                        WHERE
+                            id = ?
+                            AND status = 'active'
+                        LIMIT 1
+                    `).get(
+                        receivingStaffId
+                    );
 
                 if (!staff) {
 
                     return res.status(400).json({
                         success: false,
                         message:
-                            'Selected receiving staff member is not available.'
+                            "Receiving staff member is not available."
                     });
                 }
             }
 
+            /* DELIVERING STAFF */
 
             if (deliveringStaffId) {
 
-                const staff = db.prepare(`
-
-                    SELECT id
-                    FROM users
-                    WHERE
-                        id = ?
-                        AND status = 'active'
-                    LIMIT 1
-
-                `).get(deliveringStaffId);
-
+                const staff =
+                    db.prepare(`
+                        SELECT id
+                        FROM users
+                        WHERE
+                            id = ?
+                            AND status = 'active'
+                        LIMIT 1
+                    `).get(
+                        deliveringStaffId
+                    );
 
                 if (!staff) {
 
                     return res.status(400).json({
                         success: false,
                         message:
-                            'Selected delivering staff member is not available.'
+                            "Delivering staff member is not available."
                     });
                 }
             }
 
-
-            const now =
-                new Date().toISOString();
+            /* CREATE */
 
             const documentId =
                 generateId();
 
+            const serialNumber =
+                getNextSerialNumber();
 
-            /*
-             * Generate the serial inside a transaction so the
-             * serial number and document row are created together.
-             */
-            const createDocument = db.transaction(() => {
+            const now =
+                new Date().toISOString();
 
-                const serialNumber =
-                    getNextSerialNumber();
+            db.prepare(`
+                INSERT INTO office_documents (
 
-
-                db.prepare(`
-
-                    INSERT INTO office_documents (
-
-                        id,
-                        serial_no,
-                        client_id,
-                        purpose,
-                        mode,
-                        receipt_date,
-                        dispatch_date,
-                        completion_date,
-                        receiving_staff_id,
-                        delivering_staff_id,
-                        assigned_employee_id,
-                        created_by,
-                        created_at,
-                        updated_at
-
-                    )
-
-                    VALUES (
-
-                        ?,
-                        ?,
-                        ?,
-                        ?,
-                        ?,
-                        ?,
-                        ?,
-                        ?,
-                        ?,
-                        ?,
-                        ?,
-                        ?
-
-                    )
-
-                `).run(
-
-                    documentId,
-                    serialNumber,
-                    clientId,
+                    id,
+                    serial_no,
+                    client_id,
                     purpose,
                     mode,
-                    receiptDate,
-                    dispatchDate || null,
-                    receivingStaffId || null,
-                    deliveringStaffId || null,
-                    assignedEmployeeId,
-                    req.user.id,
-                    now,
-                    now
+                    receipt_date,
+                    dispatch_date,
+                    completion_date,
+                    receiving_staff_id,
+                    delivering_staff_id,
+                    assigned_employee_id,
+                    created_by,
+                    created_at,
+                    updated_at
+
+                )
+
+                VALUES (
+
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    ?
+
+                )
+            `).run(
+
+                documentId,
+
+                serialNumber,
+
+                clientId,
+
+                purpose,
+
+                mode,
+
+                receiptDate,
+
+                dispatchDate || null,
+
+                completionDate || null,
+
+                receivingStaffId || null,
+
+                deliveringStaffId || null,
+
+                assignedEmployeeId,
+
+                req.user.id,
+
+                now,
+
+                now
+            );
+
+            /* FETCH CREATED RECORD */
+
+            const created =
+                db.prepare(`
+                    ${documentQuery()}
+
+                    WHERE
+                        d.id = ?
+
+                    LIMIT 1
+                `).get(
+                    documentId
                 );
 
+            /*
+             * NEVER call mapDocument()
+             * if the row doesn't exist.
+             */
 
-                return serialNumber;
-            });
+            if (!created) {
 
+                return res.status(500).json({
 
-            const serialNumber =
-                createDocument();
+                    success: false,
 
-
-            const created = db.prepare(`
-
-                ${documentQuery()}
-
-                WHERE d.id = ?
-
-                LIMIT 1
-
-            `).get(documentId);
-
+                    message:
+                        "Document was saved but could not be loaded."
+                });
+            }
 
             return res.status(201).json({
 
                 success: true,
 
                 message:
-                    'Document record created successfully.',
+                    "Document saved successfully.",
 
                 document:
                     mapDocument(created),
@@ -951,124 +1021,190 @@ router.post(
                 serialNumber,
 
                 serialLabel:
-                    formatSerial(serialNumber)
+                    formatSerial(
+                        serialNumber
+                    )
             });
 
-        }
-        catch (error) {
+        } catch (error) {
 
             console.error(
-                'Create document error:',
+                "Create document error:",
                 error
             );
-
 
             return res.status(500).json({
 
                 success: false,
 
                 message:
-                    'Unable to create document record.'
+                    error.message ||
+                    "Unable to create document."
             });
         }
     }
 );
-
-
 
 /* =========================================================
    UPDATE DISPATCH DATE
 ========================================================= */
 
 router.patch(
-    '/documents/:id/dispatch-date',
+    "/documents/:id/dispatch-date",
     requireAuth,
     (req, res) => {
 
         try {
 
-            const documentId = clean(req.params.id);
-            const dispatchDate = clean(req.body?.dispatchDate);
+            const id =
+                clean(req.params.id);
 
-            const document = db.prepare(`
-                SELECT id, mode, receipt_date
-                FROM office_documents
-                WHERE id = ?
-                LIMIT 1
-            `).get(documentId);
+            const dispatchDate =
+                clean(
+                    req.body?.dispatchDate
+                );
+
+            const document =
+                db.prepare(`
+                    SELECT
+                        id,
+                        mode,
+                        receipt_date,
+                        completion_date
+                    FROM office_documents
+                    WHERE id = ?
+                    LIMIT 1
+                `).get(id);
 
             if (!document) {
+
                 return res.status(404).json({
                     success: false,
-                    message: 'Document record not found.'
+                    message:
+                        "Document not found."
                 });
             }
 
-            if (document.mode === 'online') {
+            if (
+                document.mode === "online"
+            ) {
+
                 return res.status(400).json({
                     success: false,
-                    message: 'Dispatch date is not applicable for online documents.'
+                    message:
+                        "Online documents do not have a dispatch date."
                 });
             }
 
-            if (dispatchDate && dispatchDate < document.receipt_date) {
+            if (
+                dispatchDate &&
+                dispatchDate <
+                    document.receipt_date
+            ) {
+
                 return res.status(400).json({
                     success: false,
-                    message: 'Date of dispatch cannot be earlier than the date of receipt.'
+                    message:
+                        "Dispatch date cannot be earlier than receipt date."
+                });
+            }
+
+            if (
+                dispatchDate &&
+                document.completion_date &&
+                document.completion_date <
+                    dispatchDate
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Dispatch date cannot be later than completion date."
                 });
             }
 
             db.prepare(`
                 UPDATE office_documents
-                SET dispatch_date = ?, updated_at = ?
-                WHERE id = ?
+
+                SET
+                    dispatch_date = ?,
+                    updated_at = ?
+
+                WHERE
+                    id = ?
             `).run(
+
                 dispatchDate || null,
+
                 new Date().toISOString(),
-                documentId
+
+                id
             );
 
-            const updated = db.prepare(`
-                ${documentQuery()}
-                WHERE d.id = ?
-                LIMIT 1
-            `).get(documentId);
+            const updated =
+                db.prepare(`
+                    ${documentQuery()}
+
+                    WHERE
+                        d.id = ?
+
+                    LIMIT 1
+                `).get(id);
+
+            if (!updated) {
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Document was updated but could not be reloaded."
+                });
+            }
 
             return res.json({
+
                 success: true,
-                message: 'Dispatch date updated successfully.',
-                document: mapDocument(updated)
+
+                document:
+                    mapDocument(updated)
             });
 
         } catch (error) {
 
-            console.error('Update dispatch date error:', error);
+            console.error(
+                "Dispatch update error:",
+                error
+            );
 
             return res.status(500).json({
+
                 success: false,
-                message: 'Unable to update dispatch date.'
+
+                message:
+                    error.message ||
+                    "Unable to update dispatch date."
             });
         }
     }
 );
 
-
 /* =========================================================
-   UPDATE DATE OF COMPLETION
+   UPDATE COMPLETION DATE
 ========================================================= */
 
 router.patch(
-    '/documents/:id/completion-date',
+    "/documents/:id/completion-date",
     requireAuth,
     (req, res) => {
 
         try {
 
-            const documentId =
+            const id =
                 clean(req.params.id);
 
             const completionDate =
-                clean(req.body?.completionDate);
+                clean(
+                    req.body?.completionDate
+                );
 
             const document =
                 db.prepare(`
@@ -1079,64 +1215,90 @@ router.patch(
                     FROM office_documents
                     WHERE id = ?
                     LIMIT 1
-                `).get(documentId);
+                `).get(id);
 
             if (!document) {
+
                 return res.status(404).json({
                     success: false,
                     message:
-                        'Document record not found.'
+                        "Document not found."
                 });
             }
 
             if (
                 completionDate &&
-                completionDate < document.receipt_date
+                completionDate <
+                    document.receipt_date
             ) {
+
                 return res.status(400).json({
                     success: false,
                     message:
-                        'Date of completion cannot be earlier than the date of receipt.'
+                        "Completion date cannot be earlier than receipt date."
                 });
             }
 
             if (
                 completionDate &&
                 document.dispatch_date &&
-                completionDate < document.dispatch_date
+                completionDate <
+                    document.dispatch_date
             ) {
+
                 return res.status(400).json({
                     success: false,
                     message:
-                        'Date of completion cannot be earlier than the date of dispatch.'
+                        "Completion date cannot be earlier than dispatch date."
                 });
             }
 
             db.prepare(`
                 UPDATE office_documents
+
                 SET
                     completion_date = ?,
                     updated_at = ?
-                WHERE id = ?
+
+                WHERE
+                    id = ?
             `).run(
+
                 completionDate || null,
+
                 new Date().toISOString(),
-                documentId
+
+                id
             );
 
             const updated =
                 db.prepare(`
                     ${documentQuery()}
-                    WHERE d.id = ?
+
+                    WHERE
+                        d.id = ?
+
                     LIMIT 1
-                `).get(documentId);
+                `).get(id);
+
+            if (!updated) {
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Completion date was saved but document could not be reloaded."
+                });
+            }
 
             return res.json({
+
                 success: true,
+
                 message:
                     completionDate
-                        ? 'Document marked complete.'
-                        : 'Document returned to W.I.P.',
+                        ? "Document marked COMPLETE."
+                        : "Document returned to W.I.P.",
+
                 document:
                     mapDocument(updated)
             });
@@ -1144,18 +1306,87 @@ router.patch(
         } catch (error) {
 
             console.error(
-                'Update completion date error:',
+                "Completion update error:",
                 error
             );
 
             return res.status(500).json({
+
                 success: false,
+
                 message:
-                    'Unable to update completion date.'
+                    error.message ||
+                    "Unable to update completion date."
             });
         }
     }
 );
 
+/* =========================================================
+   DELETE DOCUMENT
+========================================================= */
+
+router.delete(
+    "/documents/:id",
+    requireAuth,
+    (req, res) => {
+
+        try {
+
+            const id =
+                clean(req.params.id);
+
+            const existing =
+                db.prepare(`
+                    SELECT id
+                    FROM office_documents
+                    WHERE id = ?
+                    LIMIT 1
+                `).get(id);
+
+            if (!existing) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Document not found."
+                });
+            }
+
+            db.prepare(`
+                DELETE FROM office_documents
+                WHERE id = ?
+            `).run(id);
+
+            return res.json({
+
+                success: true,
+
+                message:
+                    "Document deleted successfully."
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Delete document error:",
+                error
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    error.message ||
+                    "Unable to delete document."
+            });
+        }
+    }
+);
+
+/* =========================================================
+   EXPORT
+========================================================= */
 
 module.exports = router;

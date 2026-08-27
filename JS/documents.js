@@ -4,81 +4,49 @@
     let documents = [];
     let filteredDocuments = [];
 
-    const $ = id => document.getElementById(id);
+    const REFRESH_INTERVAL = 10000; // 10 seconds
+    let refreshTimer = null;
+    let isLoading = false;
 
-    function esc(value) {
+    /* =========================================================
+       HELPERS
+    ========================================================= */
+
+    function $(id) {
+        return document.getElementById(id);
+    }
+
+    function escapeHtml(value) {
         return String(value ?? "").replace(
             /[&<>"']/g,
-            ch => ({
+            char => ({
                 "&": "&amp;",
                 "<": "&lt;",
                 ">": "&gt;",
                 '"': "&quot;",
                 "'": "&#039;"
-            }[ch])
+            }[char])
         );
     }
 
-    function showError(message) {
-        const box = $("documentError");
-        if (!box) return;
-        box.textContent = message || "Something went wrong.";
-        box.style.display = "block";
-    }
+    async function api(url, options = {}) {
+        const response = await fetch(url, {
+            credentials: "same-origin",
+            cache: "no-store",
+            ...options
+        });
 
-    function showSuccess(message) {
-        const box = $("documentSuccess");
-        if (!box) return;
-        box.textContent = message;
-        box.style.display = "block";
+        let data;
 
-        setTimeout(() => {
-            box.style.display = "none";
-        }, 3000);
-    }
-
-    function getStatus(doc) {
-        return doc.completionDate
-            ? "complete"
-            : "wip";
-    }
-
-    function statusLabel(doc) {
-        return doc.completionDate
-            ? "COMPLETE"
-            : "W.I.P";
-    }
-
-    function daysBetween(start, end) {
-        if (!start) return "";
-
-        const a = new Date(start + "T00:00:00");
-        const b = new Date(
-            (end || new Date().toISOString().slice(0, 10)) +
-            "T00:00:00"
-        );
-
-        const diff =
-            Math.floor(
-                (b - a) / 86400000
+        try {
+            data = await response.json();
+        } catch {
+            throw new Error(
+                `Server returned ${response.status}`
             );
+        }
 
-        return Math.max(0, diff);
-    }
-
-    async function getJson(url, options = {}) {
-        const response = await fetch(
-            url,
-            {
-                credentials: "same-origin",
-                cache: "no-store",
-                ...options
-            }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
+        if (!response.ok || data.success === false) {
             throw new Error(
                 data.message ||
                 `Request failed (${response.status})`
@@ -88,366 +56,604 @@
         return data;
     }
 
-    async function loadClients() {
-        const select = $("clientId");
-        if (!select) return;
+    function showError(message) {
+        console.error(message);
 
-        try {
-            const data =
-                await getJson("/api/documents/clients");
+        const errorBox =
+            $("documentError");
 
-            select.innerHTML =
-                `<option value="">Select client</option>`;
+        if (!errorBox) return;
 
-            (data.clients || []).forEach(client => {
-                const option =
-                    document.createElement("option");
+        errorBox.textContent =
+            message || "Something went wrong.";
 
-                option.value = client.id;
+        errorBox.style.display =
+            "block";
+    }
 
-                option.textContent =
-                    client.pan
-                        ? `${client.name} • ${client.pan}`
-                        : client.name;
+    function hideError() {
+        const errorBox =
+            $("documentError");
 
-                select.appendChild(option);
-            });
-
-        } catch (error) {
-            console.error(
-                "Document clients error:",
-                error
-            );
-
-            select.innerHTML =
-                `<option value="">Unable to load clients</option>`;
-
-            showError(error.message);
+        if (errorBox) {
+            errorBox.style.display =
+                "none";
         }
     }
 
-    async function loadStaff() {
+    function showSuccess(message) {
+        const box =
+            $("documentSuccess");
+
+        if (!box) return;
+
+        box.textContent =
+            message;
+
+        box.style.display =
+            "block";
+
+        setTimeout(() => {
+            box.style.display =
+                "none";
+        }, 2500);
+    }
+
+    /* =========================================================
+       STATUS
+    ========================================================= */
+
+    function getStatus(documentRecord) {
+
+        if (
+            documentRecord.completionDate
+        ) {
+            return "COMPLETE";
+        }
+
+        return "W.I.P";
+    }
+
+    function getStatusClass(documentRecord) {
+
+        if (
+            documentRecord.completionDate
+        ) {
+            return "complete";
+        }
+
+        return "wip";
+    }
+
+    /* =========================================================
+       DAYS
+    ========================================================= */
+
+    function calculateDays(
+        receiptDate,
+        completionDate
+    ) {
+
+        if (!receiptDate) {
+            return "";
+        }
+
+        const start =
+            new Date(
+                receiptDate +
+                "T00:00:00"
+            );
+
+        const end =
+            completionDate
+                ? new Date(
+                    completionDate +
+                    "T00:00:00"
+                )
+                : new Date();
+
+        const difference =
+            end.getTime() -
+            start.getTime();
+
+        return Math.max(
+            0,
+            Math.floor(
+                difference /
+                86400000
+            )
+        );
+    }
+
+    /* =========================================================
+       NORMALIZE API DOCUMENT
+    ========================================================= */
+
+    function normalizeDocument(record) {
+        const r = record || {};
+
+        return {
+            ...r,
+            id: r.id ?? r.document_id ?? "",
+            serialNumber: r.serialNumber ?? r.serial_no ?? "",
+            serialLabel: r.serialLabel ?? r.serial_label ?? "",
+            clientId: r.clientId ?? r.client_id ?? "",
+            clientName: r.clientName ?? r.client_name ?? r.client ?? "",
+            clientPan: r.clientPan ?? r.client_pan ?? r.pan ?? "",
+            purpose: r.purpose ?? "",
+            mode: String(r.mode ?? "").toLowerCase(),
+            receiptDate: r.receiptDate ?? r.receipt_date ?? "",
+            dispatchDate: r.dispatchDate ?? r.dispatch_date ?? "",
+            completionDate: r.completionDate ?? r.completion_date ?? "",
+            receivingStaff:
+                r.receivingStaff ??
+                r.receivingStaffName ??
+                r.receiving_staff_name ??
+                r.receiving_staff ??
+                "",
+            receivingStaffName:
+                r.receivingStaffName ??
+                r.receivingStaff ??
+                r.receiving_staff_name ??
+                r.receiving_staff ??
+                "",
+            deliveringStaff:
+                r.deliveringStaff ??
+                r.deliveringStaffName ??
+                r.delivering_staff_name ??
+                r.delivering_staff ??
+                "",
+            deliveringStaffName:
+                r.deliveringStaffName ??
+                r.deliveringStaff ??
+                r.delivering_staff_name ??
+                r.delivering_staff ??
+                "",
+            assignedEmployee:
+                r.assignedEmployee ??
+                r.assignedEmployeeName ??
+                r.assigned_employee_name ??
+                r.assigned_employee ??
+                "",
+            assignedEmployeeName:
+                r.assignedEmployeeName ??
+                r.assignedEmployee ??
+                r.assigned_employee_name ??
+                r.assigned_employee ??
+                "",
+            assignedEmployeeId:
+                r.assignedEmployeeId ??
+                r.assigned_employee_id ??
+                "",
+            status: r.status ?? ""
+        };
+    }
+
+    /* =========================================================
+       LOAD DOCUMENTS
+    ========================================================= */
+
+    async function loadDocuments(
+        silent = false
+    ) {
+
+        if (isLoading) {
+            return;
+        }
+
+        isLoading = true;
+
         try {
+
             const data =
-                await getJson("/api/documents/staff");
+                await api(
+                    "/api/documents"
+                );
 
-            const staffLists = [
-                $("receivingStaffId"),
-                $("deliveringStaffId")
-            ];
+            const incoming =
+                Array.isArray(data.documents)
+                    ? data.documents
+                    : Array.isArray(data.data)
+                        ? data.data
+                        : Array.isArray(data.rows)
+                            ? data.rows
+                            : [];
 
-            staffLists.forEach(select => {
-                if (!select) return;
+            documents =
+                incoming.map(normalizeDocument);
 
-                const first =
-                    select.id === "receivingStaffId"
-                        ? "Select receiving staff"
-                        : "Select delivering staff";
+            applyFilters();
 
-                select.innerHTML =
-                    `<option value="">${first}</option>`;
-
-                (data.staff || []).forEach(person => {
-                    const option =
-                        document.createElement("option");
-
-                    option.value = person.id;
-                    option.textContent =
-                        person.name ||
-                        person.username ||
-                        "Staff";
-
-                    select.appendChild(option);
-                });
-            });
-
-            const assigned =
-                $("assignedEmployeeId");
-
-            if (assigned) {
-                assigned.innerHTML =
-                    `<option value="">Select employee</option>`;
-
-                (data.staff || [])
-                    .filter(person =>
-                        String(person.role || "")
-                            .toLowerCase() === "employee"
-                    )
-                    .forEach(person => {
-                        const option =
-                            document.createElement("option");
-
-                        option.value = person.id;
-                        option.textContent =
-                            person.name ||
-                            person.username ||
-                            "Employee";
-
-                        assigned.appendChild(option);
-                    });
+            if (!silent) {
+                hideError();
             }
 
         } catch (error) {
+
             console.error(
-                "Document staff error:",
+                "Live Document Register load error:",
                 error
             );
 
-            showError(error.message);
-        }
-    }
-
-    async function loadSerial() {
-        const input =
-            $("serialNumber");
-
-        if (!input) return;
-
-        try {
-            const data =
-                await getJson(
-                    "/api/documents/next-serial"
+            if (!silent) {
+                showError(
+                    "Unable to load document records: " +
+                    error.message
                 );
+            }
 
-            input.value =
-                data.serialLabel ||
-                data.serialNumber ||
-                "";
-        } catch (error) {
-            input.value = "";
-            console.error(
-                "Document serial error:",
-                error
-            );
+        } finally {
+
+            isLoading = false;
         }
     }
+
+    /* =========================================================
+       FILTERS
+    ========================================================= */
 
     function applyFilters() {
+
         const search =
-            ($("documentSearch")?.value || "")
+            (
+                $("documentSearch")?.value ||
+                ""
+            )
                 .trim()
                 .toLowerCase();
 
         const mode =
-            $("documentModeFilter")?.value || "";
+            $("documentModeFilter")
+                ?.value ||
+            "";
 
         const status =
-            $("documentStatusFilter")?.value || "";
+            $("documentStatusFilter")
+                ?.value ||
+            "";
 
-        const from =
-            $("receiptDateFromFilter")?.value || "";
+        const fromDate =
+            $("receiptDateFromFilter")
+                ?.value ||
+            "";
 
-        const to =
-            $("receiptDateToFilter")?.value || "";
+        const toDate =
+            $("receiptDateToFilter")
+                ?.value ||
+            "";
 
         filteredDocuments =
-            documents.filter(doc => {
+            documents.filter(
+                documentRecord => {
 
-                if (search) {
-                    const haystack = [
-                        doc.serialLabel,
-                        doc.serialNumber,
-                        doc.clientName,
-                        doc.clientPan,
-                        doc.purpose,
-                        doc.mode,
-                        doc.receivingStaff,
-                        doc.deliveringStaff,
-                        doc.assignedEmployee
-                    ]
-                        .join(" ")
-                        .toLowerCase();
+                    /*
+                     * SEARCH
+                     */
 
-                    if (!haystack.includes(search)) {
+                    if (search) {
+
+                        const searchableText = [
+
+                            documentRecord.serialLabel,
+
+                            documentRecord.serialNumber,
+
+                            documentRecord.clientName,
+
+                            documentRecord.clientPan,
+
+                            documentRecord.purpose,
+
+                            documentRecord.mode,
+
+                            documentRecord.receiptDate,
+
+                            documentRecord.dispatchDate,
+
+                            documentRecord.completionDate,
+
+                            documentRecord.receivingStaffName,
+
+                            documentRecord.deliveringStaffName,
+
+                            documentRecord.assignedEmployeeName
+
+                        ]
+                            .filter(Boolean)
+                            .join(" ")
+                            .toLowerCase();
+
+                        if (
+                            !searchableText.includes(
+                                search
+                            )
+                        ) {
+                            return false;
+                        }
+                    }
+
+                    /*
+                     * MODE
+                     */
+
+                    if (
+                        mode &&
+                        String(
+                            documentRecord.mode ||
+                            ""
+                        ).toLowerCase() !==
+                        mode.toLowerCase()
+                    ) {
                         return false;
                     }
+
+                    /*
+                     * STATUS
+                     */
+
+                    if (status) {
+
+                        const currentStatus =
+                            getStatus(
+                                documentRecord
+                            ).toLowerCase();
+
+                        const normalizedFilter =
+                            status.toLowerCase();
+
+                        if (
+                            normalizedFilter === "wip" &&
+                            currentStatus !== "w.i.p"
+                        ) {
+                            return false;
+                        }
+
+                        if (
+                            normalizedFilter === "complete" &&
+                            currentStatus !== "complete"
+                        ) {
+                            return false;
+                        }
+
+                        if (
+                            normalizedFilter === "received" &&
+                            !documentRecord.receiptDate
+                        ) {
+                            return false;
+                        }
+
+                        if (
+                            normalizedFilter === "dispatched" &&
+                            !documentRecord.dispatchDate
+                        ) {
+                            return false;
+                        }
+                    }
+
+                    /*
+                     * RECEIPT DATE FROM
+                     */
+
+                    if (
+                        fromDate &&
+                        (
+                            !documentRecord.receiptDate ||
+                            documentRecord.receiptDate <
+                            fromDate
+                        )
+                    ) {
+                        return false;
+                    }
+
+                    /*
+                     * RECEIPT DATE TO
+                     */
+
+                    if (
+                        toDate &&
+                        (
+                            !documentRecord.receiptDate ||
+                            documentRecord.receiptDate >
+                            toDate
+                        )
+                    ) {
+                        return false;
+                    }
+
+                    return true;
                 }
+            );
 
-                if (mode && doc.mode !== mode) {
-                    return false;
-                }
-
-                if (
-                    status === "received" &&
-                    doc.dispatchDate
-                ) {
-                    return false;
-                }
-
-                if (
-                    status === "dispatched" &&
-                    !doc.dispatchDate
-                ) {
-                    return false;
-                }
-
-                if (
-                    status === "completed" &&
-                    !doc.completionDate
-                ) {
-                    return false;
-                }
-
-                if (
-                    from &&
-                    (!doc.receiptDate ||
-                     doc.receiptDate < from)
-                ) {
-                    return false;
-                }
-
-                if (
-                    to &&
-                    (!doc.receiptDate ||
-                     doc.receiptDate > to)
-                ) {
-                    return false;
-                }
-
-                return true;
-            });
-
-        render();
+        renderDocuments();
     }
 
-    function render() {
-        const body =
+    /* =========================================================
+       RENDER LIVE DOCUMENT REGISTER
+    ========================================================= */
+
+    function renderDocuments() {
+
+        const tableBody =
             $("documentsTableBody");
 
-        if (!body) return;
+        if (!tableBody) {
+            return;
+        }
 
-        body.innerHTML = "";
+        tableBody.innerHTML = "";
 
-        const total =
+        const totalElement =
             $("documentTotal");
 
-        const visible =
+        const visibleElement =
             $("documentVisible");
 
-        if (total) {
-            total.textContent =
-                documents.length;
+        if (totalElement) {
+            totalElement.textContent = documents.length;
         }
 
-        if (visible) {
-            visible.textContent =
-                filteredDocuments.length;
+        if (visibleElement) {
+            visibleElement.textContent = filteredDocuments.length;
         }
 
-        const empty =
+        const emptyElement =
             $("documentsEmpty");
 
-        if (!filteredDocuments.length) {
-            if (empty) {
-                empty.style.display = "block";
+        if (filteredDocuments.length === 0) {
+            if (emptyElement) {
+                emptyElement.style.display = "block";
             }
             return;
         }
 
-        if (empty) {
-            empty.style.display = "none";
+        if (emptyElement) {
+            emptyElement.style.display = "none";
         }
 
         filteredDocuments.forEach(
-            (doc, index) => {
+            (documentRecord, index) => {
 
-                const tr =
+                const row =
                     document.createElement("tr");
 
-                tr.dataset.id =
-                    doc.id;
+                row.dataset.id =
+                    documentRecord.id;
 
-                tr.innerHTML = `
+                const status =
+                    getStatus(documentRecord);
 
-                    <td>
-                        ${esc(
-                            doc.serialLabel ||
-                            doc.serialNumber ||
-                            index + 1
-                        )}
+                const statusClass =
+                    getStatusClass(documentRecord);
+
+                const serial =
+                    documentRecord.serialLabel ||
+                    documentRecord.serialNumber ||
+                    index + 1;
+
+                const days =
+                    calculateDays(
+                        documentRecord.receiptDate,
+                        documentRecord.completionDate
+                    );
+
+                const receivingStaff =
+                    documentRecord.receivingStaffName ||
+                    documentRecord.receivingStaff ||
+                    "—";
+
+                const deliveringStaff =
+                    documentRecord.deliveringStaffName ||
+                    documentRecord.deliveringStaff ||
+                    "—";
+
+                const assignedEmployee =
+                    documentRecord.assignedEmployeeName ||
+                    documentRecord.assignedEmployee ||
+                    "—";
+
+                row.innerHTML = `
+
+                    <td class="serial-cell">
+                        ${escapeHtml(serial)}
                     </td>
 
-                    <td>
+                    <td class="client-cell">
                         <strong>
-                            ${esc(doc.clientName)}
+                            ${escapeHtml(
+                                documentRecord.clientName || "—"
+                            )}
                         </strong>
+
                         ${
-                            doc.clientPan
-                                ? `<div style="font-size:11px;color:#777;margin-top:3px;">
-                                    PAN: ${esc(doc.clientPan)}
-                                   </div>`
+                            documentRecord.clientPan
+                                ? `
+                                    <div class="client-pan">
+                                        PAN: ${escapeHtml(
+                                            documentRecord.clientPan
+                                        )}
+                                    </div>
+                                  `
                                 : ""
                         }
                     </td>
 
-                    <td>
-                        ${esc(doc.purpose)}
-                    </td>
-
-                    <td>
-                        ${esc(doc.mode)}
-                    </td>
-
-                    <td>
-                        ${esc(doc.receiptDate)}
-                    </td>
-
-                    <td>
-                        ${
-                            doc.dispatchDate
-                                ? esc(doc.dispatchDate)
-                                : "—"
-                        }
-                    </td>
-
-                    <td>
-                        <input
-                            type="date"
-                            class="completion-date-input"
-                            value="${esc(
-                                doc.completionDate
-                            )}"
-                            max="${new Date()
-                                .toISOString()
-                                .slice(0,10)}"
-                            aria-label="Date of completion"
-                        >
-                    </td>
-
-                    <td>
-                        ${daysBetween(
-                            doc.receiptDate,
-                            doc.completionDate ||
-                            null
+                    <td class="purpose-cell">
+                        ${escapeHtml(
+                            documentRecord.purpose || "—"
                         )}
                     </td>
 
-                    <td>
-                        ${esc(doc.receivingStaff)}
+                    <td class="mode-cell">
+                        ${escapeHtml(
+                            documentRecord.mode || "—"
+                        )}
                     </td>
 
-                    <td>
-                        ${esc(doc.deliveringStaff)}
+                    <td class="date-cell">
+                        ${escapeHtml(
+                            documentRecord.receiptDate || "—"
+                        )}
                     </td>
 
-                    <td>
-                        ${esc(doc.assignedEmployee)}
+                    <td class="date-cell">
+                        ${escapeHtml(
+                            documentRecord.dispatchDate || "—"
+                        )}
                     </td>
 
-                    <td>
-                        <span class="document-status ${
-                            getStatus(doc)
-                        }">
-                            ${statusLabel(doc)}
+                    <td class="completion-cell">
+                        <input
+                            type="date"
+                            class="completion-date-input"
+                            value="${escapeHtml(
+                                documentRecord.completionDate || ""
+                            )}"
+                            data-id="${escapeHtml(
+                                documentRecord.id
+                            )}"
+                        >
+                    </td>
+
+                    <td class="days-cell">
+                        ${escapeHtml(days)}
+                    </td>
+
+                    <td class="status-cell">
+                        <span
+                            class="document-status ${statusClass}"
+                        >
+                            ${escapeHtml(status)}
                         </span>
                     </td>
+
+                    <td class="staff-cell">
+                        ${escapeHtml(receivingStaff)}
+                    </td>
+
+                    <td class="staff-cell">
+                        ${escapeHtml(deliveringStaff)}
+                    </td>
+
+                    <td class="staff-cell">
+                        ${escapeHtml(assignedEmployee)}
+                    </td>
+
                 `;
 
-                body.appendChild(tr);
+                tableBody.appendChild(row);
             }
         );
 
-        body
+        attachCompletionHandlers();
+    }
+
+    /* =========================================================
+       COMPLETION DATE
+    ========================================================= */
+
+    function attachCompletionHandlers() {
+
+        document
             .querySelectorAll(
                 ".completion-date-input"
             )
@@ -455,67 +661,90 @@
 
                 input.addEventListener(
                     "change",
-                    async () => {
-
-                        const tr =
-                            input.closest("tr");
+                    async function () {
 
                         const id =
-                            tr?.dataset.id;
+                            this.dataset.id;
 
-                        if (!id) return;
+                        const completionDate =
+                            this.value;
 
-                        const original =
+                        if (!id) {
+                            return;
+                        }
+
+                        const record =
                             documents.find(
-                                doc =>
-                                    String(doc.id) ===
+                                item =>
+                                    String(
+                                        item.id
+                                    ) ===
                                     String(id)
                             );
 
-                        if (!original) return;
+                        if (!record) {
+                            return;
+                        }
 
-                        const value =
-                            input.value;
+                        /*
+                         * Completion cannot be
+                         * before receipt.
+                         */
 
                         if (
-                            value &&
-                            original.receiptDate &&
-                            value <
-                                original.receiptDate
+                            completionDate &&
+                            record.receiptDate &&
+                            completionDate <
+                            record.receiptDate
                         ) {
+
                             alert(
                                 "Date of completion cannot be earlier than date of receipt."
                             );
 
-                            input.value =
-                                original.completionDate || "";
+                            this.value =
+                                record.completionDate ||
+                                "";
 
                             return;
                         }
 
+                        /*
+                         * Completion cannot be
+                         * before dispatch.
+                         */
+
                         if (
-                            value &&
-                            original.dispatchDate &&
-                            value <
-                                original.dispatchDate
+                            completionDate &&
+                            record.dispatchDate &&
+                            completionDate <
+                            record.dispatchDate
                         ) {
+
                             alert(
                                 "Date of completion cannot be earlier than date of dispatch."
                             );
 
-                            input.value =
-                                original.completionDate || "";
+                            this.value =
+                                record.completionDate ||
+                                "";
 
                             return;
                         }
 
                         try {
 
+                            this.disabled =
+                                true;
+
                             const data =
-                                await getJson(
-                                    `/api/documents/${encodeURIComponent(id)}/completion-date`,
+                                await api(
+                                    `/api/documents/${encodeURIComponent(
+                                        id
+                                    )}/completion-date`,
                                     {
-                                        method: "PATCH",
+                                        method:
+                                            "PATCH",
 
                                         headers: {
                                             "Content-Type":
@@ -525,126 +754,132 @@
                                         body:
                                             JSON.stringify({
                                                 completionDate:
-                                                    value
+                                                    completionDate
                                             })
                                     }
                                 );
 
+                            /*
+                             * Update local record.
+                             */
+
                             const index =
                                 documents.findIndex(
-                                    doc =>
-                                        String(doc.id) ===
+                                    item =>
+                                        String(
+                                            item.id
+                                        ) ===
                                         String(id)
                                 );
 
-                            if (index >= 0) {
+                            if (
+                                index !== -1 &&
+                                data.document
+                            ) {
+
                                 documents[index] =
                                     data.document;
                             }
 
+                            /*
+                             * Immediately refresh
+                             * the register.
+                             */
+
                             applyFilters();
 
                             showSuccess(
-                                value
+                                completionDate
                                     ? "Document marked COMPLETE."
                                     : "Document returned to W.I.P."
                             );
 
                         } catch (error) {
 
-                            input.value =
-                                original.completionDate || "";
+                            console.error(
+                                "Completion update error:",
+                                error
+                            );
 
                             showError(
                                 error.message
                             );
+
+                            this.value =
+                                record.completionDate ||
+                                "";
+
+                        } finally {
+
+                            this.disabled =
+                                false;
                         }
                     }
                 );
             });
     }
 
-    async function loadDocuments() {
-        try {
-            const data =
-                await getJson(
-                    "/api/documents"
-                );
+    /* =========================================================
+       CLEAR FILTERS
+    ========================================================= */
 
-            documents =
-                Array.isArray(data.documents)
-                    ? data.documents
-                    : [];
+    function clearFilters() {
 
-            applyFilters();
+        const fields = [
 
-        } catch (error) {
+            "documentSearch",
 
-            console.error(
-                "Get documents error:",
-                error
-            );
+            "documentModeFilter",
 
-            documents = [];
-            filteredDocuments = [];
+            "documentStatusFilter",
 
-            render();
+            "receiptDateFromFilter",
 
-            showError(
-                `Get documents error: ${error.message}`
-            );
-        }
+            "receiptDateToFilter"
+
+        ];
+
+        fields.forEach(id => {
+
+            const element =
+                $(id);
+
+            if (!element) {
+                return;
+            }
+
+            element.value = "";
+        });
+
+        applyFilters();
+
+        /*
+         * Reload from database after
+         * clearing the filters.
+         */
+
+        loadDocuments(true);
     }
 
-    async function saveDocument(event) {
-        event.preventDefault();
+    /* =========================================================
+       DISPATCH DATE
+    ========================================================= */
 
-        const button =
-            $("saveDocumentButton");
-
-        if (button) {
-            button.disabled = true;
-            button.textContent = "Saving...";
-        }
+    async function updateDispatchDate(
+        id,
+        dispatchDate
+    ) {
 
         try {
 
-            const payload = {
-
-                clientId:
-                    $("clientId")?.value || "",
-
-                purpose:
-                    $("purpose")?.value || "",
-
-                mode:
-                    $("mode")?.value || "",
-
-                receiptDate:
-                    $("receiptDate")?.value || "",
-
-                dispatchDate:
-                    $("dispatchDate")?.value || "",
-
-                completionDate:
-                    $("completionDate")?.value || "",
-
-                receivingStaffId:
-                    $("receivingStaffId")?.value || "",
-
-                deliveringStaffId:
-                    $("deliveringStaffId")?.value || "",
-
-                assignedEmployeeId:
-                    $("assignedEmployeeId")?.value || ""
-
-            };
-
             const data =
-                await getJson(
-                    "/api/documents",
+                await api(
+                    `/api/documents/${encodeURIComponent(
+                        id
+                    )}/dispatch-date`,
                     {
-                        method: "POST",
+                        method:
+                            "PATCH",
 
                         headers: {
                             "Content-Type":
@@ -652,13 +887,231 @@
                         },
 
                         body:
-                            JSON.stringify(payload)
+                            JSON.stringify({
+                                dispatchDate:
+                                    dispatchDate
+                            })
                     }
                 );
 
-            documents.unshift(
+            const index =
+                documents.findIndex(
+                    item =>
+                        String(item.id) ===
+                        String(id)
+                );
+
+            if (
+                index !== -1 &&
                 data.document
+            ) {
+
+                documents[index] =
+                    normalizeDocument(data.document);
+            }
+
+            applyFilters();
+
+        } catch (error) {
+
+            console.error(
+                "Dispatch date update error:",
+                error
             );
+
+            showError(
+                error.message
+            );
+        }
+    }
+
+    /* =========================================================
+       DELETE DOCUMENT
+    ========================================================= */
+
+    async function deleteDocument(
+        id
+    ) {
+
+        if (!id) {
+            return;
+        }
+
+        const confirmed =
+            window.confirm(
+                "Are you sure you want to delete this document record?"
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+
+            await api(
+                `/api/documents/${encodeURIComponent(
+                    id
+                )}`,
+                {
+                    method:
+                        "DELETE"
+                }
+            );
+
+            /*
+             * Remove immediately from
+             * the visible register.
+             */
+
+            documents =
+                documents.filter(
+                    item =>
+                        String(item.id) !==
+                        String(id)
+                );
+
+            applyFilters();
+
+            showSuccess(
+                "Document deleted successfully."
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Delete document error:",
+                error
+            );
+
+            showError(
+                error.message
+            );
+        }
+    }
+
+    /* =========================================================
+       AUTO REFRESH
+    ========================================================= */
+
+    function startLiveRefresh() {
+
+        if (refreshTimer) {
+            clearInterval(
+                refreshTimer
+            );
+        }
+
+        refreshTimer =
+            setInterval(
+                () => {
+
+                    /*
+                     * Silent refresh means
+                     * no annoying error popup
+                     * every 10 seconds.
+                     */
+
+                    loadDocuments(true);
+
+                },
+                REFRESH_INTERVAL
+            );
+    }
+
+    /* =========================================================
+       FORM
+    ========================================================= */
+
+    async function saveDocument(
+        event
+    ) {
+
+        event.preventDefault();
+
+        const button =
+            $("saveDocumentButton");
+
+        if (button) {
+
+            button.disabled =
+                true;
+
+            button.textContent =
+                "Saving...";
+        }
+
+        try {
+
+            const payload = {
+
+                clientId:
+                    $("clientId")?.value ||
+                    "",
+
+                purpose:
+                    $("purpose")?.value ||
+                    "",
+
+                mode:
+                    $("mode")?.value ||
+                    "",
+
+                receiptDate:
+                    $("receiptDate")?.value ||
+                    "",
+
+                dispatchDate:
+                    $("dispatchDate")?.value ||
+                    "",
+
+                completionDate:
+                    $("completionDate")?.value ||
+                    "",
+
+                receivingStaffId:
+                    $("receivingStaffId")?.value ||
+                    "",
+
+                deliveringStaffId:
+                    $("deliveringStaffId")?.value ||
+                    "",
+
+                assignedEmployeeId:
+                    $("assignedEmployeeId")?.value ||
+                    ""
+
+            };
+
+            const data =
+                await api(
+                    "/api/documents",
+                    {
+                        method:
+                            "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(
+                                payload
+                            )
+                    }
+                );
+
+            /*
+             * Immediately insert newly
+             * created document.
+             */
+
+            if (data.document) {
+
+                documents.unshift(
+                    normalizeDocument(data.document)
+                );
+            }
 
             applyFilters();
 
@@ -666,28 +1119,27 @@
                 "Document saved successfully."
             );
 
-            $("documentForm")?.reset();
+            const form =
+                $("documentForm");
+
+            if (form) {
+                form.reset();
+            }
 
             await loadSerial();
 
-            const dispatch =
-                $("dispatchDate");
+            /*
+             * Reload from database to make
+             * sure the register is exactly
+             * synchronized.
+             */
 
-            if (dispatch) {
-                dispatch.disabled = true;
-            }
-
-            const completion =
-                $("completionDate");
-
-            if (completion) {
-                completion.value = "";
-            }
+            await loadDocuments(true);
 
         } catch (error) {
 
             console.error(
-                "Create document error:",
+                "Save document error:",
                 error
             );
 
@@ -698,46 +1150,270 @@
         } finally {
 
             if (button) {
-                button.disabled = false;
+
+                button.disabled =
+                    false;
+
                 button.textContent =
                     "Save Document";
             }
         }
     }
 
+    /* =========================================================
+       SERIAL NUMBER
+    ========================================================= */
+
+    async function loadSerial() {
+
+        const serialInput =
+            $("serialNumber");
+
+        if (!serialInput) {
+            return;
+        }
+
+        try {
+
+            const data =
+                await api(
+                    "/api/documents/next-serial"
+                );
+
+            serialInput.value =
+                data.serialLabel ||
+                data.serialNumber ||
+                "";
+
+        } catch (error) {
+
+            console.error(
+                "Serial number error:",
+                error
+            );
+        }
+    }
+
+    /* =========================================================
+       CLIENTS
+    ========================================================= */
+
+    async function loadClients() {
+
+        const select =
+            $("clientId");
+
+        if (!select) {
+            return;
+        }
+
+        try {
+
+            const data =
+                await api(
+                    "/api/documents/clients"
+                );
+
+            select.innerHTML =
+                `<option value="">
+                    Select client
+                </option>`;
+
+            (
+                data.clients ||
+                []
+            ).forEach(client => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    client.id;
+
+                option.textContent =
+                    client.pan
+                        ? `${client.name} • ${client.pan}`
+                        : client.name;
+
+                select.appendChild(
+                    option
+                );
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Client loading error:",
+                error
+            );
+
+            showError(
+                error.message
+            );
+        }
+    }
+
+    /* =========================================================
+       STAFF
+    ========================================================= */
+
+    async function loadStaff() {
+
+        try {
+
+            const data =
+                await api(
+                    "/api/documents/staff"
+                );
+
+            const staff =
+                data.staff ||
+                [];
+
+            const receiving =
+                $("receivingStaffId");
+
+            const delivering =
+                $("deliveringStaffId");
+
+            const assigned =
+                $("assignedEmployeeId");
+
+            if (receiving) {
+
+                receiving.innerHTML =
+                    `<option value="">
+                        Select receiving staff
+                    </option>`;
+
+                staff.forEach(person => {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+                    option.value =
+                        person.id;
+
+                    option.textContent =
+                        person.name ||
+                        person.username ||
+                        "Staff";
+
+                    receiving.appendChild(
+                        option
+                    );
+                });
+            }
+
+            if (delivering) {
+
+                delivering.innerHTML =
+                    `<option value="">
+                        Select delivering staff
+                    </option>`;
+
+                staff.forEach(person => {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+                    option.value =
+                        person.id;
+
+                    option.textContent =
+                        person.name ||
+                        person.username ||
+                        "Staff";
+
+                    delivering.appendChild(
+                        option
+                    );
+                });
+            }
+
+            if (assigned) {
+
+                assigned.innerHTML =
+                    `<option value="">
+                        Select employee
+                    </option>`;
+
+                staff
+                    .filter(
+                        person =>
+                            String(
+                                person.role ||
+                                ""
+                            ).toLowerCase() ===
+                            "employee"
+                    )
+                    .forEach(person => {
+
+                        const option =
+                            document.createElement(
+                                "option"
+                            );
+
+                        option.value =
+                            person.id;
+
+                        option.textContent =
+                            person.name ||
+                            person.username ||
+                            "Employee";
+
+                        assigned.appendChild(
+                            option
+                        );
+                    });
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Staff loading error:",
+                error
+            );
+
+            showError(
+                error.message
+            );
+        }
+    }
+
+    /* =========================================================
+       MODE
+    ========================================================= */
+
     function setupMode() {
+
         const mode =
             $("mode");
 
         const dispatch =
             $("dispatchDate");
 
-        const help =
-            $("dispatchDateHelp");
-
-        if (!mode || !dispatch) return;
+        if (!mode || !dispatch) {
+            return;
+        }
 
         function update() {
 
-            const offline =
-                mode.value === "offline";
+            const isOffline =
+                mode.value ===
+                "offline";
 
             dispatch.disabled =
-                !offline;
+                !isOffline;
 
-            if (!offline) {
+            if (!isOffline) {
                 dispatch.value = "";
-
-                if (help) {
-                    help.textContent =
-                        mode.value === "online"
-                            ? "Dispatch date is not applicable for online documents."
-                            : "";
-                }
-
-            } else if (help) {
-                help.textContent =
-                    "Enter the dispatch date for an offline document.";
             }
         }
 
@@ -749,95 +1425,131 @@
         update();
     }
 
+    /* =========================================================
+       EXPORT EXCEL
+    ========================================================= */
+
     function exportExcel() {
 
-        if (!filteredDocuments.length) {
+        if (
+            !filteredDocuments.length
+        ) {
+
             alert(
                 "No document records match the current filters."
             );
+
             return;
         }
 
         if (!window.XLSX) {
+
             alert(
                 "Excel export library is not available."
             );
+
             return;
         }
 
         const rows =
             filteredDocuments.map(
-                (doc, index) => ({
+                documentRecord => ({
+
                     "SERIAL NUMBER":
-                        doc.serialLabel ||
-                        doc.serialNumber,
+                        documentRecord.serialLabel ||
+                        documentRecord.serialNumber,
 
                     "CLIENT":
-                        doc.clientName,
+                        documentRecord.clientName ||
+                        "",
 
                     "PAN":
-                        doc.clientPan,
+                        documentRecord.clientPan ||
+                        "",
 
                     "PURPOSE":
-                        doc.purpose,
+                        documentRecord.purpose ||
+                        "",
 
                     "MODE":
-                        doc.mode,
+                        documentRecord.mode ||
+                        "",
 
                     "DATE OF RECEIPT":
-                        doc.receiptDate,
+                        documentRecord.receiptDate ||
+                        "",
 
                     "DATE OF DISPATCH":
-                        doc.dispatchDate || "",
+                        documentRecord.dispatchDate ||
+                        "",
 
                     "DATE OF COMPLETION":
-                        doc.completionDate || "",
+                        documentRecord.completionDate ||
+                        "",
 
-                    "DAYS":
-                        daysBetween(
-                            doc.receiptDate,
-                            doc.completionDate ||
-                            null
+                    "NO. OF DAYS":
+                        calculateDays(
+                            documentRecord.receiptDate,
+                            documentRecord.completionDate
+                        ),
+
+                    "STATUS":
+                        getStatus(
+                            documentRecord
                         ),
 
                     "RECEIVING STAFF":
-                        doc.receivingStaff,
+                        documentRecord.receivingStaffName ||
+                        documentRecord.receivingStaff ||
+                        "",
 
                     "DELIVERING STAFF":
-                        doc.deliveringStaff,
+                        documentRecord.deliveringStaffName ||
+                        documentRecord.deliveringStaff ||
+                        "",
 
                     "ASSIGNED EMPLOYEE":
-                        doc.assignedEmployee,
+                        documentRecord.assignedEmployeeName ||
+                        documentRecord.assignedEmployee ||
+                        ""
 
-                    "STATUS":
-                        statusLabel(doc)
                 })
             );
 
-        const ws =
-            XLSX.utils.json_to_sheet(rows);
+        const worksheet =
+            XLSX.utils.json_to_sheet(
+                rows
+            );
 
-        const wb =
+        const workbook =
             XLSX.utils.book_new();
 
         XLSX.utils.book_append_sheet(
-            wb,
-            ws,
+            workbook,
+            worksheet,
             "Documents"
         );
 
         XLSX.writeFile(
-            wb,
-            "Office-Documents.xlsx"
+            workbook,
+            "Office-Document-Register.xlsx"
         );
     }
 
+    /* =========================================================
+       EXPORT PDF
+    ========================================================= */
+
     function exportPdf() {
 
-        if (!filteredDocuments.length) {
+        if (
+            !filteredDocuments.length
+        ) {
+
             alert(
                 "No document records match the current filters."
             );
+
             return;
         }
 
@@ -845,9 +1557,11 @@
             !window.jspdf ||
             !window.jspdf.jsPDF
         ) {
+
             alert(
                 "PDF export library is not available."
             );
+
             return;
         }
 
@@ -873,9 +1587,11 @@
             typeof pdf.autoTable !==
             "function"
         ) {
+
             alert(
                 "PDF table library is not available."
             );
+
             return;
         }
 
@@ -897,29 +1613,37 @@
 
             body:
                 filteredDocuments.map(
-                    doc => [
-                        doc.serialLabel ||
-                            doc.serialNumber,
+                    documentRecord => [
 
-                        doc.clientName,
+                        documentRecord.serialLabel ||
+                            documentRecord.serialNumber,
 
-                        doc.purpose,
+                        documentRecord.clientName ||
+                            "",
 
-                        doc.mode,
+                        documentRecord.purpose ||
+                            "",
 
-                        doc.receiptDate,
+                        documentRecord.mode ||
+                            "",
 
-                        doc.dispatchDate || "",
+                        documentRecord.receiptDate ||
+                            "",
 
-                        doc.completionDate || "",
+                        documentRecord.dispatchDate ||
+                            "",
 
-                        daysBetween(
-                            doc.receiptDate,
-                            doc.completionDate ||
-                            null
+                        documentRecord.completionDate ||
+                            "",
+
+                        calculateDays(
+                            documentRecord.receiptDate,
+                            documentRecord.completionDate
                         ),
 
-                        statusLabel(doc)
+                        getStatus(
+                            documentRecord
+                        )
                     ]
                 ),
 
@@ -930,25 +1654,46 @@
         });
 
         pdf.save(
-            "Office-Documents.pdf"
+            "Office-Document-Register.pdf"
         );
     }
+
+    /* =========================================================
+       INITIALIZE
+    ========================================================= */
 
     document.addEventListener(
         "DOMContentLoaded",
         async () => {
 
-            $("documentForm")
-                ?.addEventListener(
+            /*
+             * SAVE
+             */
+
+            const form =
+                $("documentForm");
+
+            if (form) {
+
+                form.addEventListener(
                     "submit",
                     saveDocument
                 );
+            }
+
+            /*
+             * SEARCH
+             */
 
             $("documentSearch")
                 ?.addEventListener(
                     "input",
                     applyFilters
                 );
+
+            /*
+             * FILTERS
+             */
 
             $("documentModeFilter")
                 ?.addEventListener(
@@ -974,6 +1719,20 @@
                     applyFilters
                 );
 
+            /*
+             * CLEAR FILTERS
+             */
+
+            $("clearDocumentFilters")
+                ?.addEventListener(
+                    "click",
+                    clearFilters
+                );
+
+            /*
+             * EXPORT
+             */
+
             $("exportExcelButton")
                 ?.addEventListener(
                     "click",
@@ -986,16 +1745,58 @@
                     exportPdf
                 );
 
+            /*
+             * MODE
+             */
+
             setupMode();
 
+            /*
+             * INITIAL LOAD
+             */
+
             await Promise.all([
+
                 loadClients(),
+
                 loadStaff(),
-                loadSerial()
+
+                loadSerial(),
+
+                loadDocuments()
+
             ]);
 
-            await loadDocuments();
+            /*
+             * START LIVE REGISTER
+             *
+             * Every 10 seconds the page
+             * asks the database for the
+             * latest document records.
+             */
+
+            startLiveRefresh();
         }
     );
+
+    /*
+     * Make useful functions available
+     * to existing HTML onclick handlers.
+     */
+
+    window.loadDocuments =
+        loadDocuments;
+
+    window.applyDocumentFilters =
+        applyFilters;
+
+    window.clearDocumentFilters =
+        clearFilters;
+
+    window.updateDocumentDispatchDate =
+        updateDispatchDate;
+
+    window.deleteDocument =
+        deleteDocument;
 
 })();

@@ -29,7 +29,7 @@
 
     <link
         rel="stylesheet"
-        href="/CSS/style.css"
+        href="../CSS/style.css"
     >
 
     <style>
@@ -191,6 +191,7 @@
         .document-summary-card strong {
             font-size: 22px;
         }
+
 
 
         .dispatch-cell {
@@ -358,34 +359,200 @@
             }
         }
 
+        /* =========================================================
+           DOCUMENT REGISTER - FULL WIDTH + HORIZONTAL SCROLL
+        ========================================================= */
+
         .document-table-wrapper {
-            overflow-x: auto;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: scroll;
+            overflow-y: hidden;
             padding: 0 24px 24px;
+            box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: auto;
         }
 
         .document-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 1050px;
+            width: 2200px;
+            min-width: 2200px;
+            max-width: none;
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: fixed;
         }
 
         .document-table th,
         .document-table td {
-            padding: 13px 12px;
-            border-bottom: 1px solid #edf0f4;
+            box-sizing: border-box;
+            padding: 14px 16px;
+            border-right: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
             text-align: left;
             vertical-align: middle;
+            white-space: normal;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+        }
+
+        .document-table th:last-child,
+        .document-table td:last-child {
+            border-right: 0;
         }
 
         .document-table th {
             background: #f8fafc;
+            color: #344054;
             font-size: 13px;
             font-weight: 700;
-            color: #555;
+            white-space: nowrap;
+            height: 54px;
         }
 
         .document-table td {
+            background: #fff;
+            color: #101828;
             font-size: 14px;
+            min-height: 58px;
+        }
+
+        .document-table tbody tr:hover td {
+            background: #f9fafb;
+        }
+
+        /* Exact 12-column layout */
+        .document-table th:nth-child(1),
+        .document-table td:nth-child(1) {
+            width: 130px;
+        }
+
+        .document-table th:nth-child(2),
+        .document-table td:nth-child(2) {
+            width: 240px;
+        }
+
+        .document-table th:nth-child(3),
+        .document-table td:nth-child(3) {
+            width: 150px;
+        }
+
+        .document-table th:nth-child(4),
+        .document-table td:nth-child(4) {
+            width: 110px;
+        }
+
+        .document-table th:nth-child(5),
+        .document-table td:nth-child(5) {
+            width: 150px;
+        }
+
+        .document-table th:nth-child(6),
+        .document-table td:nth-child(6) {
+            width: 150px;
+        }
+
+        .document-table th:nth-child(7),
+        .document-table td:nth-child(7) {
+            width: 190px;
+        }
+
+        .document-table th:nth-child(8),
+        .document-table td:nth-child(8) {
+            width: 80px;
+            text-align: center;
+        }
+
+        .document-table th:nth-child(9),
+        .document-table td:nth-child(9) {
+            width: 130px;
+            text-align: center;
+        }
+
+        .document-table th:nth-child(10),
+        .document-table td:nth-child(10) {
+            width: 220px;
+        }
+
+        .document-table th:nth-child(11),
+        .document-table td:nth-child(11) {
+            width: 220px;
+        }
+
+        .document-table th:nth-child(12),
+        .document-table td:nth-child(12) {
+            width: 220px;
+        }
+
+        .document-table input[type="date"] {
+            width: 155px;
+            min-width: 155px;
+            height: 38px;
+            padding: 7px 9px;
+            box-sizing: border-box;
+            border: 1px solid #98a2b3;
+            border-radius: 6px;
+            background: #fff;
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .document-table .client-name,
+        .document-table .staff-cell {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .document-table .client-pan {
+            margin-top: 5px;
+            color: #667085;
+            font-size: 12px;
+        }
+
+        .document-table .status-cell {
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .document-table .document-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 90px;
+            padding: 6px 11px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .document-table .document-status.complete {
+            background: #ecfdf3;
+            color: #027a48;
+        }
+
+        .document-table .document-status.wip {
+            background: #fffaeb;
+            color: #b54708;
+        }
+
+        .document-table-wrapper::-webkit-scrollbar {
+            height: 14px;
+        }
+
+        .document-table-wrapper::-webkit-scrollbar-track {
+            background: #e9edf2;
+            border-radius: 8px;
+        }
+
+        .document-table-wrapper::-webkit-scrollbar-thumb {
+            background: #98a2b3;
+            border-radius: 8px;
+            border: 2px solid #e9edf2;
+        }
+
+        .document-table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #667085;
         }
 
         .muted-small {
@@ -527,11 +694,6 @@
             color: #a33;
         }
 
-        .live-task-completed {
-            background: #ecfdf3;
-            color: #067647;
-        }
-
         .live-task-empty {
             padding: 32px 20px;
             text-align: center;
@@ -540,13 +702,102 @@
 
     </style>
 
-
 </head>
 
-<body class="ca-admin-constant-page" class="dashboard-body">
+<body class="dashboard-body">
+
 <div class="dashboard-layout">
 
-    
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+            <div class="brand-name">
+                <strong>CA Office</strong>
+                <span>Employee Portal</span>
+            </div>
+
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <span class="nav-section">
+                WORKSPACE
+            </span>
+
+            <a
+                href="/employee/dashboard.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a
+                href="/employee/clients.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">◉</span>
+                Clients
+            </a>
+
+            <a
+                href="/employee/add-client.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">+</span>
+                Add Client
+            </a>
+
+            <a
+                href="/employee/tasks.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">✓</span>
+                My Tasks
+            </a>
+
+            <a
+                href="/employee/documents.html"
+                class="nav-item active"
+            >
+                <span class="nav-icon">□</span>
+                Documents
+            </a>
+
+            <span class="nav-section">
+                OFFICE
+            </span>
+
+            <a
+                href="#"
+                class="nav-item"
+                onclick="return false;"
+            >
+                <span class="nav-icon">◷</span>
+                Calendar
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <button
+                type="button"
+                class="logout-button"
+                id="logoutButton"
+            >
+                <span class="nav-icon">↪</span>
+                Sign out
+            </button>
+
+        </div>
+
+    </aside>
 
 
     <main class="dashboard-main">
@@ -555,7 +806,7 @@
 
             <div style="margin-bottom:20px;">
                 <a
-                    href="/admin/dashboard.html"
+                    href="/employee/dashboard.html"
                     style="text-decoration:none;color:#555;"
                 >
                     ← Back to Dashboard
@@ -580,15 +831,15 @@
                 </div>
 
                 <div class="user-profile">
-                    <div class="avatar" id="adminAvatar">
+                    <div class="avatar" id="employeeAvatar">
                         E
                     </div>
 
                     <div class="user-info">
-                        <strong id="adminName">
-                            Administrator
+                        <strong id="employeeName">
+                            Employee
                         </strong>
-                        <span id="adminRole">
+                        <span id="employeeRole">
                             Staff
                         </span>
                     </div>
@@ -646,7 +897,7 @@
 
                         <div class="form-group">
                             <label for="clientId">
-                                Assigned Client
+                                Name of Client
                                 <span class="required">*</span>
                             </label>
 
@@ -920,7 +1171,6 @@
                 <div class="document-table-wrapper">
 
                     <table class="document-table">
-
                         <thead>
                             <tr>
                                 <th>Serial Number</th>
@@ -929,14 +1179,12 @@
                                 <th>Mode</th>
                                 <th>Date of Receipt</th>
                                 <th>Date of Dispatch</th>
-
-                        <th>
-                            Days
-                        </th>
+                                <th>Date of Completion</th>
+                                <th>Days</th>
+                                <th>Status</th>
                                 <th>Receiving Staff</th>
                                 <th>Delivering Staff</th>
                                 <th>Assigned Employee</th>
-                                <th>Status</th>
                             </tr>
                         </thead>
 
@@ -967,7 +1215,7 @@
                     <div>
                         <h2>Live Task Register</h2>
                         <p>
-                            Tasks assigned to employees, including completion tracking.
+                            Active W.I.P and Incomplete tasks assigned to employees.
                             The register refreshes automatically.
                         </p>
                     </div>
@@ -999,7 +1247,6 @@
                                 <th>Client</th>
                                 <th>Assigned Employee</th>
                                 <th>Date of Assigning</th>
-                                <th>Date of Completion</th>
                                 <th>No. of Days</th>
                                 <th>Status</th>
                             </tr>
@@ -1018,22 +1265,14 @@
 </div>
 
 
-<script src="/JS/auth.js"></script>
+<script src="../JS/auth.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-<script src="/JS/documents.js"></script>
-<script src="/JS/live-tasks.js"></script>
+<script src="../JS/documents.js"></script>
+<script src="../JS/live-tasks.js"></script>
 
-    <script src="/JS/unified-sidebar.js"></script>
 
-<script>
-document.getElementById("logoutButton")?.addEventListener("click", function () {
-    localStorage.removeItem("caOfficeLoggedIn");
-    localStorage.removeItem("caOfficeUser");
-    window.location.href = "/login.html";
-});
-</script>
-
+<script src="../JS/unified-sidebar.js"></script>
 </body>
 </html>
