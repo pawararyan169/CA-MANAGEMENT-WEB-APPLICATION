@@ -64,12 +64,10 @@
                 : [];
 
             /*
-             * Live register = tasks that are still open.
-             * Completed tasks are not part of the live queue.
+             * Live register shows every assigned task so completion
+             * can be tracked directly from the dashboard.
              */
-            const live = tasks.filter(task =>
-                !task.completionDate
-            );
+            const live = tasks;
 
             if (countBox) {
                 countBox.textContent = live.length;
@@ -107,6 +105,7 @@
                         <td>${esc(task.clientName || '—')}</td>
                         <td>${esc(task.assignedEmployeeName || '—')}</td>
                         <td>${esc(date(task.assignedDate))}</td>
+                        <td>${esc(date(task.completionDate))}</td>
                         <td>
                             <strong>${esc(days(task.assignedDate, task.completionDate))}</strong>
                             <span class="live-task-days">days</span>

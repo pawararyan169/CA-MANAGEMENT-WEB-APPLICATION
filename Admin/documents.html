@@ -527,6 +527,11 @@
             color: #a33;
         }
 
+        .live-task-completed {
+            background: #ecfdf3;
+            color: #067647;
+        }
+
         .live-task-empty {
             padding: 32px 20px;
             text-align: center;
@@ -641,7 +646,7 @@
 
                         <div class="form-group">
                             <label for="clientId">
-                                Name of Client
+                                Assigned Client
                                 <span class="required">*</span>
                             </label>
 
@@ -962,7 +967,7 @@
                     <div>
                         <h2>Live Task Register</h2>
                         <p>
-                            Active W.I.P and Incomplete tasks assigned to employees.
+                            Tasks assigned to employees, including completion tracking.
                             The register refreshes automatically.
                         </p>
                     </div>
@@ -994,6 +999,7 @@
                                 <th>Client</th>
                                 <th>Assigned Employee</th>
                                 <th>Date of Assigning</th>
+                                <th>Date of Completion</th>
                                 <th>No. of Days</th>
                                 <th>Status</th>
                             </tr>

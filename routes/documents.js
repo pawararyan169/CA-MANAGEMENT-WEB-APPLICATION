@@ -80,6 +80,31 @@ try {
 }
 
 /* =========================================================
+   DATE OF COMPLETION MIGRATION
+========================================================= */
+
+try {
+    const documentColumns =
+        db.prepare(`PRAGMA table_info(office_documents)`).all();
+
+    if (
+        !documentColumns.some(
+            column => column.name === 'completion_date'
+        )
+    ) {
+        db.exec(`
+            ALTER TABLE office_documents
+            ADD COLUMN completion_date TEXT
+        `);
+    }
+} catch (completionMigrationError) {
+    console.error(
+        'Document completion date migration error:',
+        completionMigrationError
+    );
+}
+
+/* =========================================================
    HELPERS
 ========================================================= */
 
@@ -133,6 +158,14 @@ function mapDocument(row) {
         receiptDate: row.receipt_date || '',
 
         dispatchDate: row.dispatch_date || '',
+
+        completionDate:
+            row.completion_date || '',
+
+        status:
+            row.completion_date
+                ? 'COMPLETE'
+                : 'W.I.P',
 
         receivingStaffId:
             row.receiving_staff_id || '',
@@ -619,6 +652,9 @@ router.post(
             const requestedDispatchDate =
                 clean(body.dispatchDate);
 
+            const completionDate =
+                clean(body.completionDate);
+
             /*
              * Online documents never have a dispatch date.
              * Enforce this on the server as well so the rule
@@ -699,6 +735,29 @@ router.post(
                 });
             }
 
+
+            if (
+                completionDate &&
+                completionDate < receiptDate
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        'Date of completion cannot be earlier than the date of receipt.'
+                });
+            }
+
+            if (
+                dispatchDate &&
+                completionDate &&
+                completionDate < dispatchDate
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        'Date of completion cannot be earlier than the date of dispatch.'
+                });
+            }
 
             if (
                 dispatchDate &&
@@ -815,6 +874,7 @@ router.post(
                         mode,
                         receipt_date,
                         dispatch_date,
+                        completion_date,
                         receiving_staff_id,
                         delivering_staff_id,
                         assigned_employee_id,
@@ -991,5 +1051,111 @@ router.patch(
         }
     }
 );
+
+
+/* =========================================================
+   UPDATE DATE OF COMPLETION
+========================================================= */
+
+router.patch(
+    '/documents/:id/completion-date',
+    requireAuth,
+    (req, res) => {
+
+        try {
+
+            const documentId =
+                clean(req.params.id);
+
+            const completionDate =
+                clean(req.body?.completionDate);
+
+            const document =
+                db.prepare(`
+                    SELECT
+                        id,
+                        receipt_date,
+                        dispatch_date
+                    FROM office_documents
+                    WHERE id = ?
+                    LIMIT 1
+                `).get(documentId);
+
+            if (!document) {
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        'Document record not found.'
+                });
+            }
+
+            if (
+                completionDate &&
+                completionDate < document.receipt_date
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        'Date of completion cannot be earlier than the date of receipt.'
+                });
+            }
+
+            if (
+                completionDate &&
+                document.dispatch_date &&
+                completionDate < document.dispatch_date
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        'Date of completion cannot be earlier than the date of dispatch.'
+                });
+            }
+
+            db.prepare(`
+                UPDATE office_documents
+                SET
+                    completion_date = ?,
+                    updated_at = ?
+                WHERE id = ?
+            `).run(
+                completionDate || null,
+                new Date().toISOString(),
+                documentId
+            );
+
+            const updated =
+                db.prepare(`
+                    ${documentQuery()}
+                    WHERE d.id = ?
+                    LIMIT 1
+                `).get(documentId);
+
+            return res.json({
+                success: true,
+                message:
+                    completionDate
+                        ? 'Document marked complete.'
+                        : 'Document returned to W.I.P.',
+                document:
+                    mapDocument(updated)
+            });
+
+        } catch (error) {
+
+            console.error(
+                'Update completion date error:',
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    'Unable to update completion date.'
+            });
+        }
+    }
+);
+
 
 module.exports = router;
