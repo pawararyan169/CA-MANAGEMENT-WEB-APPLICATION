@@ -175,6 +175,16 @@ app.use(
 );
 
 app.use('/api',require('./routes/professional-tax'))
+app.use('/api', require('./routes/udyam-dashboard'));
+app.use(
+    '/api',
+    require('./routes/pan-dashboard')
+);
+
+app.use(
+    '/api',
+    require('./routes/tan-dashboard')
+);
 
 
 /* =========================================================
@@ -375,6 +385,59 @@ app.get(
     }
 );
 
+
+app.get(
+    '/admin/udyam_dashboard.html',
+    (req, res) => {
+        res.sendFile(
+            path.join(
+                __dirname,
+                'admin',
+                'udyam_dashboard.html'
+            )
+        );
+    }
+);
+
+app.get(
+    '/employee/udyam_dashboard.html',
+    (req, res) => {
+        res.sendFile(
+            path.join(
+                __dirname,
+                'employee',
+                'udyam_dashboard.html'
+            )
+        );
+    }
+);
+
+
+app.get(
+    '/admin/pan-dashboard.html',
+    (req, res) => {
+        res.sendFile(
+            path.join(
+                __dirname,
+                'admin',
+                'pan-dashboard.html'
+            )
+        );
+    }
+);
+
+app.get(
+    '/employee/pan-dashboard.html',
+    (req, res) => {
+        res.sendFile(
+            path.join(
+                __dirname,
+                'employee',
+                'pan-dashboard.html'
+            )
+        );
+    }
+);
 
 /* =========================================================
    EMPLOYEE

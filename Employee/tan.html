@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MSME Udyam Clients | CA Office</title>
+<title>TAN Clients | CA Office</title>
 <link rel="stylesheet" href="/CSS/style.css">
 <style>
 .registration-page{max-width:1450px;margin:0 auto}
@@ -50,130 +50,10 @@
 @media(max-width:600px){.registration-filter-grid,.summary,.detail-grid{grid-template-columns:1fr}}
 </style>
 
-    <!-- Employee sidebar scrolling -->
-    <style id="employee-sidebar-scroll">
-        /* Keep the sidebar fixed to the viewport while allowing the menu itself to scroll. */
-        .sidebar {
-            height: 100vh !important;
-            max-height: 100vh !important;
-            overflow: hidden !important;
-            display: flex !important;
-            flex-direction: column !important;
-        }
-
-        .sidebar-brand {
-            flex: 0 0 auto !important;
-        }
-
-        .sidebar-nav {
-            flex: 1 1 auto !important;
-            min-height: 0 !important;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            overscroll-behavior: contain;
-            scrollbar-width: thin;
-            scrollbar-color: #c8c8c8 transparent;
-            padding-right: 4px;
-        }
-
-        .sidebar-nav::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar-nav::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar-nav::-webkit-scrollbar-thumb {
-            background: #c8c8c8;
-            border-radius: 10px;
-        }
-
-        .sidebar-nav::-webkit-scrollbar-thumb:hover {
-            background: #a9a9a9;
-        }
-
-        .sidebar-bottom {
-            flex: 0 0 auto !important;
-        }
-
-        @media (max-width: 900px) {
-            .sidebar-nav {
-                scrollbar-width: thin;
-            }
-        }
-    </style>
-
 </head>
-<body class="dashboard-body">
-
+<body class="ca-admin-constant-page" class="dashboard-body">
 <div class="dashboard-layout">
 
-<aside class="sidebar">
-
-    <div class="sidebar-brand">
-        <div class="logo-mark">CA</div>
-        <div class="brand-name">
-            <strong>CA Office</strong>
-            <span>Employee Portal</span>
-        </div>
-    </div>
-
-    <nav class="sidebar-nav">
-
-        <span class="nav-section">WORKSPACE</span>
-
-        <a href="/employee/dashboard.html" class="nav-item">
-            <span class="nav-icon">⌂</span>
-            Dashboard
-        </a>
-
-        <a href="/employee/clients.html" class="nav-item">
-            <span class="nav-icon">◉</span>
-            Clients
-        </a>
-
-        <a href="/employee/add-client.html" class="nav-item">
-            <span class="nav-icon">+</span>
-            Add Client
-        </a>
-
-        <div class="registration-section">
-
-            <div class="registration-section-title">
-                TAX & REGISTRATIONS
-            </div>
-
-            <div class="registration-menu">
-                <a href="/employee/cin.html" class="registration-menu-item "><span>CIN</span></a>
-<a href="/employee/fssai.html" class="registration-menu-item "><span>FSSAI</span></a>
-<a href="/employee/gst.html" class="registration-menu-item "><span>GST</span></a>
-<a href="/employee/udyam.html" class="registration-menu-item active"><span>MSME Udyam</span></a>
-<a href="/employee/ptec.html" class="registration-menu-item "><span>PTEC</span></a>
-<a href="/employee/ptrc.html" class="registration-menu-item "><span>PTRC</span></a>
-<a href="/employee/tan.html" class="registration-menu-item "><span>TAN</span></a>
-            </div>
-
-        </div>
-
-        
-        <a href="/employee/tasks.html" class="nav-item"><span class="nav-icon">✓</span> My Tasks</a>
-    
-
-    </nav>
-
-    <div class="sidebar-bottom">
-        <button
-            id="logoutButton"
-            type="button"
-            class="logout-button"
-        >
-            <span class="nav-icon">↪</span>
-            Sign out
-        </button>
-    </div>
-
-</aside>
 
 <main class="dashboard-main">
 
@@ -188,11 +68,11 @@
         </span>
 
         <h1 id="registrationTitle">
-            MSME Udyam
+            TAN
         </h1>
 
         <p id="registrationDescription">
-            MSME Udyam Registration
+            Tax Deduction and Collection Account Number
         </p>
 
     </div>
@@ -210,7 +90,7 @@
     <div class="summary-card">
 
         <span id="registrationCountLabel">
-            Total clients with MSME Udyam
+            Total clients with TAN
         </span>
 
         <strong id="registrationTotal">
@@ -240,11 +120,11 @@
         <div>
 
             <h2>
-                MSME Udyam Register
+                TAN Register
             </h2>
 
             <p>
-                Only clients who have provided a MSME Udyam
+                Only clients who have provided a TAN
                 registration number are shown.
             </p>
 
@@ -311,7 +191,7 @@
         id="registrationLoading"
         style="padding:45px;text-align:center;color:#777;"
     >
-        Loading MSME Udyam clients...
+        Loading TAN clients...
     </div>
 
     <div
@@ -320,11 +200,11 @@
     >
 
         <h3>
-            No MSME Udyam clients found
+            No TAN clients found
         </h3>
 
         <p>
-            No client has provided a MSME Udyam number,
+            No client has provided a TAN number,
             or no record matches the selected filter.
         </p>
 
@@ -347,7 +227,7 @@
                     </th>
 
                     <th id="registrationTableHeading">
-                        MSME Udyam Number
+                        TAN Number
                     </th>
 
                     <th>
@@ -405,7 +285,7 @@
                 </span>
 
                 <h2 id="detailsTitle">
-                    MSME Udyam Client Details
+                    TAN Client Details
                 </h2>
 
             </div>
@@ -432,7 +312,16 @@
 
 <script src="/JS/auth.js"></script>
 <script src="/JS/registrations.js"></script>
-<script src="/JS/unified-sidebar.js"></script>
+
+    <script src="/JS/unified-sidebar.js"></script>
+
+<script>
+document.getElementById("logoutButton")?.addEventListener("click", function () {
+    localStorage.removeItem("caOfficeLoggedIn");
+    localStorage.removeItem("caOfficeUser");
+    window.location.href = "/login.html";
+});
+</script>
 
 </body>
 </html>

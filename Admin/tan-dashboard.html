@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1.0"
+>
+
+<title>TAN Dashboard</title>
+
+<link
+    rel="stylesheet"
+    href="/CSS/style.css"
+>
+
+<link
+    rel="stylesheet"
+    href="/CSS/tan-dashboard.css"
+>
+
+</head>
+
+<body>
+
+<div class="dashboard-layout">
+
+<main class="dashboard-main">
+
+<div class="tan-page">
+
+<header class="tan-header">
+
+<div>
+
+<div class="tan-eyebrow">
+TAN COMPLIANCE
+</div>
+
+<h1>
+TAN Dashboard
+</h1>
+
+<p>
+Year-wise quarterly TAN filing records.
+</p>
+
+</div>
+
+
+<div class="tan-actions">
+
+<button
+type="button"
+id="tanExcel"
+class="tan-btn"
+>
+Export Excel
+</button>
+
+<button
+type="button"
+id="tanPdf"
+class="tan-btn"
+>
+Export PDF
+</button>
+
+<button
+type="button"
+id="tanSave"
+class="tan-btn save"
+>
+Save All
+</button>
+
+</div>
+
+</header>
+
+
+<div
+id="tanError"
+class="tan-error">
+</div>
+
+
+<section class="tan-filter-card">
+
+<div class="tan-filters">
+
+<div class="tan-field">
+
+<label for="tanYear">
+Year
+</label>
+
+<select id="tanYear">
+</select>
+
+</div>
+
+
+<div class="tan-field">
+
+<label for="tanSearch">
+Search
+</label>
+
+<input
+id="tanSearch"
+type="search"
+placeholder="Search name or TAN number..."
+autocomplete="off"
+>
+
+</div>
+
+
+<div class="tan-field">
+
+<label for="tanStatus">
+Status
+</label>
+
+<select id="tanStatus">
+
+<option value="">
+All Statuses
+</option>
+
+<option value="Q1 FILING PENDING">
+Q1 Filing Pending
+</option>
+
+<option value="Q2 FILING PENDING">
+Q2 Filing Pending
+</option>
+
+<option value="Q3 FILING PENDING">
+Q3 Filing Pending
+</option>
+
+<option value="Q4 FILING PENDING">
+Q4 Filing Pending
+</option>
+
+<option value="Q4 FILLED">
+Q4 Filled
+</option>
+
+</select>
+
+</div>
+
+
+<div class="tan-field">
+
+<label for="tanSort">
+Sort
+</label>
+
+<select id="tanSort">
+
+<option value="name-asc">
+Name: A to Z
+</option>
+
+<option value="name-desc">
+Name: Z to A
+</option>
+
+<option value="tan-asc">
+TAN: A to Z
+</option>
+
+<option value="tan-desc">
+TAN: Z to A
+</option>
+
+<option value="q1-asc">
+Q1 Date: Oldest First
+</option>
+
+<option value="q1-desc">
+Q1 Date: Newest First
+</option>
+
+<option value="q2-asc">
+Q2 Date: Oldest First
+</option>
+
+<option value="q2-desc">
+Q2 Date: Newest First
+</option>
+
+<option value="q3-asc">
+Q3 Date: Oldest First
+</option>
+
+<option value="q3-desc">
+Q3 Date: Newest First
+</option>
+
+<option value="q4-asc">
+Q4 Date: Oldest First
+</option>
+
+<option value="q4-desc">
+Q4 Date: Newest First
+</option>
+
+<option value="status-asc">
+Status: A to Z
+</option>
+
+<option value="status-desc">
+Status: Z to A
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+<div class="tan-count">
+
+Showing
+<strong id="tanVisible">0</strong>
+of
+<strong id="tanTotal">0</strong>
+records for
+<strong id="tanYearLabel"></strong>
+
+</div>
+
+</section>
+
+
+<section class="tan-table-card">
+
+<div
+id="tanLoading"
+class="tan-loading"
+>
+Loading TAN records...
+</div>
+
+
+<div
+id="tanEmpty"
+class="tan-empty"
+style="display:none"
+>
+No TAN records found.
+</div>
+
+
+<div
+id="tanTableWrap"
+class="tan-table-wrap"
+style="display:none"
+>
+
+<table class="tan-table">
+
+<thead>
+
+<tr>
+
+<th>
+SR. NO.
+</th>
+
+<th>
+NAME
+</th>
+
+<th>
+TAN NUMBER
+</th>
+
+<th>
+Q1 FILING DATE
+</th>
+
+<th>
+Q2 FILING DATE
+</th>
+
+<th>
+Q3 FILING DATE
+</th>
+
+<th>
+Q4 FILING DATE
+</th>
+
+<th>
+STATUS
+</th>
+
+</tr>
+
+</thead>
+
+
+<tbody
+id="tanTableBody">
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+</div>
+
+</main>
+
+</div>
+
+
+<div
+id="tanToast"
+class="tan-toast">
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<script src="/JS/auth.js"></script>
+
+<script src="/JS/tan-dashboard.js"></script>
+
+<script src="/JS/unified-sidebar.js"></script>
+
+</body>
+
+</html>

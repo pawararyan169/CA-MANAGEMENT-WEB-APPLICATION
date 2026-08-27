@@ -339,7 +339,7 @@
         ["link", "/admin/ptec_dashboard.html", "PTEC", "◇"],
         ["link", "/admin/income_tax.html", "PAN", "◇"],
         ["link", "/admin/ptrc_dashboard.html", "PTRC", "◇"],
-        ["link", "/admin/tan.html", "TAN", "◇"],
+        ["link", "/admin/tan-dashboard.html", "TAN", "◇"],
         
 
         ["section", "OFFICE"],
@@ -364,12 +364,12 @@
         ["section", "REGISTRATIONS"],
         ["link", "/employee/cin_dashboard.html", "CIN", "◇"],
         ["link", "/employee/fssai_dashboard.html", "FSSAI", "◇"],
-        ["link", "/employee/gst.html", "GST", "◇"],
+        ["link", "/employee/gst-dashboard.html", "GST", "◇"],
         ["link", "/employee/udyam_dashboard.html", "MSME Udyam", "◇"],
         ["link", "/employee/Income_tax.html", "PAN", "◇"],
         ["link", "/employee/ptec_dashboard.html", "PTEC", "◇"],
         ["link", "/employee/ptrc_dashboard.html", "PTRC", "◇"],
-        ["link", "/employee/tan.html", "TAN", "◇"],
+        ["link", "/employee/tan-dashboard.html", "TAN", "◇"],
         
 
         ["section", "OFFICE"],

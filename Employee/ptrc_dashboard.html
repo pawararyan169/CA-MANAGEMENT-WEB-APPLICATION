@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>PTRC Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="/CSS/style.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/CSS/professional-tax-dashboard.css"
+    >
+
+</head>
+
+<body data-tax-type="PTRC">
+
+<div class="dashboard-layout">
+
+    <main class="dashboard-main">
+
+        <div class="professional-tax-page">
+
+            <header
+                class="professional-tax-header"
+            >
+
+                <div>
+
+                    <span
+                        class="professional-tax-eyebrow"
+                    >
+                        PROFESSIONAL TAX
+                    </span>
+
+                    <h1>
+                        PTRC Dashboard
+                    </h1>
+
+                    <p>
+                        Year-wise PTRC payment records.
+                    </p>
+
+                </div>
+
+
+                <div
+                    class="professional-tax-actions"
+                >
+
+                    <button
+                        id="professionalTaxExcel"
+                        class="professional-tax-btn"
+                        type="button"
+                    >
+                        Export Excel
+                    </button>
+
+
+                    <button
+                        id="professionalTaxPdf"
+                        class="professional-tax-btn"
+                        type="button"
+                    >
+                        Export PDF
+                    </button>
+
+
+                    <button
+                        id="professionalTaxSave"
+                        class="professional-tax-btn save"
+                        type="button"
+                    >
+                        Save All
+                    </button>
+
+                </div>
+
+            </header>
+
+
+            <div
+                id="professionalTaxError"
+                class="professional-tax-error"
+            ></div>
+
+
+            <section
+                class="professional-tax-filter-card"
+            >
+
+                <div
+                    class="professional-tax-filters"
+                >
+
+                    <div
+                        class="professional-tax-field"
+                    >
+
+                        <label>
+                            Year
+                        </label>
+
+                        <select
+                            id="professionalTaxYear"
+                        ></select>
+
+                    </div>
+
+
+                    <div
+                        class="professional-tax-field"
+                    >
+
+                        <label>
+                            Search
+                        </label>
+
+                        <input
+                            id="professionalTaxSearch"
+                            type="search"
+                            placeholder="Search name or PTRC number..."
+                        >
+
+                    </div>
+
+
+                    <div
+                        class="professional-tax-field"
+                    >
+
+                        <label>
+                            Status
+                        </label>
+
+                        <select
+                            id="professionalTaxStatus"
+                        >
+
+                            <option value="">
+                                All Statuses
+                            </option>
+
+                            <option value="PAYMENT PENDING">
+                                Payment Pending
+                            </option>
+
+                            <option value="PAYMENT DONE">
+                                Payment Done
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="professional-tax-filter-info"
+                >
+
+                    Showing
+
+                    <strong
+                        id="professionalTaxVisible"
+                    >
+                        0
+                    </strong>
+
+                    of
+
+                    <strong
+                        id="professionalTaxTotal"
+                    >
+                        0
+                    </strong>
+
+                    records for
+
+                    <strong
+                        id="professionalTaxYearLabel"
+                    ></strong>
+
+                </div>
+
+            </section>
+
+
+            <section
+                class="professional-tax-table-card"
+            >
+
+                <div
+                    id="professionalTaxLoading"
+                    class="professional-tax-loading"
+                >
+                    Loading PTRC records...
+                </div>
+
+
+                <div
+                    id="professionalTaxEmpty"
+                    class="professional-tax-empty"
+                    style="display:none"
+                >
+                    No PTRC records found.
+                </div>
+
+
+                <div
+                    id="professionalTaxTableWrap"
+                    class="professional-tax-table-wrap"
+                    style="display:none"
+                >
+
+                    <table
+                        class="professional-tax-table"
+                    >
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    SR. NO.
+                                </th>
+
+                                <th>
+                                    NAME
+                                </th>
+
+                                <th>
+                                    PTRC NUMBER
+                                </th>
+
+                                <th>
+                                    DATE OF PAYMENT
+                                </th>
+
+                                <th>
+                                    STATUS
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody
+                            id="professionalTaxTableBody"
+                        ></tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<div
+    id="professionalTaxToast"
+    class="professional-tax-toast"
+></div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<script src="/JS/auth.js"></script>
+
+<script src="/JS/professional-tax-dashboard.js"></script>
+
+<script src="/JS/unified-sidebar.js"></script>
+
+</body>
+
+</html>
