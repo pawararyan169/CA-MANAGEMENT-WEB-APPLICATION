@@ -1,11 +1,4 @@
-/*
- * CA OFFICE — UNIFIED SIDEBAR
- * One sidebar for Admin and Employee pages.
- *
- * The page HTML should NOT contain a <aside class="sidebar">.
- * This script creates the sidebar and keeps only the navigation area
- * scrollable. Brand and Sign out remain visible.
- */
+
 (() => {
     "use strict";
 
@@ -414,7 +407,7 @@
             <div class="ca-brand">
                 <div class="ca-logo">CA</div>
                 <div>
-                    <span class="ca-title">CA Office</span>
+                    <span class="ca-title">BB GADHVI CA ADMIN HUB</span>
                     <span class="ca-subtitle">
                         ${isEmployee ? "Employee Portal" : "Administration"}
                     </span>
