@@ -82,22 +82,65 @@ db.exec(`
         ON gst_monthly_records(month_key);
 `);
 
-// GST GSTR-1 / IFF uses one filing date. Migrate legacy separate columns if present.
-try {
-    const cols = db.prepare(`PRAGMA table_info(gst_monthly_records)`).all().map(c => c.name);
-    if (!cols.includes("gstr1_iff_filing_date")) {
-        db.exec(`ALTER TABLE gst_monthly_records ADD COLUMN gstr1_iff_filing_date TEXT`);
-    }
-    const cols2 = db.prepare(`PRAGMA table_info(gst_monthly_records)`).all().map(c => c.name);
-    if (cols2.includes("gstr1_filing_date") || cols2.includes("iff_filing_date")) {
-        const g = cols2.includes("gstr1_filing_date") ? "gstr1_filing_date" : "NULL";
-        const i = cols2.includes("iff_filing_date") ? "iff_filing_date" : "NULL";
-        db.exec(`UPDATE gst_monthly_records SET gstr1_iff_filing_date = COALESCE(${g}, ${i}) WHERE gstr1_iff_filing_date IS NULL`);
-    }
-} catch (e) {
-    console.warn("GST GSTR-1/IFF migration warning:", e.message);
-}
 
+/* =========================================================
+   GST GSTR-1 / IFF MIGRATION
+========================================================= */
+
+try {
+
+    const cols = db
+        .prepare(
+            `PRAGMA table_info(gst_monthly_records)`
+        )
+        .all()
+        .map(c => c.name);
+
+    if (!cols.includes("gstr1_iff_filing_date")) {
+
+        db.exec(
+            `ALTER TABLE gst_monthly_records
+             ADD COLUMN gstr1_iff_filing_date TEXT`
+        );
+    }
+
+    const cols2 = db
+        .prepare(
+            `PRAGMA table_info(gst_monthly_records)`
+        )
+        .all()
+        .map(c => c.name);
+
+    if (
+        cols2.includes("gstr1_filing_date") ||
+        cols2.includes("iff_filing_date")
+    ) {
+
+        const g =
+            cols2.includes("gstr1_filing_date")
+                ? "gstr1_filing_date"
+                : "NULL";
+
+        const i =
+            cols2.includes("iff_filing_date")
+                ? "iff_filing_date"
+                : "NULL";
+
+        db.exec(`
+            UPDATE gst_monthly_records
+            SET gstr1_iff_filing_date =
+                COALESCE(${g}, ${i})
+            WHERE gstr1_iff_filing_date IS NULL
+        `);
+    }
+
+} catch (e) {
+
+    console.warn(
+        "GST GSTR-1/IFF migration warning:",
+        e.message
+    );
+}
 
 
 /* =========================================================
@@ -293,7 +336,6 @@ db.exec(`
 `);
 
 
-
 /* =========================================================
    BILLING RECORDS
 ========================================================= */
@@ -435,9 +477,11 @@ function addColumnIfMissing(
 ) {
 
     const columns =
-        db.prepare(
-            `PRAGMA table_info(${tableName})`
-        ).all();
+        db
+            .prepare(
+                `PRAGMA table_info(${tableName})`
+            )
+            .all();
 
     const exists =
         columns.some(
@@ -854,9 +898,193 @@ catch (migrationError) {
 }
 
 
+/* =========================================================
+   OPTIONAL ONE-TIME PRODUCTION DATABASE RESET
+
+   Set RESET_DATABASE=true in Render ONLY for the
+   one-time clean production initialization.
+
+   This will:
+
+   - Keep the admin account
+   - Delete non-admin users
+   - Delete clients
+   - Delete GST records
+   - Delete PAN / Income Tax records
+   - Delete billing records
+   - Delete documents
+   - Delete tasks
+   - Delete signup requests
+   - Delete assignments
+   - Delete audit logs
+   - Preserve the database schema
+
+   IMPORTANT:
+   After the reset deployment succeeds,
+   REMOVE RESET_DATABASE from Render.
+========================================================= */
+
+if (
+    String(
+        process.env.RESET_DATABASE || ""
+    ).toLowerCase() === "true"
+) {
+
+    console.log("");
+    console.log(
+        "========================================"
+    );
+    console.log(
+        " RESET_DATABASE=true"
+    );
+    console.log(
+        " Cleaning application records..."
+    );
+    console.log(
+        "========================================"
+    );
+
+
+    const resetTables = [
+
+        "audit_logs",
+
+        "billing_records",
+
+        "client_assignments",
+
+        "fssai_yearly_records",
+
+        "gst_monthly_records",
+
+        "gst_profiles",
+
+        "income_tax_monthly_records",
+
+        "income_tax_profiles",
+
+        "office_billing",
+
+        "office_documents",
+
+        "office_tasks",
+
+        "pan_billing_status",
+
+        "professional_tax_yearly_records",
+
+        "signup_requests",
+
+        "tan_yearly_records",
+
+        "tasks",
+
+        "udyam_yearly_records",
+
+        "clients"
+
+    ];
+
+
+    const resetDatabase =
+        db.transaction(() => {
+
+            for (
+                const table
+                of resetTables
+            ) {
+
+                try {
+
+                    const result =
+                        db
+                            .prepare(
+                                `DELETE FROM "${table}"`
+                            )
+                            .run();
+
+                    console.log(
+                        `Reset ${table}: ${result.changes} row(s) deleted`
+                    );
+
+                }
+                catch (error) {
+
+                    console.error(
+                        `Reset ${table} failed:`,
+                        error.message
+                    );
+
+                    throw error;
+                }
+
+            }
+
+
+            /*
+             * Keep ONLY the admin account.
+             */
+
+            const usersResult =
+                db.prepare(`
+                    DELETE FROM users
+                    WHERE LOWER(username) <> 'admin'
+                `).run();
+
+
+            console.log(
+                `Reset users: ${usersResult.changes} non-admin user(s) deleted`
+            );
+
+        });
+
+
+    resetDatabase();
+
+
+    console.log("");
+    console.log(
+        "========================================"
+    );
+    console.log(
+        " DATABASE RESET COMPLETED"
+    );
+    console.log(
+        "========================================"
+    );
+
+
+    console.log(
+        "Remaining users:",
+        db
+            .prepare(`
+                SELECT
+                    id,
+                    username,
+                    role,
+                    status
+                FROM users
+            `)
+            .all()
+    );
+
+
+    console.log("");
+
+    console.log(
+        "IMPORTANT: Remove RESET_DATABASE from Render after this deployment."
+    );
+
+}
+
+
 console.log(
     "Client database migration completed."
 );
 
+
+/* =========================================================
+   EXPORT DATABASE
+========================================================= */
 
 module.exports = db;
