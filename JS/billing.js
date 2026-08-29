@@ -258,6 +258,9 @@
      * status/billable fields.
      */
     function eligibleForBilling(record) {
+        // GST/PAN records come directly from their dashboards. No Task Panel completion/billable check applies.
+        const directSource = String(record?.sourceType || record?.source_type || "").trim().toUpperCase();
+        if (directSource === "GST" || directSource === "PAN" || record?.transferredToBilling === true) return true;
 
         const hasStatus =
             record.status !== undefined ||
@@ -284,6 +287,31 @@
         return true;
     }
 
+
+
+    /* ============================================================
+       SOURCE-AWARE BILLING TASK LABEL
+       GST transferred record -> GST
+       PAN transferred record -> PAN
+       Normal Task Panel record -> original task name
+       ============================================================ */
+    function billingTaskLabel(record) {
+        const source = String(
+            record.sourceType ||
+            record.source_type ||
+            ""
+        ).trim().toUpperCase();
+
+        if (source === "GST") return "GST";
+        if (source === "PAN") return "PAN";
+
+        return (
+            record.taskName ||
+            record.task ||
+            record.nameOfTask ||
+            ""
+        );
+    }
 
     /* ============================================================
        SEARCH + DATE FILTER
@@ -327,7 +355,9 @@
                 record.pan,
                 record.taskName,
                 record.task,
-                record.nameOfTask
+                record.nameOfTask,
+                record.sourceType,
+                record.source_type
             ]
                 .filter(value => value !== undefined && value !== null)
                 .join(" ")
@@ -513,7 +543,7 @@
             tbody.innerHTML = `
                 <tr>
                     <td
-                        colspan="12"
+                        colspan="13"
                         class="empty"
                     >
                         No completed and billable
@@ -575,10 +605,19 @@
                 "—";
 
 
+            /*
+             * Billing display rule:
+             *
+             * TASK -> keep the original task name.
+             * GST  -> display "GST" only.
+             * PAN  -> display "PAN" only.
+             *
+             * Client Name is displayed by itself. PAN/GST numbers are
+             * intentionally not rendered in the Billing table.
+             */
+
             const taskName =
-                record.taskName ||
-                record.task ||
-                record.nameOfTask ||
+                billingTaskLabel(record) ||
                 "—";
 
 
@@ -627,16 +666,6 @@
             return `
                 <tr
                     data-id="${esc(rowId)}"
-                    data-billing-id="${esc(
-                        record.billingId ??
-                        (
-                            record.id &&
-                            !String(record.id).startsWith("task-")
-                                ? record.id
-                                : ""
-                        ) ??
-                        ""
-                    )}"
                     data-task-id="${esc(
                         record.taskId ??
                         record.task_id ??
@@ -644,7 +673,22 @@
                     )}"
                 >
 
-                    <!-- 1. SERIAL NUMBER -->
+                    <!-- 1. ROW NUMBER -->
+
+
+                    <td class="row-number">
+
+
+                        ${index + 1}
+
+
+                    </td>
+
+
+
+                    <!-- 2. SERIAL NUMBER -->
+
+
                     <td>
                         <strong>
                             ${esc(
@@ -661,15 +705,7 @@
                             ${esc(clientName)}
                         </span>
 
-                        ${
-                            pan
-                                ? `
-                                    <small class="pan">
-                                        PAN: ${esc(pan)}
-                                    </small>
-                                  `
-                                : ""
-                        }
+
                     </td>
 
 
@@ -774,13 +810,14 @@
                         ${balanceHTML(balance)}
                     </td>
 
-                    <td class="action-cell">
+                    <!-- 13. ACTION -->
+                    <td>
                         <button
                             type="button"
-                            class="billing-remove-btn"
-                            data-remove-billing
+                            class="save-row-button"
+                            data-save-row
                         >
-                            🗑 Remove
+                            Save
                         </button>
                     </td>
 
@@ -929,7 +966,7 @@
                 ),
 
             receiptDate:
-                get("receiptDate")?.value || "",
+                get("receiptDate")?.value || null,
 
             amount:
                 Math.max(
@@ -940,10 +977,10 @@
                 ),
 
             paymentMode:
-                get("paymentMode")?.value || "",
+                get("paymentMode")?.value || null,
 
             advancePaymentDate:
-                get("advancePaymentDate")?.value || "",
+                get("advancePaymentDate")?.value || null,
 
             advanceAmount:
                 Math.max(
@@ -954,7 +991,7 @@
                 ),
 
             advancePaymentMode:
-                get("advancePaymentMode")?.value || ""
+                get("advancePaymentMode")?.value || null
         };
     }
 
@@ -1082,7 +1119,6 @@
 
 
         const id =
-            row.dataset.billingId ||
             row.dataset.id ||
             row.dataset.taskId;
 
@@ -1156,11 +1192,6 @@
 
         try {
 
-            const controller =
-                new AbortController();
-
-            row.__saveController = controller;
-
             const response =
                 await fetch(
                     `${API}/${encodeURIComponent(id)}`,
@@ -1169,6 +1200,7 @@
 
                         credentials:
                             "same-origin",
+                        cache: "no-store",
 
                         headers: {
                             "Accept":
@@ -1179,9 +1211,7 @@
                         },
 
                         body:
-                            JSON.stringify(payload),
-                        signal:
-                            controller.signal
+                            JSON.stringify(payload)
                     }
                 );
 
@@ -1222,26 +1252,12 @@
                 });
 
 
-            if (result.billingId) {
-                row.dataset.billingId =
-                    String(result.billingId);
-                row.dataset.id =
-                    String(result.billingId);
-            }
-
             if (localRecord) {
 
                 Object.assign(
                     localRecord,
                     payload
                 );
-
-                if (result.billingId) {
-                    localRecord.billingId =
-                        result.billingId;
-                    localRecord.id =
-                        result.billingId;
-                }
 
 
                 localRecord.balance =
@@ -1294,217 +1310,12 @@
 
 
     /* ============================================================
-       REMOVE BILLING RECORD
-    ============================================================ */
-
-    async function removeBillingRecord(row, button) {
-
-        if (!row) return;
-
-        const reference =
-            row.dataset.billingId ||
-            row.dataset.id;
-
-        if (!reference ||
-            String(reference).startsWith("task-")) {
-            showError(
-                "This billing record has not been saved yet."
-            );
-            return;
-        }
-
-        if (!window.confirm(
-            "Remove this billing record?\n\n" +
-            "All billing/payment data will be deleted.\n\n" +
-            "The original completed task will NOT be deleted."
-        )) {
-            return;
-        }
-
-        row.dataset.deleting = "1";
-
-        /*
-         * Cancel queued auto-save.
-         */
-        [
-            row.dataset.billingId,
-            row.dataset.id,
-            row.dataset.taskId
-        ].filter(Boolean).forEach(key => {
-            if (savingTimers.has(key)) {
-                clearTimeout(savingTimers.get(key));
-                savingTimers.delete(key);
-            }
-        });
-
-        /*
-         * Abort an in-flight PUT so an old edit cannot recreate
-         * the billing record after DELETE.
-         */
-        if (row.__saveController) {
-            try {
-                row.__saveController.abort();
-            } catch (_) {}
-            row.__saveController = null;
-        }
-
-        if (button) {
-            button.disabled = true;
-            button.textContent = "Removing...";
-        }
-
-        try {
-            const response = await fetch(
-                `${API}/${encodeURIComponent(reference)}`,
-                {
-                    method: "DELETE",
-                    credentials: "same-origin",
-                    headers: {
-                        "Accept": "application/json"
-                    }
-                }
-            );
-
-            let result = {};
-            try {
-                result = await response.json();
-            } catch (_) {}
-
-            if (!response.ok) {
-                throw new Error(
-                    result.message ||
-                    `Billing delete failed with HTTP ${response.status}.`
-                );
-            }
-
-            records = records.filter(record => {
-                return ![
-                    record.id,
-                    record.billingId,
-                    record.taskId,
-                    record.task_id
-                ]
-                .filter(v => v !== undefined && v !== null)
-                .map(String)
-                .includes(String(reference));
-            });
-
-            row.remove();
-
-            render();
-
-            showSuccess(
-                "Billing record removed successfully."
-            );
-
-        } catch (error) {
-            console.error(
-                "Billing remove error:",
-                error
-            );
-
-            row.dataset.deleting = "";
-
-            if (button) {
-                button.disabled = false;
-                button.textContent = "🗑 Remove";
-            }
-
-            showError(error.message);
-        }
-    }
-
-
-    /* ============================================================
-       MANUAL SAVE ALL RECORDS
-    ============================================================ */
-
-    async function saveAllRecords() {
-
-        const button = $("saveBillingRecords");
-        const tbody = $("billingTableBody");
-
-        if (!button || !tbody) {
-            return;
-        }
-
-        /*
-         * Cancel pending auto-save timers before manual save.
-         */
-        savingTimers.forEach(timer => clearTimeout(timer));
-        savingTimers.clear();
-
-        const rows = Array.from(
-            tbody.querySelectorAll("tr[data-id], tr[data-task-id]")
-        );
-
-        if (!rows.length) {
-            showError("There are no billing records to save.");
-            return;
-        }
-
-        button.disabled = true;
-        button.textContent = "Saving...";
-        clearMessages();
-
-        let saved = 0;
-        let failed = 0;
-        let firstError = "";
-
-        try {
-
-            for (const row of rows) {
-
-                try {
-
-                    await saveRow(row);
-                    saved++;
-
-                } catch (error) {
-
-                    failed++;
-
-                    if (!firstError) {
-                        firstError = error.message;
-                    }
-
-                    console.error(
-                        "Manual billing save error:",
-                        error
-                    );
-                }
-            }
-
-            if (failed === 0) {
-
-                showSuccess(
-                    `${saved} billing record(s) saved successfully.`
-                );
-
-            } else {
-
-                showError(
-                    `${saved} saved, ${failed} failed.` +
-                    (firstError ? ` ${firstError}` : "")
-                );
-            }
-
-        } finally {
-
-            button.disabled = false;
-            button.textContent = "✓ Save Records";
-        }
-    }
-
-
-    /* ============================================================
        AUTO SAVE
     ============================================================ */
 
     function scheduleSave(row) {
 
-        if (!row ||
-            row.dataset.deleting === "1") {
+        if (!row) {
             return;
         }
 
@@ -1565,38 +1376,15 @@
         }
 
 
-        if (!tbody.dataset.removeHandlerAttached) {
+        
 
-            tbody.addEventListener(
-                "click",
-                event => {
-
-                    const button =
-                        event.target.closest(
-                            "[data-remove-billing]"
-                        );
-
-                    if (!button) return;
-
-                    const row =
-                        button.closest("tr");
-
-                    if (!row ||
-                        row.dataset.deleting === "1") {
-                        return;
-                    }
-
-                    removeBillingRecord(
-                        row,
-                        button
-                    );
-                }
-            );
-
-            tbody.dataset.removeHandlerAttached = "1";
-        }
-
-        const controls =
+        tbody.querySelectorAll("[data-save-row]").forEach(button => {
+            button.addEventListener("click", () => {
+                const row = button.closest("tr");
+                saveRow(row);
+            });
+        });
+const controls =
             tbody.querySelectorAll(
                 "[data-field]"
             );
@@ -1685,7 +1473,7 @@
             tbody.innerHTML = `
                 <tr>
                     <td
-                        colspan="12"
+                        colspan="13"
                         class="empty"
                     >
                         Loading billing records...
@@ -1705,6 +1493,7 @@
 
                         credentials:
                             "same-origin",
+                        cache: "no-store",
 
                         headers: {
                             "Accept":
@@ -1762,11 +1551,15 @@
                             record.name ||
                             "",
 
+                        sourceType:
+                            String(
+                                record.sourceType ||
+                                record.source_type ||
+                                ""
+                            ).trim().toUpperCase(),
+
                         taskName:
-                            record.taskName ||
-                            record.task ||
-                            record.nameOfTask ||
-                            "",
+                            billingTaskLabel(record),
 
                         pan:
                             record.pan ||
@@ -1851,7 +1644,7 @@
                 tbody.innerHTML = `
                     <tr>
                         <td
-                            colspan="12"
+                            colspan="13"
                             class="empty"
                         >
                             Unable to load billing records.
@@ -1912,7 +1705,7 @@
                         record.pan || "",
 
                     "Name of Task":
-                        record.taskName || "",
+                        billingTaskLabel(record),
 
                     "Chargeable Amount":
                         number(
@@ -2298,9 +2091,6 @@
         const refresh =
             $("refreshBilling");
 
-        const saveRecords =
-            $("saveBillingRecords");
-
 
         /*
          * Search.
@@ -2354,11 +2144,6 @@
         refresh?.addEventListener(
             "click",
             refreshRecords
-        );
-
-        saveRecords?.addEventListener(
-            "click",
-            saveAllRecords
         );
 
 

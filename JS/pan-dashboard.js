@@ -102,6 +102,13 @@
         return record.location || "—";
     }
 
+    function recordStatusBeforeChange(select) {
+        const record = state.records.find(
+            item => String(item.id) === String(select.dataset.id)
+        );
+        return record?.billingStatus || "PENDING";
+    }
+
     function render() {
         const body = $("panTableBody");
 
@@ -156,6 +163,16 @@
                 </td>
 
                 <td>
+                    <select
+                        class="pan-billing-status"
+                        data-id="${esc(record.id)}"
+                    >
+                        <option value="PENDING" ${record.billingStatus === "PENDING" ? "selected" : ""}>PENDING</option>
+                        <option value="TRANSFERED TO BILLING" ${record.billingStatus === "TRANSFERED TO BILLING" ? "selected" : ""}>TRANSFERED TO BILLING</option>
+                    </select>
+                </td>
+
+                <td>
                     <button
                         type="button"
                         class="pan-action-btn"
@@ -168,6 +185,40 @@
 
             body.appendChild(tr);
         });
+
+        body.querySelectorAll(".pan-billing-status")
+            .forEach(select => {
+                select.addEventListener("change", async () => {
+                    const previous = recordStatusBeforeChange(select);
+                    try {
+                        select.disabled = true;
+                        const response = await fetch(
+                            `/api/pan-dashboard/${encodeURIComponent(select.dataset.id)}/billing-status`,
+                            {
+                                method: "PATCH",
+                                credentials: "same-origin",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ status: select.value })
+                            }
+                        );
+                        const data = await response.json();
+                        if (!response.ok || !data.success) {
+                            throw new Error(data.message || "Unable to update PAN billing status.");
+                        }
+                        const record = state.records.find(r => String(r.id) === String(select.dataset.id));
+                        if (record) {
+                            record.billingStatus = data.billingStatus;
+                            record.transferredAt = data.transferredAt || "";
+                        }
+                        localStorage.setItem("caPanBillingStatusChanged", String(Date.now()));
+                    } catch (error) {
+                        alert(error.message || "Unable to update PAN billing status.");
+                        select.value = previous;
+                    } finally {
+                        select.disabled = false;
+                    }
+                });
+            });
 
         body.querySelectorAll(".pan-action-btn")
             .forEach(button => {
@@ -266,7 +317,8 @@
                 "LOCATION": locationText(record),
                 "PAN": record.pan,
                 "CONTACT": record.contact,
-                "EMAIL": record.email
+                "EMAIL": record.email,
+                "BILLING STATUS": record.billingStatus || "PENDING"
             }));
 
         const worksheet =
@@ -344,7 +396,8 @@
                 "LOCATION",
                 "PAN",
                 "CONTACT",
-                "EMAIL"
+                "EMAIL",
+                "BILLING STATUS"
             ]],
 
             body:
@@ -358,7 +411,8 @@
                         locationText(record),
                         record.pan,
                         record.contact || "",
-                        record.email || ""
+                        record.email || "",
+                        record.billingStatus || "PENDING"
                     ]
                 ),
 

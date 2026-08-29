@@ -11,10 +11,8 @@ CREATE TABLE IF NOT EXISTS gst_profiles (
   client_id TEXT NOT NULL UNIQUE,
   trade_name TEXT DEFAULT '',
   effective_from TEXT,
-  registration_type TEXT DEFAULT 'REGULAR'
-    CHECK (registration_type IN ('REGULAR','COMPOSITION')),
-  filing_frequency TEXT DEFAULT 'MONTHLY'
-    CHECK (filing_frequency IN ('MONTHLY','QUARTERLY')),
+  registration_type TEXT DEFAULT 'REGULAR' CHECK (registration_type IN ('REGULAR','COMPOSITION')),
+  filing_frequency TEXT DEFAULT 'MONTHLY' CHECK (filing_frequency IN ('MONTHLY','QUARTERLY')),
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
@@ -33,13 +31,9 @@ CREATE TABLE IF NOT EXISTS gst_monthly_records (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(gst_profile_id, month_key),
-  FOREIGN KEY (gst_profile_id)
-    REFERENCES gst_profiles(id)
-    ON DELETE CASCADE
+  FOREIGN KEY (gst_profile_id) REFERENCES gst_profiles(id) ON DELETE CASCADE
 );
-
-CREATE INDEX IF NOT EXISTS idx_gst_monthly_month
-ON gst_monthly_records(month_key);
+CREATE INDEX IF NOT EXISTS idx_gst_monthly_month ON gst_monthly_records(month_key);
 `);
 
 for (const sql of [
@@ -49,760 +43,258 @@ for (const sql of [
   `ALTER TABLE gst_monthly_records ADD COLUMN tax_payment_date TEXT`,
   `ALTER TABLE gst_monthly_records ADD COLUMN three_b_filing_date TEXT`,
   `ALTER TABLE gst_monthly_records ADD COLUMN set_date TEXT`
-]) {
-  try {
-    db.exec(sql);
-  } catch (_) {}
-}
+]) { try { db.exec(sql); } catch (_) {} }
 
 const clean = value => String(value ?? "").trim();
-
-const validMonth = value =>
-  /^\d{4}-(0[1-9]|1[0-2])$/.test(value);
-
-const validDate = value =>
-  value === "" || /^\d{4}-\d{2}-\d{2}$/.test(value);
-
-const REGISTRATION_TYPES = new Set([
-  "REGULAR",
-  "COMPOSITION"
-]);
-
-const FREQUENCIES = new Set([
-  "MONTHLY",
-  "QUARTERLY"
-]);
+const validMonth = value => /^\d{4}-(0[1-9]|1[0-2])$/.test(value);
+const validDate = value => value === "" || /^\d{4}-\d{2}-\d{2}$/.test(value);
+const REGISTRATION_TYPES = new Set(["REGULAR","COMPOSITION"]);
+const FREQUENCIES = new Set(["MONTHLY","QUARTERLY"]);
 
 function currentMonth() {
   const d = new Date();
-
-  return `${d.getFullYear()}-${String(
-    d.getMonth() + 1
-  ).padStart(2, "0")}`;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
 }
-
 function generateId(prefix) {
-  return `${prefix}${Date.now()}${crypto.randomInt(1000, 9999)}`;
+  return `${prefix}${Date.now()}${crypto.randomInt(1000,9999)}`;
 }
-
-/*
-=========================================================
-SYNC GST PROFILES
-=========================================================
-*/
 
 function syncProfiles() {
-
   const clients = db.prepare(`
-    SELECT
-      id,
-      first_name,
-      middle_name,
-      last_name,
-      gst
+    SELECT id, first_name, middle_name, last_name, gst
     FROM clients
-    WHERE gst IS NOT NULL
-      AND TRIM(gst) <> ''
-    ORDER BY
-      first_name,
-      middle_name,
-      last_name
+    WHERE gst IS NOT NULL AND TRIM(gst) <> ''
+    ORDER BY first_name, middle_name, last_name
   `).all();
 
-  const find = db.prepare(`
-    SELECT id
-    FROM gst_profiles
-    WHERE client_id = ?
-  `);
-
+  const find = db.prepare(`SELECT id FROM gst_profiles WHERE client_id = ?`);
   const insert = db.prepare(`
     INSERT INTO gst_profiles
-    (
-      id,
-      client_id,
-      trade_name,
-      effective_from,
-      registration_type,
-      filing_frequency,
-      created_at,
-      updated_at
-    )
-    VALUES (
-      ?,
-      ?,
-      '',
-      NULL,
-      'REGULAR',
-      'MONTHLY',
-      ?,
-      ?
-    )
+    (id,client_id,trade_name,effective_from,registration_type,filing_frequency,created_at,updated_at)
+    VALUES (?,?, '', NULL,'REGULAR','MONTHLY',?,?)
   `);
-
   const now = new Date().toISOString();
 
   db.transaction(() => {
-
     for (const client of clients) {
-
-      if (!find.get(client.id)) {
-
-        insert.run(
-          generateId("GSTP"),
-          client.id,
-          now,
-          now
-        );
-
-      }
-
+      if (!find.get(client.id)) insert.run(generateId("GSTP"), client.id, now, now);
     }
-
   })();
 
   return clients;
 }
 
-/*
-=========================================================
-ENSURE MONTH
-=========================================================
-*/
-
 function ensureMonth(monthKey) {
-
-  if (!validMonth(monthKey)) {
-    throw new Error("Invalid month.");
-  }
-
+  if (!validMonth(monthKey)) throw new Error("Invalid month.");
   syncProfiles();
 
   const profiles = db.prepare(`
-    SELECT gp.id
-    FROM gst_profiles gp
-    JOIN clients c
-      ON c.id = gp.client_id
-    WHERE c.gst IS NOT NULL
-      AND TRIM(c.gst) <> ''
+    SELECT gp.id FROM gst_profiles gp
+    JOIN clients c ON c.id = gp.client_id
+    WHERE c.gst IS NOT NULL AND TRIM(c.gst) <> ''
   `).all();
 
   const find = db.prepare(`
-    SELECT id
-    FROM gst_monthly_records
-    WHERE gst_profile_id = ?
-      AND month_key = ?
+    SELECT id FROM gst_monthly_records WHERE gst_profile_id = ? AND month_key = ?
   `);
-
   const insert = db.prepare(`
     INSERT INTO gst_monthly_records
-    (
-      id,
-      gst_profile_id,
-      month_key,
-      document_received_date,
-      working_date,
-      gstr1_iff_filing_date,
-      tax_payment_date,
-      three_b_filing_date,
-      filing_date,
-      set_date,
-      created_at,
-      updated_at
-    )
-    VALUES (
-      ?,
-      ?,
-      ?,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      ?,
-      ?
-    )
+    (id,gst_profile_id,month_key,document_received_date,working_date,
+     gstr1_iff_filing_date,tax_payment_date,three_b_filing_date,
+     filing_date,set_date,created_at,updated_at)
+    VALUES (?,?,?,NULL,NULL,NULL,NULL,NULL,NULL,NULL,?,?)
   `);
-
   const now = new Date().toISOString();
 
   db.transaction(() => {
-
-    for (const profile of profiles) {
-
-      if (!find.get(profile.id, monthKey)) {
-
-        insert.run(
-          generateId("GSTM"),
-          profile.id,
-          monthKey,
-          now,
-          now
-        );
-
-      }
-
+    for (const p of profiles) {
+      if (!find.get(p.id, monthKey)) insert.run(generateId("GSTM"),p.id,monthKey,now,now);
     }
-
   })();
 }
 
-/*
-=========================================================
-GST STATUS
-=========================================================
-*/
-
 function getStatus(row) {
-
-  if (row.set_date) {
-    return "TRANSFERED TO BILLING";
-  }
-
-  /*
-   * Kept for compatibility with existing records.
-   */
-  if (row.filing_date) {
-    return "SET PENDING";
-  }
-
-  if (row.three_b_filing_date) {
-    return "FILING PENDING";
-  }
-
-  if (row.tax_payment_date) {
-    return "3B FILING PENDING";
-  }
-
-  if (row.gstr1_iff_filing_date) {
-    return "TAX PENDING";
-  }
-
-  if (row.working_date) {
-    return "GSTR -1/ IFF PENDING";
-  }
-
-  if (row.document_received_date) {
-    return "DOCUMENT RECIEVED";
-  }
-
+  if (row.set_date) return "TRANSFERED TO BILLING";
+  if (row.filing_date) return "SET PENDING";
+  if (row.three_b_filing_date) return "FILING PENDING";
+  if (row.tax_payment_date) return "3B FILING PENDING";
+  if (row.gstr1_iff_filing_date) return "TAX PENDING";
+  if (row.working_date) return "GSTR -1/ IFF PENDING";
+  if (row.document_received_date) return "DOCUMENT RECIEVED";
   return "DOCUMENT NOT RECIEVED";
 }
 
-/*
-=========================================================
-MAP DATABASE ROW
-=========================================================
-*/
-
 function mapRow(row) {
-
   return {
-
     id: row.id,
-
     profileId: row.profile_id,
-
     clientId: row.client_id,
-
-    gstName:
-      [
-        row.first_name,
-        row.middle_name,
-        row.last_name
-      ]
-        .filter(Boolean)
-        .join(" "),
-
+    gstName: [row.first_name,row.middle_name,row.last_name].filter(Boolean).join(" "),
     gstNumber: row.gst,
-
-    tradeName:
-      row.trade_name || "",
-
-    effectiveFrom:
-      row.effective_from || "",
-
-    registrationType:
-      row.registration_type || "REGULAR",
-
-    filingFrequency:
-      row.filing_frequency || "MONTHLY",
-
-    month:
-      row.month_key,
-
-    documentReceivedDate:
-      row.document_received_date || "",
-
-    workingDate:
-      row.working_date || "",
-
-    gstr1IffFilingDate:
-      row.gstr1_iff_filing_date || "",
-
-    taxPaymentDate:
-      row.tax_payment_date || "",
-
-    threeBFilingDate:
-      row.three_b_filing_date || "",
-
-    setDate:
-      row.set_date || "",
-
-    status:
-      getStatus(row)
-
+    tradeName: row.trade_name || "",
+    effectiveFrom: row.effective_from || "",
+    registrationType: row.registration_type || "REGULAR",
+    filingFrequency: row.filing_frequency || "MONTHLY",
+    month: row.month_key,
+    documentReceivedDate: row.document_received_date || "",
+    workingDate: row.working_date || "",
+    gstr1IffFilingDate: row.gstr1_iff_filing_date || "",
+    taxPaymentDate: row.tax_payment_date || "",
+    threeBFilingDate: row.three_b_filing_date || "",
+    setDate: row.set_date || "",
+    status: getStatus(row)
   };
-
 }
-
-/*
-=========================================================
-GET GST ROWS
-=========================================================
-*/
 
 function getRows(monthKey) {
-
   ensureMonth(monthKey);
-
   return db.prepare(`
-    SELECT
-      gm.id,
-
-      gp.id AS profile_id,
-
-      gp.client_id,
-
-      gp.trade_name,
-
-      gp.effective_from,
-
-      gp.registration_type,
-
-      gp.filing_frequency,
-
-      gm.month_key,
-
-      gm.document_received_date,
-
-      gm.working_date,
-
-      gm.gstr1_iff_filing_date,
-
-      gm.tax_payment_date,
-
-      gm.three_b_filing_date,
-
-      gm.set_date,
-
-      c.first_name,
-
-      c.middle_name,
-
-      c.last_name,
-
-      c.gst
-
+    SELECT gm.id, gp.id AS profile_id, gp.client_id, gp.trade_name, gp.effective_from,
+           gp.registration_type, gp.filing_frequency, gm.month_key,
+           gm.document_received_date, gm.working_date, gm.gstr1_iff_filing_date, gm.tax_payment_date, gm.three_b_filing_date,
+           gm.set_date,
+           c.first_name, c.middle_name, c.last_name, c.gst
     FROM gst_monthly_records gm
-
-    JOIN gst_profiles gp
-      ON gp.id = gm.gst_profile_id
-
-    JOIN clients c
-      ON c.id = gp.client_id
-
-    WHERE gm.month_key = ?
-
-      AND c.gst IS NOT NULL
-
-      AND TRIM(c.gst) <> ''
-
-    ORDER BY
-      c.first_name,
-      c.middle_name,
-      c.last_name
-
-  `)
-    .all(monthKey)
-    .map(mapRow);
+    JOIN gst_profiles gp ON gp.id = gm.gst_profile_id
+    JOIN clients c ON c.id = gp.client_id
+    WHERE gm.month_key = ? AND c.gst IS NOT NULL AND TRIM(c.gst) <> ''
+    ORDER BY c.first_name,c.middle_name,c.last_name
+  `).all(monthKey).map(mapRow);
 }
 
-/*
-=========================================================
-VALIDATE GST PAYLOAD
-=========================================================
-*/
-
 function validatePayload(body) {
-
   const fields = [
-    "effectiveFrom",
-    "documentReceivedDate",
-    "workingDate",
-    "gstr1IffFilingDate",
-    "taxPaymentDate",
-    "threeBFilingDate",
-    "setDate"
+    "effectiveFrom","documentReceivedDate","workingDate","gstr1IffFilingDate",
+    "taxPaymentDate","threeBFilingDate","setDate"
   ];
-
-  for (const field of fields) {
-
-    if (!validDate(clean(body[field]))) {
-
-      throw new Error(
-        `${field} must use YYYY-MM-DD.`
-      );
-
-    }
-
+  for (const f of fields) {
+    if (!validDate(clean(body[f]))) throw new Error(`${f} must use YYYY-MM-DD.`);
   }
-
-  const registrationType =
-    clean(body.registrationType).toUpperCase();
-
-  const filingFrequency =
-    clean(body.filingFrequency).toUpperCase();
-
-  if (!REGISTRATION_TYPES.has(registrationType)) {
-
-    throw new Error(
-      "Invalid registration type."
-    );
-
-  }
-
-  if (!FREQUENCIES.has(filingFrequency)) {
-
-    throw new Error(
-      "Invalid filing frequency."
-    );
-
-  }
-
+  const registrationType = clean(body.registrationType).toUpperCase();
+  const filingFrequency = clean(body.filingFrequency).toUpperCase();
+  if (!REGISTRATION_TYPES.has(registrationType)) throw new Error("Invalid registration type.");
+  if (!FREQUENCIES.has(filingFrequency)) throw new Error("Invalid filing frequency.");
   return {
-
-    tradeName:
-      clean(body.tradeName),
-
-    effectiveFrom:
-      clean(body.effectiveFrom),
-
+    tradeName: clean(body.tradeName),
+    effectiveFrom: clean(body.effectiveFrom),
     registrationType,
-
     filingFrequency,
-
-    documentReceivedDate:
-      clean(body.documentReceivedDate),
-
-    workingDate:
-      clean(body.workingDate),
-
-    gstr1IffFilingDate:
-      clean(body.gstr1IffFilingDate),
-
-    taxPaymentDate:
-      clean(body.taxPaymentDate),
-
-    threeBFilingDate:
-      clean(body.threeBFilingDate),
-
-    setDate:
-      clean(body.setDate)
-
+    documentReceivedDate: clean(body.documentReceivedDate),
+    workingDate: clean(body.workingDate),
+    gstr1IffFilingDate: clean(body.gstr1IffFilingDate),
+    taxPaymentDate: clean(body.taxPaymentDate),
+    threeBFilingDate: clean(body.threeBFilingDate),
+    setDate: clean(body.setDate)
   };
 }
 
-/*
-=========================================================
-UPDATE ONE GST RECORD
-=========================================================
-*/
-
 function updateOne(id, body) {
-
   const existing = db.prepare(`
-    SELECT
-      gm.id,
-      gm.month_key,
-      gp.id AS profile_id
-
+    SELECT gm.id, gm.month_key, gp.id AS profile_id
     FROM gst_monthly_records gm
-
-    JOIN gst_profiles gp
-      ON gp.id = gm.gst_profile_id
-
+    JOIN gst_profiles gp ON gp.id = gm.gst_profile_id
     WHERE gm.id = ?
   `).get(id);
+  if (!existing) throw new Error("GST monthly record not found.");
 
-  if (!existing) {
-
-    throw new Error(
-      "GST monthly record not found."
-    );
-
-  }
-
-  const payload =
-    validatePayload(body);
-
-  const now =
-    new Date().toISOString();
+  const p = validatePayload(body);
+  const now = new Date().toISOString();
 
   db.transaction(() => {
-
-    /*
-    -----------------------------------------
-    GST BASIC PROFILE
-    -----------------------------------------
-    */
-
     db.prepare(`
       UPDATE gst_profiles
-
-      SET
-        trade_name = ?,
-        effective_from = ?,
-        registration_type = ?,
-        filing_frequency = ?,
-        updated_at = ?
-
-      WHERE id = ?
-    `).run(
-      payload.tradeName,
-      payload.effectiveFrom || null,
-      payload.registrationType,
-      payload.filingFrequency,
-      now,
-      existing.profile_id
-    );
-
-    /*
-    -----------------------------------------
-    MONTHLY DATA
-    -----------------------------------------
-    */
+      SET trade_name=?, effective_from=?, registration_type=?, filing_frequency=?, updated_at=?
+      WHERE id=?
+    `).run(p.tradeName,p.effectiveFrom || null,p.registrationType,p.filingFrequency,now,existing.profile_id);
 
     db.prepare(`
       UPDATE gst_monthly_records
-
-      SET
-        document_received_date = ?,
-        working_date = ?,
-        gstr1_iff_filing_date = ?,
-        tax_payment_date = ?,
-        three_b_filing_date = ?,
-        set_date = ?,
-        updated_at = ?
-
-      WHERE id = ?
+      SET document_received_date=?, working_date=?, gstr1_iff_filing_date=?,
+          tax_payment_date=?, three_b_filing_date=?, set_date=?, updated_at=?
+      WHERE id=?
     `).run(
-
-      payload.documentReceivedDate || null,
-
-      payload.workingDate || null,
-
-      payload.gstr1IffFilingDate || null,
-
-      payload.taxPaymentDate || null,
-
-      payload.threeBFilingDate || null,
-
-      payload.setDate || null,
-
-      now,
-
-      id
-
+      p.documentReceivedDate || null,p.workingDate || null,p.gstr1IffFilingDate || null,
+      p.taxPaymentDate || null,p.threeBFilingDate || null,
+      p.setDate || null,now,id
     );
-
   })();
 
-  return getRows(
-    existing.month_key
-  ).find(
-    row => row.id === id
-  );
+  return getRows(existing.month_key).find(row => row.id === id);
 }
 
-/*
-=========================================================
-GET GST DASHBOARD
-=========================================================
-*/
-
-router.get(
-  "/gst-dashboard",
-  requireAuth,
-  (req, res) => {
-
-    try {
-
-      const month =
-        validMonth(
-          clean(req.query.month)
-        )
-          ? clean(req.query.month)
-          : currentMonth();
-
-      res.json({
-
-        success: true,
-
-        month,
-
-        rows:
-          getRows(month)
-
-      });
-
-    } catch (error) {
-
-      console.error(
-        "GST dashboard GET error:",
-        error
-      );
-
-      res.status(500).json({
-
-        success: false,
-
-        message:
-          "Unable to load GST dashboard."
-
-      });
-
-    }
-
+router.get("/gst-dashboard", requireAuth, (req,res) => {
+  try {
+    const month = validMonth(clean(req.query.month)) ? clean(req.query.month) : currentMonth();
+    res.json({success:true,month,rows:getRows(month)});
+  } catch (error) {
+    console.error("GST dashboard GET error:",error);
+    res.status(500).json({success:false,message:"Unable to load GST dashboard."});
   }
-);
+});
+
 
 /*
-=========================================================
-SAVE ALL GST RECORDS
-=========================================================
-*/
+ * SAVE ONE GST RECORD
+ *
+ * The GST dashboard Save button sends:
+ *   PATCH /api/gst-dashboard/:id
+ *
+ * This route was missing, which made the row-level Save button fail.
+ */
+router.patch("/gst-dashboard/:id", requireAuth, (req,res) => {
+  try {
+    const id = clean(req.params.id);
 
-router.patch(
-  "/gst-dashboard/bulk",
-  requireAuth,
-  (req, res) => {
-
-    try {
-
-      const month =
-        clean(req.body?.month);
-
-      const rows =
-        Array.isArray(req.body?.rows)
-          ? req.body.rows
-          : [];
-
-      if (!validMonth(month)) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message:
-            "Invalid month."
-
-        });
-
-      }
-
-      ensureMonth(month);
-
-      for (const row of rows) {
-
-        updateOne(
-          row.id,
-          row
-        );
-
-      }
-
-      res.json({
-
-        success: true,
-
-        month,
-
-        rows:
-          getRows(month)
-
-      });
-
-    } catch (error) {
-
-      console.error(
-        "GST dashboard BULK PATCH error:",
-        error
-      );
-
-      res.status(400).json({
-
+    if (!id) {
+      return res.status(400).json({
         success: false,
-
-        message:
-          error.message ||
-          "Unable to save GST records."
-
+        message: "GST record ID is required."
       });
-
     }
 
+    const row = updateOne(id, req.body || {});
+
+    return res.json({
+      success: true,
+      row
+    });
+  } catch (error) {
+    console.error("GST dashboard PATCH error:", error);
+
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Unable to save GST record."
+    });
   }
-);
+});
 
-/*
-=========================================================
-SAVE SINGLE GST RECORD
-=========================================================
-*/
+router.patch("/gst-dashboard/bulk", requireAuth, (req,res) => {
+  try {
+    const month = clean(req.body?.month);
+    const rows = Array.isArray(req.body?.rows) ? req.body.rows : [];
+    if (!validMonth(month)) return res.status(400).json({success:false,message:"Invalid month."});
 
-router.patch(
-  "/gst-dashboard/:id",
-  requireAuth,
-  (req, res) => {
+    ensureMonth(month);
 
-    try {
-
-      const row =
-        updateOne(
-          clean(req.params.id),
-          req.body || {}
-        );
-
-      res.json({
-
-        success: true,
-
-        row
-
-      });
-
-    } catch (error) {
-
-      console.error(
-        "GST dashboard PATCH error:",
-        error
-      );
-
-      res.status(400).json({
-
-        success: false,
-
-        message:
-          error.message ||
-          "Unable to save GST record."
-
-      });
-
+    for (const row of rows) {
+      updateOne(row.id,row);
     }
 
+    res.json({success:true,month,rows:getRows(month)});
+  } catch (error) {
+    console.error("GST dashboard BULK PATCH error:",error);
+    res.status(400).json({success:false,message:error.message || "Unable to save GST records."});
   }
-);
+});
+
+router.patch("/gst-dashboard/:id", requireAuth, (req,res) => {
+  try {
+    const row = updateOne(clean(req.params.id),req.body || {});
+    res.json({success:true,row});
+  } catch (error) {
+    console.error("GST dashboard PATCH error:",error);
+    res.status(400).json({success:false,message:error.message || "Unable to save GST record."});
+  }
+});
 
 module.exports = router;

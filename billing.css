@@ -4,422 +4,478 @@
 }
 
 :root {
-    --page-bg: #f5f7fa;
-    --white: #ffffff;
-    --navy: #172b4d;
-    --text: #344054;
-    --muted: #7b8798;
-    --border: #dfe4ea;
-    --border-dark: #c7d0da;
-    --head: #f3f6f9;
-    --blue: #2563eb;
-    --green: #217346;
-    --green-dark: #185c37;
-    --red: #b42318;
+    --excel-green: #217346;
+    --excel-green-dark: #185c37;
+    --sheet-border: #cfd6dc;
+    --grid: #d9dee3;
+    --header: #f3f6f8;
+    --text: #1f2937;
+    --muted: #667085;
+    --blue: #155eef;
+    --danger: #b42318;
+    --success: #027a48;
 }
 
 html,
 body {
     margin: 0;
+    width: 100%;
     min-height: 100%;
 }
 
 body {
-    background: var(--page-bg);
+    background: #eef1f4;
     color: var(--text);
-    font-family: Inter, "Segoe UI", Arial, sans-serif;
-    font-size: 13px;
-}
-
-button,
-input {
-    font: inherit;
+    font-family: Arial, "Segoe UI", sans-serif;
+    font-size: 12px;
 }
 
 .billing-page {
     width: 100%;
     min-height: 100vh;
-    padding: 22px;
+    padding: 18px;
 }
 
-/* The only visible page component */
-.records-card {
+.excel-sheet {
     width: 100%;
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(16, 24, 40, .055);
+    min-width: 1100px;
+    background: #fff;
+    border: 1px solid #c7cdd3;
+    border-radius: 5px;
+    box-shadow: 0 2px 7px rgba(16, 24, 40, .08);
     overflow: hidden;
 }
 
-/* Header belonging to the table section only */
-.records-header {
-    min-height: 72px;
+/* Top Excel-style title bar */
+.sheet-topbar {
+    min-height: 58px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
-    padding: 14px 17px;
-    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    padding: 8px 12px;
+    background: #fff;
+    border-bottom: 1px solid var(--sheet-border);
 }
 
-.records-header h1 {
-    margin: 0;
-    color: var(--navy);
-    font-size: 20px;
-    line-height: 1.2;
-    font-weight: 750;
-}
-
-.records-header p {
-    margin: 5px 0 0;
-    color: var(--muted);
-    font-size: 11px;
-}
-
-.header-actions {
+.sheet-title {
     display: flex;
-    gap: 8px;
-    flex-shrink: 0;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
 }
 
-.btn {
-    height: 36px;
-    padding: 0 13px;
-    border: 1px solid var(--border-dark);
-    border-radius: 6px;
+.sheet-icon {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 3px;
+    background: var(--excel-green);
+    color: #fff;
+    font-weight: 800;
+    font-size: 17px;
+}
+
+.sheet-title h1 {
+    margin: 0;
+    color: #202124;
+    font-size: 18px;
+    line-height: 1.15;
+    font-weight: 700;
+}
+
+.sheet-title span:last-child {
+    display: block;
+    margin-top: 2px;
+    color: #6b7280;
+    font-size: 10px;
+}
+
+.sheet-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.toolbar-button {
+    height: 31px;
+    padding: 0 12px;
+    border: 1px solid #c7cdd3;
+    border-radius: 3px;
     background: #fff;
     color: #344054;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
-    white-space: nowrap;
-    transition: .15s ease;
 }
 
-.btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(16, 24, 40, .08);
+.toolbar-button:hover {
+    background: #f3f6f8;
 }
 
-.btn.excel {
-    background: var(--green);
-    border-color: var(--green);
+.toolbar-button.primary {
+    border-color: var(--excel-green);
+    background: var(--excel-green);
     color: #fff;
 }
 
-.btn.excel:hover {
-    background: var(--green-dark);
+.toolbar-button.primary:hover {
+    background: var(--excel-green-dark);
 }
 
-.btn.pdf {
-    background: var(--blue);
-    border-color: var(--blue);
-    color: #fff;
-}
-
-.btn.pdf:hover {
-    background: #1d4ed8;
-}
-
-/* Filters */
-.filters-row {
-    min-height: 70px;
+/* Excel-like formula/filter toolbar */
+.sheet-toolbar {
+    min-height: 48px;
     display: flex;
-    align-items: flex-end;
-    gap: 10px;
-    padding: 11px 13px;
-    background: #fafbfc;
-    border-bottom: 1px solid var(--border);
+    align-items: center;
+    gap: 7px;
+    padding: 7px 9px;
+    background: #f7f8f9;
+    border-bottom: 1px solid var(--sheet-border);
 }
 
 .search-box {
-    width: min(390px, 35vw);
-    height: 37px;
+    width: min(360px, 28vw);
+    height: 31px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 0 10px;
+    gap: 6px;
+    padding: 0 8px;
     background: #fff;
-    border: 1px solid var(--border-dark);
-    border-radius: 6px;
-}
-
-.search-box:focus-within {
-    border-color: #7ea7ff;
-    box-shadow: 0 0 0 3px #edf3ff;
+    border: 1px solid #c7cdd3;
+    border-radius: 3px;
 }
 
 .search-box span {
-    color: #98a2b3;
-    font-size: 17px;
+    color: #667085;
+    font-size: 16px;
 }
 
 .search-box input {
     width: 100%;
-    height: 30px;
     border: 0;
     outline: 0;
-    background: transparent;
-    color: var(--text);
     font-size: 11px;
+    background: transparent;
 }
 
-.date-box {
-    width: 165px;
-}
-
-.date-box label {
-    display: block;
-    margin: 0 0 5px;
-    color: #667085;
-    font-size: 9px;
-    font-weight: 700;
-}
-
-.date-box input {
-    width: 100%;
-    height: 37px;
-    padding: 0 8px;
-    border: 1px solid var(--border-dark);
-    border-radius: 6px;
+.toolbar-date {
+    height: 31px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 7px;
     background: #fff;
-    color: var(--text);
+    border: 1px solid #c7cdd3;
+    border-radius: 3px;
+}
+
+.toolbar-date span {
+    color: #667085;
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.toolbar-date input {
+    width: 120px;
+    height: 25px;
+    border: 0;
     outline: 0;
+    background: #fff;
     font-size: 10px;
 }
 
-.date-box input:focus {
-    border-color: #7ea7ff;
-    box-shadow: 0 0 0 3px #edf3ff;
-}
-
-.reset {
-    height: 37px;
-}
-
-.visible-count {
-    height: 37px;
+.sheet-count {
     margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    color: var(--muted);
+    color: #667085;
     white-space: nowrap;
     font-size: 10px;
 }
 
-.visible-count strong {
-    color: var(--navy);
-    font-size: 16px;
+.sheet-count strong {
+    color: #1f2937;
+    font-size: 12px;
 }
 
-/* Messages */
-.alert {
-    margin: 9px 13px 0;
-    padding: 9px 11px;
-    border-radius: 6px;
+.sheet-message {
+    margin: 6px 9px;
+    padding: 7px 9px;
+    border-radius: 3px;
     font-size: 11px;
 }
 
-.alert.error {
-    color: var(--red);
-    background: #fff1f0;
+.sheet-message.error {
+    color: var(--danger);
+    background: #fef3f2;
     border: 1px solid #fecdca;
 }
 
-.alert.success {
-    color: #027a48;
+.sheet-message.success {
+    color: var(--success);
     background: #ecfdf3;
     border: 1px solid #abefc6;
 }
 
-/* Meta line */
-.table-meta {
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 13px;
-    color: var(--muted);
-    border-bottom: 1px solid var(--border);
-    font-size: 10px;
-}
-
-.table-meta span:last-child {
-    padding: 5px 9px;
-    border-radius: 20px;
-    background: #edf8f1;
-    color: var(--green-dark);
-    font-weight: 700;
-}
-
-/* Spreadsheet */
-.table-wrap {
+/* Actual spreadsheet */
+.spreadsheet-wrap {
     width: 100%;
     overflow: auto;
-    max-height: calc(100vh - 240px);
     background: #fff;
+    scrollbar-gutter: stable;
 }
 
-.table-wrap::-webkit-scrollbar {
+.spreadsheet-wrap::-webkit-scrollbar {
     width: 13px;
     height: 13px;
 }
 
-.table-wrap::-webkit-scrollbar-track {
+.spreadsheet-wrap::-webkit-scrollbar-track {
     background: #edf0f2;
 }
 
-.table-wrap::-webkit-scrollbar-thumb {
-    background: #aeb7c1;
+.spreadsheet-wrap::-webkit-scrollbar-thumb {
+    background: #aeb6bd;
     border: 3px solid #edf0f2;
     border-radius: 8px;
 }
 
-.billing-table {
-    width: 1650px;
-    min-width: 1650px;
+.spreadsheet {
+    width: 100%;
+    min-width: 1900px;
     border-collapse: separate;
     border-spacing: 0;
     table-layout: fixed;
 }
 
-.billing-table th {
+/* Header row */
+.spreadsheet thead th {
     position: sticky;
     top: 0;
     z-index: 5;
-    height: 52px;
-    padding: 8px 9px;
-    background: var(--head);
-    color: #475467;
-    border-right: 1px solid var(--border);
-    border-bottom: 2px solid #c4ccd5;
-    text-align: left;
+    height: 42px;
+    padding: 7px 8px;
+    background: var(--header);
+    color: #344054;
+    border-right: 1px solid var(--grid);
+    border-bottom: 2px solid #aeb6bd;
     font-size: 10px;
-    font-weight: 750;
-    line-height: 1.25;
-    white-space: normal;
-}
-
-.billing-table td {
-    height: 51px;
-    padding: 7px 9px;
-    background: #fff;
-    color: var(--text);
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-    font-size: 11px;
-}
-
-.billing-table tbody tr:nth-child(even) td {
-    background: #fbfcfe;
-}
-
-.billing-table tbody tr:hover td {
-    background: #f4f8ff;
-}
-
-/* Properly spread columns */
-.billing-table th:nth-child(1)  { width: 110px; }
-.billing-table th:nth-child(2)  { width: 210px; }
-.billing-table th:nth-child(3)  { width: 245px; }
-.billing-table th:nth-child(4)  { width: 155px; }
-.billing-table th:nth-child(5)  { width: 135px; }
-.billing-table th:nth-child(6)  { width: 135px; }
-.billing-table th:nth-child(7)  { width: 105px; }
-.billing-table th:nth-child(8)  { width: 165px; }
-.billing-table th:nth-child(9)  { width: 165px; }
-.billing-table th:nth-child(10) { width: 175px; }
-.billing-table th:nth-child(11) { width: 130px; }
-
-/* Cells produced by existing billing.js */
-.billing-table td strong {
-    color: #172033;
     font-weight: 700;
+    text-align: left;
+    white-space: normal;
+    line-height: 1.2;
 }
 
-.billing-table td small {
+.spreadsheet thead th:first-child {
+    border-left: 1px solid var(--grid);
+}
+
+.row-number-head {
+    width: 42px !important;
+    text-align: center !important;
+    background: #e9edf0 !important;
+}
+
+/* Column widths */
+.serial-col { width: 105px; }
+.client-col { width: 210px; }
+.task-col { width: 245px; }
+.charge-col { width: 155px; }
+.date-col { width: 130px; }
+.amount-col { width: 135px; }
+.mode-col { width: 105px; }
+.advance-date-col { width: 155px; }
+.advance-col { width: 155px; }
+.advance-mode-col { width: 170px; }
+.balance-col { width: 135px; }
+.action-col { width: 85px; }
+
+/* Grid cells */
+.spreadsheet tbody td {
+    height: 44px;
+    padding: 4px 6px;
+    color: #1f2937;
+    background: #fff;
+    border-right: 1px solid var(--grid);
+    border-bottom: 1px solid var(--grid);
+    font-size: 11px;
+    vertical-align: middle;
+}
+
+.spreadsheet tbody td:first-child {
+    border-left: 1px solid var(--grid);
+}
+
+.spreadsheet tbody tr:nth-child(even) td {
+    background: #fbfcfd;
+}
+
+.spreadsheet tbody tr:hover td {
+    background: #f5f9ff;
+}
+
+.spreadsheet tbody tr.dirty-row td {
+    background: #fffdf0;
+}
+
+.row-number {
+    background: #f0f2f4 !important;
+    color: #667085 !important;
+    text-align: center;
+    font-size: 10px !important;
+    user-select: none;
+}
+
+.readonly-cell {
+    background: #f8fafb !important;
+    color: #344054 !important;
+    font-weight: 500;
+}
+
+.readonly-cell strong {
     display: block;
-    margin-top: 3px;
+    color: #18212f;
+    font-weight: 650;
+}
+
+.readonly-cell small {
+    display: block;
+    margin-top: 2px;
     color: #98a2b3;
     font-size: 9px;
 }
 
-.balance-due {
-    color: var(--red) !important;
-    font-weight: 750;
+/* Editable Excel cells */
+.billing-input,
+.billing-select {
+    width: 100%;
+    height: 34px;
+    padding: 0 7px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    background: #fff;
+    color: #1f2937;
+    font: inherit;
+    font-size: 11px;
+    outline: none;
 }
 
-.balance-paid {
-    color: #667085 !important;
+.billing-input:hover,
+.billing-select:hover {
+    border-color: #b7c0c8;
+}
+
+.billing-input:focus,
+.billing-select:focus {
+    border: 2px solid #217346;
+    background: #fff;
+    box-shadow: inset 0 0 0 1px #fff;
+}
+
+.money-input {
+    text-align: right;
+}
+
+.billing-select {
+    cursor: pointer;
+}
+
+.balance-cell {
     font-weight: 700;
+    text-align: right;
+    padding-right: 9px !important;
 }
 
-.empty-cell,
-.empty {
+.balance-nil {
+    color: #667085 !important;
+    background: #f8fafb !important;
+}
+
+.balance-due {
+    color: #b42318 !important;
+    background: #fff8f7 !important;
+}
+
+/* Excel-style row save */
+.save-row-button {
+    width: 100%;
+    height: 30px;
+    border: 1px solid #217346;
+    border-radius: 2px;
+    background: #217346;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.save-row-button:hover {
+    background: #185c37;
+}
+
+.save-row-button:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+.sheet-empty {
     height: 180px !important;
     text-align: center !important;
-    color: var(--muted) !important;
+    color: #667085 !important;
     background: #fff !important;
+    font-size: 12px !important;
 }
 
-
-/* Larger spreadsheet-style editable fields */
-.billing-table input,
-.billing-table select {
-    width: 100%;
-    height: 44px;
-    min-height: 44px;
-    padding: 0 12px;
-    box-sizing: border-box;
-    border: 1px solid #cbd3dc;
-    border-radius: 6px;
-    background: #fff;
-    color: #172033;
-    font-size: 13px;
-}
-
-.billing-table input:focus,
-.billing-table select:focus {
-    outline: none;
-    border-color: #7ea7ff;
-    box-shadow: 0 0 0 3px #edf3ff;
-}
-
-/* Footer */
-.records-footer {
-    height: 36px;
+.sheet-footer {
+    height: 31px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 13px;
-    background: #f8fafc;
-    border-top: 1px solid var(--border);
-    color: #8a96a6;
+    padding: 0 10px;
+    background: #f3f6f8;
+    border-top: 1px solid #c7cdd3;
+    color: #667085;
     font-size: 9px;
+}
+
+.sheet-footer strong {
+    color: #344054;
+}
+
+/* Freeze the row-number column like a spreadsheet */
+.spreadsheet thead th:first-child,
+.spreadsheet tbody td:first-child {
+    position: sticky;
+    left: 0;
+}
+
+.spreadsheet thead th:first-child {
+    z-index: 8;
+}
+
+.spreadsheet tbody td:first-child {
+    z-index: 4;
 }
 
 @media (max-width: 900px) {
     .billing-page {
-        padding: 10px;
+        padding: 8px;
     }
 
-    .records-header {
+    .sheet-topbar {
         align-items: flex-start;
         flex-direction: column;
     }
 
-    .header-actions {
+    .sheet-actions {
         width: 100%;
     }
 
-    .header-actions .btn {
+    .sheet-actions button {
         flex: 1;
     }
 
-    .filters-row {
+    .sheet-toolbar {
         flex-wrap: wrap;
     }
 
@@ -427,105 +483,69 @@ input {
         width: 100%;
     }
 
-    .date-box {
-        flex: 1;
-        min-width: 150px;
-    }
-
-    .billing-table input,
-.billing-table select {
-    width: 100%;
-    height: 44px;
-    min-height: 44px;
-    padding: 0 12px;
-    box-sizing: border-box;
-
-    border: 1px solid #cbd3dc;
-    border-radius: 6px;
-
-    background: #fff;
-    color: #172033;
-    font-size: 13px;
-}
-
-    .visible-count {
+    .sheet-count {
         margin-left: 0;
     }
 }
 
 
-/* Billing master Save button */
-.btn.save-billing {
-    background: #f80606;
-    border-color: #217346;
-    color: #fff;
-    min-width: 96px;
+/* Billing sheet: keep the complete spreadsheet wider than the viewport. */
+html, body {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
 }
-
-.btn.save-billing:hover {
-    background: #185c37;
-    border-color: #185c37;
-}
-
-.btn.save-billing:disabled {
-    opacity: .65;
-    cursor: wait;
-}
-
-
-/* =========================================================
-   CA OFFICE — BILLING UI CONSISTENCY
-========================================================= */
 
 .billing-page {
-    min-width: 1180px;
-    padding: 22px !important;
+    width: 100%;
+    min-width: 0;
+    padding: 18px;
+    overflow-x: hidden;
 }
 
-.records-header {
-    min-height: 72px !important;
+.excel-sheet {
+    width: 100%;
+    min-width: 1100px;
 }
 
-.header-actions {
-    height: 40px;
-    align-items: center;
+.spreadsheet-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
 }
 
-.billing-page .btn {
-    height: 40px !important;
-    min-height: 40px !important;
-    min-width: 96px;
-    padding: 0 14px !important;
-    border-radius: 8px !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
+.spreadsheet {
+    width: 1730px !important;
+    min-width: 1730px !important;
+    table-layout: fixed;
 }
 
-.filters-row {
-    min-height: 66px !important;
-    align-items: center !important;
+.spreadsheet .row-number-head { width: 42px !important; }
+.spreadsheet .serial-col { width: 105px !important; }
+.spreadsheet .client-col { width: 210px !important; }
+.spreadsheet .task-col { width: 245px !important; }
+.spreadsheet .charge-col { width: 155px !important; }
+.spreadsheet .date-col { width: 130px !important; }
+.spreadsheet .amount-col { width: 135px !important; }
+.spreadsheet .mode-col { width: 105px !important; }
+.spreadsheet .advance-date-col { width: 155px !important; }
+.spreadsheet .advance-col { width: 155px !important; }
+.spreadsheet .advance-mode-col { width: 170px !important; }
+.spreadsheet .balance-col { width: 135px !important; }
+.spreadsheet .action-col { width: 90px !important; }
+
+.spreadsheet tbody td {
+    overflow: hidden;
 }
 
-.search-box,
-.date-box input,
-.reset {
-    height: 40px !important;
-    min-height: 40px !important;
+.spreadsheet tbody td.readonly-cell {
+    white-space: normal;
+    word-break: break-word;
 }
 
-.date-box {
-    width: 165px !important;
-}
-
-.table-meta {
-    height: 44px !important;
-}
-
-.billing-table th {
-    height: 48px !important;
-}
-
-.billing-table td {
-    height: 48px !important;
-    padding: 9px 10px !important;
+.row-number {
+    text-align: center !important;
+    user-select: none;
 }

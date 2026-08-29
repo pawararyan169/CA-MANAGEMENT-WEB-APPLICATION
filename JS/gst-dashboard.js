@@ -91,13 +91,66 @@
   }
 
   async function save(tr){
-    const r=readRow(tr); if(!r) return; const btn=tr.querySelector('.save-btn'); btn.disabled=true;
+    const r=readRow(tr);
+    if(!r) return;
+
+    const btn=tr.querySelector('.save-btn');
+    if(!btn) return;
+
+    const originalText=btn.textContent;
+    btn.disabled=true;
+    btn.textContent='Saving...';
+
     try{
-      const res=await fetch(`/api/gst-dashboard/${encodeURIComponent(r.id)}`,{method:'PATCH',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(r)});
-      const data=await res.json(); if(!res.ok||!data.success) throw new Error(data.message||'Unable to save GST record.');
-      const i=records.findIndex(x=>x.id===r.id); if(i>=0) records[i]=data.row; applyFilters();
-    }catch(e){ $('gstError').textContent=e.message; $('gstError').style.display='block'; }
-    finally{btn.disabled=false;}
+      const res=await fetch(
+        `/api/gst-dashboard/${encodeURIComponent(r.id)}`,
+        {
+          method:'PATCH',
+          credentials:'same-origin',
+          cache:'no-store',
+          headers:{
+            'Content-Type':'application/json',
+            'Accept':'application/json'
+          },
+          body:JSON.stringify(r)
+        }
+      );
+
+      const data=await res.json();
+
+      if(!res.ok || !data.success){
+        throw new Error(
+          data.message || `Unable to save GST record. (HTTP ${res.status})`
+        );
+      }
+
+      const i=records.findIndex(x=>x.id===r.id);
+
+      if(i>=0){
+        records[i]=data.row;
+      }
+
+      $('gstError').style.display='none';
+      applyFilters();
+
+      // Brief visual confirmation.
+      const savedRow = $('gstTableBody').querySelector(
+        `tr[data-id="${CSS.escape(r.id)}"]`
+      );
+
+      if(savedRow){
+        savedRow.classList.add('saved');
+        setTimeout(()=>savedRow.classList.remove('saved'),1200);
+      }
+
+    }catch(e){
+      console.error('GST save error:',e);
+      $('gstError').textContent=e.message || 'Unable to save GST record.';
+      $('gstError').style.display='block';
+    }finally{
+      btn.disabled=false;
+      btn.textContent=originalText;
+    }
   }
 
   function exportCsv(){

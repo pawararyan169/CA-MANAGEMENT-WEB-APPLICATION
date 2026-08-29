@@ -4,6 +4,36 @@ const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
+/* =========================================================
+   PAN BILLING STATUS
+   PAN is a client-level service, so its transfer status is
+   stored separately from clients.status.
+========================================================= */
+db.exec(`
+CREATE TABLE IF NOT EXISTS pan_billing_status (
+    client_id TEXT PRIMARY KEY,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    transferred_at TEXT,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_pan_billing_status_status
+    ON pan_billing_status(status);
+`);
+
+function ensurePanBillingStatus(clientId) {
+    const existing = db.prepare(`
+        SELECT client_id FROM pan_billing_status WHERE client_id = ?
+    `).get(clientId);
+    if (!existing) {
+        const now = new Date().toISOString();
+        db.prepare(`
+            INSERT INTO pan_billing_status(client_id, status, transferred_at, updated_at)
+            VALUES (?, 'PENDING', NULL, ?)
+        `).run(clientId, now);
+    }
+}
+
+
 function findColumn(candidates) {
     const columns = db.prepare("PRAGMA table_info(clients)").all()
         .map(c => c.name);
@@ -192,6 +222,12 @@ router.get(
             `).all();
 
             const records = rows.map(row => {
+                ensurePanBillingStatus(row.client_id);
+                const billingStatus = db.prepare(`
+                    SELECT status, transferred_at
+                    FROM pan_billing_status
+                    WHERE client_id = ?
+                `).get(row.client_id) || { status: "PENDING", transferred_at: null };
                 let name = row.direct_name;
 
                 if (!name || !String(name).trim()) {
@@ -216,7 +252,9 @@ router.get(
                     state: row.state || "",
                     pan: row.pan || "",
                     contact: row.contact || "",
-                    email: row.email || ""
+                    email: row.email || "",
+                    billingStatus: billingStatus.status || "PENDING",
+                    transferredAt: billingStatus.transferred_at || ""
                 };
             });
 
@@ -233,6 +271,62 @@ router.get(
                 message:
                     error.message ||
                     "Unable to load PAN records."
+            });
+        }
+    }
+);
+
+/* =========================================================
+   UPDATE PAN BILLING STATUS
+========================================================= */
+router.patch(
+    "/pan-dashboard/:id/billing-status",
+    requireAuth,
+    (req, res) => {
+        try {
+            const clientId = String(req.params.id || "").trim();
+            const status = String(req.body?.status || "PENDING").trim().toUpperCase();
+
+            if (!clientId) {
+                return res.status(400).json({ success: false, message: "Client ID is required." });
+            }
+
+            if (!["PENDING", "TRANSFERED TO BILLING"].includes(status)) {
+                return res.status(400).json({ success: false, message: "Invalid PAN billing status." });
+            }
+
+            const client = db.prepare(`SELECT id FROM clients WHERE id = ? LIMIT 1`).get(clientId);
+            if (!client) {
+                return res.status(404).json({ success: false, message: "PAN client not found." });
+            }
+
+            const now = new Date().toISOString();
+            ensurePanBillingStatus(clientId);
+
+            db.prepare(`
+                UPDATE pan_billing_status
+                SET status = ?,
+                    transferred_at = CASE WHEN ? = 'TRANSFERED TO BILLING' THEN COALESCE(transferred_at, ?) ELSE NULL END,
+                    updated_at = ?
+                WHERE client_id = ?
+            `).run(status, status, now, now, clientId);
+
+            const updated = db.prepare(`
+                SELECT status, transferred_at
+                FROM pan_billing_status
+                WHERE client_id = ?
+            `).get(clientId);
+
+            return res.json({
+                success: true,
+                billingStatus: updated.status,
+                transferredAt: updated.transferred_at || ""
+            });
+        } catch (error) {
+            console.error("PAN BILLING STATUS ERROR:", error);
+            return res.status(500).json({
+                success: false,
+                message: error.message || "Unable to update PAN billing status."
             });
         }
     }

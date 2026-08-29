@@ -3,115 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Billing Records</title>
-    <link rel="stylesheet" href="/billing.css?v=20260822-50">
+    <title>Billing Record</title>
+    <link rel="stylesheet" href="/billing.css?v=20260829-ui-fixed">
 </head>
 
 <body>
-
 <main class="billing-page">
 
-    <!-- ONLY THE LOWER BILLING RECORD SECTION -->
-    <section class="records-card">
+    <section class="excel-sheet">
 
-        <div class="records-header">
-            <div>
-                <h1>Billing Records</h1>
-                <p>Completed and billable tasks only</p>
+        <div class="sheet-topbar">
+            <div class="sheet-title">
+                <span class="sheet-icon">₹</span>
+                <div>
+                    <h1>Billing Record</h1>
+                    <span id="registerState">Loading...</span>
+                </div>
             </div>
 
-            <div class="header-actions">
-                <button id="refreshBilling" type="button" class="btn secondary">
+            <div class="sheet-actions">
+                <button id="refreshBilling" type="button" class="toolbar-button">
                     ↻ Refresh
                 </button>
 
-                <button id="saveBillingRecords" type="button" class="btn secondary">
-                    ✓ Save Records
+                <button id="exportBillingExcel" type="button" class="toolbar-button primary">
+                    ↓ Excel
                 </button>
 
-                <button id="exportBillingExcel" type="button" class="btn excel">
-                    Export to Excel
-                </button>
-
-                <button id="exportBillingPdf" type="button" class="btn pdf">
-                    Export to PDF
+                <button id="exportBillingPdf" type="button" class="toolbar-button">
+                    ↓ PDF
                 </button>
             </div>
         </div>
 
-        <div class="filters-row">
+        <div class="sheet-toolbar">
 
             <div class="search-box">
                 <span>⌕</span>
                 <input
                     id="billingSearch"
                     type="search"
-                    placeholder="Search client, PAN, task or serial number..."
+                    placeholder="Search client, task, PAN or serial number..."
                 >
             </div>
 
-            <div class="date-box">
-                <label>Receipt From</label>
+            <div class="toolbar-date">
+                <span>Receipt from</span>
                 <input id="billingDateFrom" type="date">
             </div>
 
-            <div class="date-box">
-                <label>Receipt To</label>
+            <div class="toolbar-date">
+                <span>Receipt to</span>
                 <input id="billingDateTo" type="date">
             </div>
 
-            <button id="resetBillingFilters" type="button" class="btn reset">
+            <button id="resetBillingFilters" type="button" class="toolbar-button">
                 Reset
             </button>
 
-            <div class="visible-count">
+            <div class="sheet-count">
                 <strong id="visibleCount">0</strong>
-                <span>visible records</span>
+                records
             </div>
-
         </div>
 
-        <div id="billingError" class="alert error" hidden></div>
-        <div id="billingSuccess" class="alert success" hidden></div>
+        <div id="billingError" class="sheet-message error" hidden></div>
+        <div id="billingSuccess" class="sheet-message success" hidden></div>
 
-        <div class="table-meta">
-            <span id="registerState">Loading...</span>
-            <span>Completed + Billable</span>
-        </div>
+        <div class="spreadsheet-wrap">
 
-        <div class="table-wrap">
-            <table class="billing-table">
+            <table class="spreadsheet">
 
                 <thead>
                     <tr>
-                        <th>Serial Number</th>
-                        <th>Name</th>
-                        <th>Name of Task</th>
-                        <th>Chargeable Amount</th>
-                        <th>Date of Receipt</th>
-                        <th>Amount</th>
-                        <th>Mode</th>
-                        <th>Date of Advance Payment</th>
-                        <th>Advance Paid Amount</th>
-                        <th>Advance Payment Mode</th>
-                        <th>Balance</th>
+                        <th class="row-number-head">#</th>
+                        <th class="serial-col">Serial Number</th>
+                        <th class="client-col">Name</th>
+                        <th class="task-col">Name of Task</th>
+                        <th class="charge-col">Chargeable Amount</th>
+                        <th class="date-col">Date of Receipt</th>
+                        <th class="amount-col">Amount</th>
+                        <th class="mode-col">Mode</th>
+                        <th class="advance-date-col">Date of Advance Payment</th>
+                        <th class="advance-col">Advance Paid Amount</th>
+                        <th class="advance-mode-col">Mode of Advance Payment</th>
+                        <th class="balance-col">Balance</th>
+                        <th class="action-col">Action</th>
                     </tr>
                 </thead>
 
                 <tbody id="billingTableBody">
                     <tr>
-                        <td colspan="11" class="empty">
+                        <td colspan="13" class="sheet-empty">
                             Loading billing records...
                         </td>
                     </tr>
                 </tbody>
 
             </table>
+
         </div>
 
-        <div class="records-footer">
-            <span>Only completed and billable task records are shown.</span>
-            <span>Use the horizontal scrollbar to view all columns.</span>
+        <div class="sheet-footer">
+            <span>
+                Only <strong>Completed + Billable</strong> tasks are shown.
+            </span>
+
+            <span>
+                Editable cells are white. Task/client information is locked.
+            </span>
         </div>
 
     </section>
@@ -121,7 +121,6 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-<script src="/JS/billing.js?v=20260822-50" defer></script>
-
+<script src="/JS/billing.js?v=20260829-ui-fixed"></script>
 </body>
 </html>
