@@ -84,6 +84,11 @@ app.use(
     cinDashboardRoutes
 );
 
+app.use(
+    "/api",
+    require("./routes/documents")
+);
+
 
 /*
  * FSSAI DASHBOARD
@@ -266,7 +271,7 @@ app.get(
 
 
 app.get(
-    '/admin/dashboard.html',
+    '/Admin/dashboard.html',
     (req, res) => {
 
         res.sendFile(
