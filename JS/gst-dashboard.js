@@ -91,65 +91,110 @@
   }
 
   async function save(tr){
-    const r=readRow(tr);
-    if(!r) return;
-
-    const btn=tr.querySelector('.save-btn');
-    if(!btn) return;
-
-    const originalText=btn.textContent;
-    btn.disabled=true;
-    btn.textContent='Saving...';
-
+    const r=readRow(tr); if(!r) return; const btn=tr.querySelector('.save-btn'); btn.disabled=true;
     try{
-      const res=await fetch(
-        `/api/gst-dashboard/${encodeURIComponent(r.id)}`,
+      const res=await fetch(`/api/gst-dashboard/${encodeURIComponent(r.id)}`,{method:'PATCH',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(r)});
+      const data=await res.json(); if(!res.ok||!data.success) throw new Error(data.message||'Unable to save GST record.');
+      const i=records.findIndex(x=>x.id===r.id); if(i>=0) records[i]=data.row; applyFilters();
+    }catch(e){ $('gstError').textContent=e.message; $('gstError').style.display='block'; }
+    finally{btn.disabled=false;}
+  }
+
+  async function saveAll(){
+    const button = $('gstSaveAll');
+
+    if (!button) return;
+
+    if (!records.length) {
+      $('gstError').textContent = 'There are no GST records to save.';
+      $('gstError').style.display = 'block';
+      return;
+    }
+
+    button.disabled = true;
+    const originalText = button.textContent;
+    button.textContent = 'Saving...';
+    $('gstError').style.display = 'none';
+
+    try {
+      /*
+       * Save the complete loaded month, not just the currently filtered
+       * rows. This means filters never prevent a GST record from being saved.
+       */
+      const rows = records.map(r => ({
+        id: r.id,
+        tradeName: r.tradeName || '',
+        effectiveFrom: r.effectiveFrom || '',
+        registrationType: r.registrationType || 'REGULAR',
+        filingFrequency: r.filingFrequency || 'MONTHLY',
+        documentReceivedDate: r.documentReceivedDate || '',
+        workingDate: r.workingDate || '',
+        gstr1IffFilingDate:
+          r.gstr1IffFilingDate ||
+          r.gstr1FilingDate ||
+          r.iffFilingDate ||
+          '',
+        taxPaymentDate: r.taxPaymentDate || '',
+        threeBFilingDate:
+          r.threeBFilingDate ||
+          r.filingDate ||
+          '',
+        setDate: r.setDate || ''
+      }));
+
+      const response = await fetch(
+        '/api/gst-dashboard/bulk',
         {
-          method:'PATCH',
-          credentials:'same-origin',
-          cache:'no-store',
-          headers:{
-            'Content-Type':'application/json',
-            'Accept':'application/json'
+          method: 'PATCH',
+          credentials: 'same-origin',
+          cache: 'no-store',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           },
-          body:JSON.stringify(r)
+          body: JSON.stringify({
+            month: currentMonth,
+            rows
+          })
         }
       );
 
-      const data=await res.json();
+      let result = {};
+      try {
+        result = await response.json();
+      } catch (_) {}
 
-      if(!res.ok || !data.success){
+      if (!response.ok || !result.success) {
         throw new Error(
-          data.message || `Unable to save GST record. (HTTP ${res.status})`
+          result.message ||
+          `Unable to save GST records. HTTP ${response.status}.`
         );
       }
 
-      const i=records.findIndex(x=>x.id===r.id);
+      /*
+       * Replace the local records with the authoritative rows returned
+       * by the backend.
+       */
+      records = Array.isArray(result.rows)
+        ? result.rows
+        : records;
 
-      if(i>=0){
-        records[i]=data.row;
-      }
-
-      $('gstError').style.display='none';
       applyFilters();
 
-      // Brief visual confirmation.
-      const savedRow = $('gstTableBody').querySelector(
-        `tr[data-id="${CSS.escape(r.id)}"]`
-      );
+      button.textContent = 'Saved ✓';
 
-      if(savedRow){
-        savedRow.classList.add('saved');
-        setTimeout(()=>savedRow.classList.remove('saved'),1200);
-      }
+      setTimeout(() => {
+        button.textContent = originalText;
+      }, 1200);
 
-    }catch(e){
-      console.error('GST save error:',e);
-      $('gstError').textContent=e.message || 'Unable to save GST record.';
-      $('gstError').style.display='block';
-    }finally{
-      btn.disabled=false;
-      btn.textContent=originalText;
+    } catch (error) {
+      console.error('GST Save All error:', error);
+      $('gstError').textContent =
+        error.message || 'Unable to save GST records.';
+      $('gstError').style.display = 'block';
+      button.textContent = originalText;
+    } finally {
+      button.disabled = false;
     }
   }
 
@@ -165,6 +210,8 @@
     const now=new Date(); const month=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; $('gstMonth').value=month;
     $('gstMonth').addEventListener('change',()=>load($('gstMonth').value));
     ['gstSearch','gstRegistrationFilter','gstFrequencyFilter','gstStatusFilter','gstBillingFilter'].forEach(id=>{ const el=$(id); if(el) el.addEventListener('input',applyFilters); });
+    const saveAllBtn=$('gstSaveAll');
+    if(saveAllBtn) saveAllBtn.addEventListener('click',saveAll);
     const exportBtn=$('gstExport'); if(exportBtn) exportBtn.addEventListener('click',exportCsv);
     const currentBtn=$('gstCurrentMonth'); if(currentBtn) currentBtn.addEventListener('click',()=>{ const d=new Date(); const m=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; $('gstMonth').value=m; load(m); });
     const tableBody=$('gstTableBody');

@@ -36,3 +36,73 @@
 @media(max-width:1400px){.it-filters{grid-template-columns:repeat(4,minmax(160px,1fr))}}
 @media(max-width:800px){.it-head{align-items:flex-start;flex-direction:column}.it-filters{grid-template-columns:repeat(2,minmax(160px,1fr))}}
 @media(max-width:600px){.income-tax-page{padding:20px 14px}.it-filters{grid-template-columns:1fr}}
+
+
+/* =========================================================
+   FILTER ALIGNMENT FIX
+   Keep all eight filters INSIDE the toolbar.
+   No functional/UI rules outside the filter section changed.
+   ========================================================= */
+
+.income-tax-page .it-toolbar {
+    width: 100%;
+    max-width: 100%;
+    overflow: visible;
+}
+
+.income-tax-page .it-filters {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1.35fr)
+        repeat(7, minmax(0, 1fr));
+    gap: 11px;
+    align-items: end;
+}
+
+.income-tax-page .it-field {
+    min-width: 0;
+    width: 100%;
+}
+
+.income-tax-page .it-field label {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.income-tax-page .it-field input,
+.income-tax-page .it-field select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/*
+ * At narrower dashboard widths, wrap cleanly instead of allowing
+ * Set Date / other filters to escape the toolbar.
+ */
+@media (max-width: 1400px) {
+    .income-tax-page .it-filters {
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 800px) {
+    .income-tax-page .it-filters {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .income-tax-page .it-filters {
+        grid-template-columns:
+            minmax(0, 1fr);
+    }
+}

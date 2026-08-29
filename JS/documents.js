@@ -618,12 +618,8 @@
                         ${escapeHtml(days)}
                     </td>
 
-                    <td class="status-cell">
-                        <span
-                            class="document-status ${statusClass}"
-                        >
-                            ${escapeHtml(status)}
-                        </span>
+                    <td class="staff-cell">
+                        ${escapeHtml(assignedEmployee)}
                     </td>
 
                     <td class="staff-cell">
@@ -634,8 +630,12 @@
                         ${escapeHtml(deliveringStaff)}
                     </td>
 
-                    <td class="staff-cell">
-                        ${escapeHtml(assignedEmployee)}
+                    <td class="status-cell">
+                        <span
+                            class="document-status ${statusClass}"
+                        >
+                            ${escapeHtml(status)}
+                        </span>
                     </td>
 
                 `;

@@ -232,42 +232,6 @@ router.get("/gst-dashboard", requireAuth, (req,res) => {
   }
 });
 
-
-/*
- * SAVE ONE GST RECORD
- *
- * The GST dashboard Save button sends:
- *   PATCH /api/gst-dashboard/:id
- *
- * This route was missing, which made the row-level Save button fail.
- */
-router.patch("/gst-dashboard/:id", requireAuth, (req,res) => {
-  try {
-    const id = clean(req.params.id);
-
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        message: "GST record ID is required."
-      });
-    }
-
-    const row = updateOne(id, req.body || {});
-
-    return res.json({
-      success: true,
-      row
-    });
-  } catch (error) {
-    console.error("GST dashboard PATCH error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message || "Unable to save GST record."
-    });
-  }
-});
-
 router.patch("/gst-dashboard/bulk", requireAuth, (req,res) => {
   try {
     const month = clean(req.body?.month);
