@@ -345,6 +345,7 @@
         ["section", "OFFICE"],
         ["link", "/admin/dashboard.html#calendar", "Calendar", "◷"],
         ["link", "/admin/dashboard.html#reports", "Reports", "◈"],
+        ["link", "/admin/signup-requests.html","Sign-up Requests","◇"],
 
         ["section", "SYSTEM"],
         ["link", "/admin/dashboard.html#settings", "Settings", "⚙"]
@@ -360,6 +361,7 @@
         ["link", "/employee/tasks.html", "Tasks", "✓"],
         ["link", "/employee/documents.html", "Documents", "□"],
         ["link", "/employee/billing.html", "Billing", "₹"],
+        
 
         ["section", "REGISTRATIONS"],
         ["link", "/employee/cin_dashboard.html", "CIN", "◇"],

@@ -96,7 +96,7 @@
 
         .request-info {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, minmax(0, 1fr));
 
             gap: 15px;
 
@@ -121,6 +121,26 @@
             color: var(--text);
             font-size: 10px;
             word-break: break-word;
+        }
+
+        .request-section-title {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: var(--text);
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .request-info-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .request-id {
+            color: var(--text-muted);
+            font-size: 9px;
+            margin-top: 3px;
         }
 
         .request-message {
@@ -256,6 +276,10 @@
 
             .request-info {
                 grid-template-columns: 1fr;
+            }
+
+            .request-info-item.full-width {
+                grid-column: auto;
             }
 
             .approval-fields {
