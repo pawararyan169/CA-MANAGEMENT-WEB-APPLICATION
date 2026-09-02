@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Client Details | CA Office</title>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../CSS/style.css"
+    >
+
+
+    <!-- =====================================================
+         CLIENT DETAILS PAGE ONLY
+         Does not affect other admin/employee pages
+    ====================================================== -->
+
+    <style>
+
+        /* =====================================================
+           PAGE WRAPPER
+        ====================================================== */
+
+        .client-details-page {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+
+        /* =====================================================
+           BACK LINK
+        ====================================================== */
+
+        .client-back-link {
+            margin-bottom: 22px;
+        }
+
+        .client-back-link a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #555;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .client-back-link a:hover {
+            color: #111;
+        }
+
+
+        /* =====================================================
+           HEADER
+        ====================================================== */
+
+        .client-details-header {
+            margin-bottom: 28px;
+        }
+
+
+        /* =====================================================
+           LOADING
+        ====================================================== */
+
+        .client-loading {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            min-height: 160px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #666;
+            font-size: 14px;
+        }
+
+
+        /* =====================================================
+           ERROR
+        ====================================================== */
+
+        #clientDetailsError {
+            margin-bottom: 20px;
+        }
+
+
+        /* =====================================================
+           DETAILS CONTAINER
+        ====================================================== */
+
+        .client-details-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+
+        /* =====================================================
+           DETAIL PANEL
+        ====================================================== */
+
+        .client-detail-panel {
+            margin: 0 !important;
+            overflow: hidden;
+        }
+
+
+        /* =====================================================
+           PANEL HEADER
+        ====================================================== */
+
+        .client-detail-panel .panel-header {
+            padding: 20px 24px;
+            margin: 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .client-detail-panel .panel-header h2 {
+            margin: 0 0 5px 0;
+            font-size: 17px;
+        }
+
+        .client-detail-panel .panel-header p {
+            margin: 0;
+            color: #777;
+            font-size: 13px;
+        }
+
+
+        /* =====================================================
+           DETAIL CONTENT
+        ====================================================== */
+
+        .client-detail-content {
+            padding: 22px 24px 24px;
+        }
+
+
+        /* =====================================================
+           DETAIL GRID
+        ====================================================== */
+
+        .client-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px 24px;
+        }
+
+
+        /* =====================================================
+           DETAIL ITEM
+        ====================================================== */
+
+        .client-detail-item {
+            min-width: 0;
+        }
+
+
+        .client-detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+
+        /* =====================================================
+           LABEL
+        ====================================================== */
+
+        .client-detail-label {
+            display: block;
+            margin-bottom: 7px;
+
+            font-size: 12px;
+            font-weight: 600;
+            color: #777;
+
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+
+        /* =====================================================
+           VALUE
+        ====================================================== */
+
+        .detail-value {
+            min-height: 44px;
+
+            display: flex;
+            align-items: center;
+
+            padding: 11px 13px;
+
+            background: #fafafa;
+            border: 1px solid #e7e7e7;
+            border-radius: 8px;
+
+            color: #222;
+            font-size: 14px;
+            line-height: 1.5;
+
+            word-break: break-word;
+        }
+
+
+        /* =====================================================
+           ADDRESS
+        ====================================================== */
+
+        .client-address {
+            min-height: 70px;
+            align-items: flex-start;
+            white-space: pre-wrap;
+        }
+
+
+        /* =====================================================
+           STATUS
+        ====================================================== */
+
+        #detailStatus {
+            font-weight: 600;
+        }
+
+
+        /* =====================================================
+           ASSIGNED EMPLOYEES
+        ====================================================== */
+
+        .assigned-employees-container {
+            padding: 20px 24px 24px;
+        }
+
+
+        .assigned-employees-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+
+        .assigned-employee {
+            padding: 13px 15px;
+
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+
+        /* =====================================================
+           RECORD INFORMATION
+        ====================================================== */
+
+        .record-value {
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ====================================================== */
+
+        @media (max-width: 900px) {
+
+            .client-detail-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .client-detail-item.full-width {
+                grid-column: auto;
+            }
+
+            .assigned-employees-list {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .client-detail-panel .panel-header {
+                padding: 17px 18px;
+            }
+
+            .client-detail-content {
+                padding: 18px;
+            }
+
+            .assigned-employees-container {
+                padding: 18px;
+            }
+
+            .client-detail-grid {
+                gap: 14px;
+            }
+
+            .detail-value {
+                min-height: 42px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<div class="dashboard-layout">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+            <div class="brand-name">
+
+                <strong>
+                    CA Office
+                </strong>
+
+                <span>
+                    Administration
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <span class="nav-section">
+                OVERVIEW
+            </span>
+
+
+            <a
+                href="/employee/dashboard.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+
+            <span class="nav-section">
+                MANAGEMENT
+            </span>
+
+
+            <a
+                href="/employee/employees.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">◌</span>
+                Employees
+            </a>
+
+
+            <a
+                href="/employee/clients.html"
+                class="nav-item active"
+            >
+                <span class="nav-icon">◉</span>
+                Clients
+            </a>
+
+
+            <a
+                href="/employee/tasks.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">✓</span>
+                Tasks
+            </a>
+
+
+            <a
+                href="/employee/signup-requests.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">✉</span>
+                Signup Requests
+            </a>
+
+
+            <a
+                href="/employee/locations.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">◇</span>
+                Locations
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <button
+                id="logoutButton"
+                class="logout-button"
+                type="button"
+            >
+                <span class="nav-icon">↪</span>
+                Sign out
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="dashboard-main">
+
+        <div class="client-details-page">
+
+
+            <!-- =================================================
+                 BACK
+            ================================================== -->
+
+            <div class="client-back-link">
+
+                <a href="/employee/clients.html">
+                    ← Back to Clients
+                </a>
+
+            </div>
+
+
+            <!-- =================================================
+                 HEADER
+            ================================================== -->
+
+            <header class="dashboard-header client-details-header">
+
+                <div>
+
+                    <span class="dashboard-eyebrow">
+                        CLIENT RECORD
+                    </span>
+
+                    <h1 id="clientName">
+                        Loading...
+                    </h1>
+
+                    <p id="clientSubtitle">
+                        Loading client information...
+                    </p>
+
+                </div>
+
+
+                <div class="user-profile">
+
+                    <div
+                        class="avatar"
+                        id="employeeAvatar"
+                    >
+                        A
+                    </div>
+
+                    <div class="user-info">
+
+                        <strong id="employeeName">
+                            Employee
+                        </strong>
+
+                        <span id="employeeRole">
+                            Employee
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- =================================================
+                 ERROR
+            ================================================== -->
+
+            <div
+                id="clientDetailsError"
+                class="form-alert error-alert"
+            ></div>
+
+
+            <!-- =================================================
+                 LOADING
+            ================================================== -->
+
+            <div
+                id="clientDetailsLoading"
+                class="client-loading"
+            >
+                Loading client details...
+            </div>
+
+
+            <!-- =================================================
+                 DETAILS
+            ================================================== -->
+
+            <div
+                id="clientDetails"
+                class="client-details-sections"
+                style="display:none;"
+            >
+
+
+                <!-- =================================================
+                     BASIC INFORMATION
+                ================================================== -->
+
+                <section class="dashboard-panel client-detail-panel">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Basic Information
+                            </h2>
+
+                            <p>
+                                Personal and entity information.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="client-detail-content">
+
+                        <div class="client-detail-grid">
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Full Name
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailName"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Client Type
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailType"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Gender
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailGender"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Status
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailStatus"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     LOCATION
+                ================================================== -->
+
+                <section class="dashboard-panel client-detail-panel">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Location & Address
+                            </h2>
+
+                            <p>
+                                Registered client location.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="client-detail-content">
+
+                        <div class="client-detail-grid">
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Office Location
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailLocation"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    State
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailState"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    District
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailDistrict"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    City / Town
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailCity"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item full-width">
+
+                                <span class="client-detail-label">
+                                    Complete Address
+                                </span>
+
+                                <div
+                                    class="detail-value client-address"
+                                    id="detailAddress"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     TAX
+                ================================================== -->
+
+                <section class="dashboard-panel client-detail-panel">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Tax & Registration
+                            </h2>
+
+                            <p>
+                                Government and business registrations.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="client-detail-content">
+
+                        <div class="client-detail-grid">
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    PAN
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailPan"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Aadhaar
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailAadhaar"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    TAN
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailTan"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    GST
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailGst"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    MSME Udyam
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailUdyam"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    CIN
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailCin"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    FSSAI
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailFssai"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    PTEC
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailPtec"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    PTRC
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailPtrc"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     CONTACT
+                ================================================== -->
+
+                <section class="dashboard-panel client-detail-panel">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Contact Information
+                            </h2>
+
+                            <p>
+                                Primary contact details.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="client-detail-content">
+
+                        <div class="client-detail-grid">
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Contact Number
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailContact"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Email
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailEmail"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     DATES
+                ================================================== -->
+
+                <section class="dashboard-panel client-detail-panel">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Dates
+                            </h2>
+
+                            <p>
+                                Important client dates.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="client-detail-content">
+
+                        <div class="client-detail-grid">
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Date of Birth
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailDob"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Date of Registration
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailRegistration"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     AUTHORISED PERSON
+                ================================================== -->
+
+                <section class="dashboard-panel client-detail-panel">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Authorised Person
+                            </h2>
+
+                            <p>
+                                Person authorised to represent this client.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="client-detail-content">
+
+                        <div class="client-detail-grid">
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Same as Client
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailAuthorisedSame"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Name
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailAuthorisedName"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Contact
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailAuthorisedContact"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Email
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailAuthorisedEmail"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     ASSIGNED EMPLOYEES
+                ================================================== -->
+
+                <section class="dashboard-panel client-detail-panel">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Assigned Employees
+                            </h2>
+
+                            <p>
+                                Employees currently responsible for this client.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="assigned-employees-container">
+
+                        <div
+                            id="assignedEmployees"
+                            class="assigned-employees-list"
+                        >
+                            —
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     RECORD INFORMATION
+                ================================================== -->
+
+                <section class="dashboard-panel client-detail-panel">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Record Information
+                            </h2>
+
+                            <p>
+                                Internal client record information.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="client-detail-content">
+
+                        <div class="client-detail-grid">
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Client ID
+                                </span>
+
+                                <div
+                                    class="detail-value record-value"
+                                    id="detailId"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Created By
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailCreatedBy"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Created At
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailCreatedAt"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="client-detail-item">
+
+                                <span class="client-detail-label">
+                                    Last Updated
+                                </span>
+
+                                <div
+                                    class="detail-value"
+                                    id="detailUpdatedAt"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script src="../JS/auth.js"></script>
+
+<script src="../JS/employee-client-details.js"></script>
+
+
+<script src="../JS/unified-sidebar.js"></script>
+</body>
+
+</html>

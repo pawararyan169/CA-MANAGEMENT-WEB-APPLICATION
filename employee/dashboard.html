@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="CA Office Management - Employee Dashboard"
+    >
+
+    <title>Employee Dashboard | CA Office</title>
+
+
+    <!-- Google Font -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- Main CSS -->
+
+    <link
+        rel="stylesheet"
+        href="/CSS/style.css"
+    >
+
+
+    <!-- Employee Dashboard CSS -->
+
+    <style>
+
+        /* =====================================================
+           EMPLOYEE DASHBOARD
+        ===================================================== */
+
+        .employee-dashboard-content {
+            width: 100%;
+        }
+
+
+        /* =====================================================
+           OFFICE CLIENTS
+        ===================================================== */
+
+        .employee-office-clients {
+            width: 100%;
+            margin-top: 18px;
+            overflow: hidden;
+        }
+
+
+        .employee-clients-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 20px;
+
+            padding: 20px 24px;
+
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+
+        .employee-clients-header h2 {
+            margin: 0 0 5px;
+
+            font-size: 18px;
+            font-weight: 700;
+
+            color: #111827;
+        }
+
+
+        .employee-clients-header p {
+            margin: 0;
+
+            color: #7b8190;
+
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+
+        .employee-view-all {
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            min-width: 80px;
+            height: 38px;
+
+            padding: 0 16px;
+
+            border-radius: 8px;
+
+            background: #111827;
+
+            color: #ffffff !important;
+
+            text-decoration: none;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            flex-shrink: 0;
+
+            transition: 0.2s ease;
+        }
+
+
+        .employee-view-all:hover {
+            background: #273142;
+            transform: translateY(-1px);
+        }
+
+
+        /* =====================================================
+           CLIENT LIST
+        ===================================================== */
+
+        .office-clients-list {
+            width: 100%;
+
+            display: flex;
+            flex-direction: column;
+
+            padding: 8px 20px 18px;
+
+            box-sizing: border-box;
+        }
+
+
+        .office-client-row {
+            width: 100%;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 20px;
+
+            padding: 15px 4px;
+
+            border-bottom: 1px solid #eeeeee;
+
+            box-sizing: border-box;
+        }
+
+
+        .office-client-row:last-child {
+            border-bottom: none;
+        }
+
+
+        .office-client-main {
+            display: flex;
+
+            align-items: center;
+
+            gap: 13px;
+
+            min-width: 0;
+        }
+
+
+        .office-client-avatar {
+            width: 42px;
+            height: 42px;
+
+            min-width: 42px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #eef1f5;
+
+            color: #1f2937;
+
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+
+        .office-client-information {
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 3px;
+
+            min-width: 0;
+        }
+
+
+        .office-client-information strong {
+            color: #171717;
+
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+
+        .office-client-information span {
+            color: #707070;
+
+            font-size: 12px;
+        }
+
+
+        .office-client-information small {
+            color: #999999;
+
+            font-size: 11px;
+        }
+
+
+        .office-client-view {
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            min-width: 58px;
+            height: 34px;
+
+            padding: 0 12px;
+
+            border: 1px solid #dedede;
+            border-radius: 7px;
+
+            background: #ffffff;
+
+            color: #222222 !important;
+
+            text-decoration: none;
+
+            font-size: 12px;
+            font-weight: 600;
+
+            flex-shrink: 0;
+
+            transition: 0.2s ease;
+        }
+
+
+        .office-client-view:hover {
+            background: #f5f5f5;
+            border-color: #cfcfcf;
+        }
+
+
+        /* =====================================================
+           LOADING
+        ===================================================== */
+
+        .clients-loading {
+            min-height: 140px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            color: #777777;
+
+            font-size: 14px;
+        }
+
+
+        /* =====================================================
+           EMPTY
+        ===================================================== */
+
+        .clients-empty {
+            min-height: 140px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+        }
+
+
+        .clients-empty-icon {
+            width: 44px;
+            height: 44px;
+
+            margin-bottom: 10px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #f2f3f5;
+
+            color: #777777;
+
+            font-size: 18px;
+        }
+
+
+        .clients-empty strong {
+            margin-bottom: 5px;
+
+            color: #333333;
+
+            font-size: 14px;
+        }
+
+
+        .clients-empty span {
+            color: #888888;
+
+            font-size: 12px;
+        }
+
+
+        /* =====================================================
+           ERROR
+        ===================================================== */
+
+        .clients-error {
+            min-height: 140px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+            justify-content: center;
+
+            gap: 8px;
+
+            text-align: center;
+        }
+
+
+        .clients-error strong {
+            color: #b42318;
+
+            font-size: 14px;
+        }
+
+
+        .clients-error span {
+            color: #777777;
+
+            font-size: 12px;
+        }
+
+
+        .clients-error button {
+            margin-top: 8px;
+
+            padding: 8px 14px;
+
+            border: none;
+            border-radius: 7px;
+
+            background: #111827;
+
+            color: #ffffff;
+
+            cursor: pointer;
+
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+
+        /* =====================================================
+           QUICK LINKS
+        ===================================================== */
+
+        .employee-quick-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
+
+            gap: 12px;
+
+            padding: 20px;
+        }
+
+
+        .employee-quick-action {
+            min-height: 80px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            flex-direction: column;
+
+            gap: 7px;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+
+            background: #ffffff;
+
+            color: #222222;
+
+            text-decoration: none;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            transition: 0.2s ease;
+        }
+
+
+        .employee-quick-action:hover {
+            background: #f7f7f7;
+
+            transform: translateY(-1px);
+        }
+
+
+        .employee-quick-icon {
+            font-size: 20px;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (max-width: 800px) {
+
+            .employee-clients-header {
+                align-items: flex-start;
+            }
+
+
+            .employee-quick-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .employee-clients-header {
+                flex-direction: column;
+            }
+
+
+            .employee-view-all {
+                width: 100%;
+            }
+
+
+            .office-client-row {
+                gap: 10px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<div class="dashboard-layout">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+
+        <!-- BRAND -->
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+
+            <div class="brand-name">
+
+                <strong>
+                    CA Office
+                </strong>
+
+                <span>
+                    Employee Portal
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- NAVIGATION -->
+
+        <nav class="sidebar-nav">
+
+
+            <span class="nav-section">
+                WORKSPACE
+            </span>
+
+
+            <!-- DASHBOARD -->
+
+            <a
+                href="/employee/dashboard.html"
+                class="nav-item active"
+            >
+
+                <span class="nav-icon">
+                    ⌂
+                </span>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </a>
+
+
+            <!-- CLIENTS -->
+
+            <a
+                href="/employee/clients.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ◉
+                </span>
+
+                <span>
+                    Clients
+                </span>
+
+            </a>
+
+
+            <!-- TASKS -->
+
+            <a
+                href="/employee/tasks.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ✓
+                </span>
+
+                <span>
+                    My Tasks
+                </span>
+
+            </a>
+
+
+            <span class="nav-section">
+                OFFICE
+            </span>
+
+
+            <!-- CALENDAR -->
+
+            <a
+                href="#"
+                class="nav-item"
+                onclick="return false;"
+            >
+
+                <span class="nav-icon">
+                    ◷
+                </span>
+
+                <span>
+                    Calendar
+                </span>
+
+            </a>
+
+            <a
+    href="/employee/dashboard.html"
+    class="nav-item active"
+>
+    <span class="nav-icon">⌂</span>
+    Dashboard
+</a>
+
+
+<a
+    href="/employee/clients.html"
+    class="nav-item"
+>
+    <span class="nav-icon">◉</span>
+    Clients
+</a>
+
+
+<a
+    href="/employee/add-client.html"
+    class="nav-item"
+>
+    <span class="nav-icon">+</span>
+    Add Client
+</a>
+
+
+<a
+    href="/employee/tasks.html"
+    class="nav-item"
+>
+    <span class="nav-icon">✓</span>
+    My Tasks
+</a>
+
+
+            <!-- DOCUMENTS -->
+
+            <a
+                href="#"
+                class="nav-item"
+                onclick="return false;"
+            >
+
+                <span class="nav-icon">
+                    □
+                </span>
+
+                <span>
+                    Documents
+                </span>
+
+            </a>
+
+            <a
+                href="/employee/billing.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">
+                    ₹
+                </span>
+
+                <span>
+                    Billing
+                </span>
+            </a>
+
+
+        </nav>
+
+
+        <!-- SIDEBAR BOTTOM -->
+
+        <div class="sidebar-bottom">
+
+
+            <button
+                type="button"
+                class="logout-button"
+                id="logoutButton"
+            >
+
+                <span class="nav-icon">
+                    ↪
+                </span>
+
+                <span>
+                    Sign out
+                </span>
+
+            </button>
+
+
+        </div>
+
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="dashboard-main">
+
+
+        <div class="employee-dashboard-content">
+
+
+            <!-- =================================================
+                 HEADER
+            ================================================== -->
+
+            <header class="dashboard-header">
+
+
+                <div>
+
+                    <span class="dashboard-eyebrow">
+                        EMPLOYEE WORKSPACE
+                    </span>
+
+
+                    <h1>
+                        Office overview
+                    </h1>
+
+
+                    <p>
+                        View clients, tasks and your office activity.
+                    </p>
+
+                </div>
+
+
+                <!-- USER -->
+
+                <div class="user-profile">
+
+
+                    <div
+                        class="avatar"
+                        id="employeeAvatar"
+                    >
+                        E
+                    </div>
+
+
+                    <div class="user-info">
+
+                        <strong id="employeeName">
+                            Employee
+                        </strong>
+
+                        <span id="employeeRole">
+                            Staff
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+            </header>
+
+
+            <!-- =================================================
+                 STATISTICS
+            ================================================== -->
+
+            <section class="stats-grid">
+
+
+                <!-- CLIENTS -->
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+
+                        <span>
+                            Active Clients
+                        </span>
+
+                        <span class="stat-icon">
+                            ◉
+                        </span>
+
+                    </div>
+
+
+                    <strong id="clientCount">
+                        —
+                    </strong>
+
+
+                    <span class="stat-change">
+                        All active office clients
+                    </span>
+
+                </div>
+
+
+                <!-- TASKS -->
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+
+                        <span>
+                            My Tasks
+                        </span>
+
+                        <span class="stat-icon">
+                            ✓
+                        </span>
+
+                    </div>
+
+
+                    <strong id="taskCount">
+                        —
+                    </strong>
+
+
+                    <span class="stat-change">
+                        Assigned work
+                    </span>
+
+                </div>
+
+
+                <!-- COMPLETED -->
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+
+                        <span>
+                            Completed
+                        </span>
+
+                        <span class="stat-icon">
+                            ✓
+                        </span>
+
+                    </div>
+
+
+                    <strong id="completedTaskCount">
+                        —
+                    </strong>
+
+
+                    <span class="stat-change">
+                        Completed tasks
+                    </span>
+
+                </div>
+
+
+                <!-- PENDING -->
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+
+                        <span>
+                            Pending
+                        </span>
+
+                        <span class="stat-icon">
+                            ◷
+                        </span>
+
+                    </div>
+
+
+                    <strong id="pendingTaskCount">
+                        —
+                    </strong>
+
+
+                    <span class="stat-change">
+                        Work remaining
+                    </span>
+
+                </div>
+
+
+            </section>
+
+
+
+        <!-- =========================================================
+             TAX & REGISTRATIONS
+        ========================================================== -->
+        <section class="dashboard-panel registration-dashboard-panel">
+
+            <div class="panel-header">
+                <div>
+                    <h2>Tax &amp; Registrations</h2>
+                    <p>Live registration information from your client records.</p>
+                </div>
+
+                <a
+                    href="/employee/registrations.html?type=cin"
+                    class="secondary-button"
+                >
+                    View All Registrations →
+                </a>
+            </div>
+
+            <div class="registration-dashboard-grid">
+<!-- PAN -->
+        <a href="/employee/pan-dashboard.html" class="registration-dashboard-card">
+            <div class="registration-dashboard-icon">P</div>
+            <div class="registration-dashboard-info">
+                <strong>PAN</strong>
+                <span>Permanent Account Number</span>
+            </div>
+            <div class="registration-dashboard-count">
+                <strong id="dashboardPanCount">—</strong>
+                <span>Clients</span>
+            </div>
+        </a>
+
+
+
+                <a href="/employee/cin.html"
+                   class="registration-dashboard-card">
+                    <div class="registration-dashboard-icon">C</div>
+                    <div class="registration-dashboard-info">
+                        <strong>CIN</strong>
+                        <span>Corporate Identification Number</span>
+                    </div>
+                    <div class="registration-dashboard-count">
+                        <strong id="dashboardCinCount">—</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+
+                <a href="/employee/fssai.html"
+                   class="registration-dashboard-card">
+                    <div class="registration-dashboard-icon">F</div>
+                    <div class="registration-dashboard-info">
+                        <strong>FSSAI</strong>
+                        <span>Food Safety Registration</span>
+                    </div>
+                    <div class="registration-dashboard-count">
+                        <strong id="dashboardFssaiCount">—</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+
+                <a href="/employee/gst.html"
+                   class="registration-dashboard-card">
+                    <div class="registration-dashboard-icon">G</div>
+                    <div class="registration-dashboard-info">
+                        <strong>GST</strong>
+                        <span>Goods &amp; Services Tax</span>
+                    </div>
+                    <div class="registration-dashboard-count">
+                        <strong id="dashboardGstCount">—</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+
+                <a href="/employee/udyam.html"
+                   class="registration-dashboard-card">
+                    <div class="registration-dashboard-icon">M</div>
+                    <div class="registration-dashboard-info">
+                        <strong>MSME Udyam</strong>
+                        <span>MSME Udyam Registration</span>
+                    </div>
+                    <div class="registration-dashboard-count">
+                        <strong id="dashboardUdyamCount">—</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+
+                <a href="/employee/ptec.html"
+                   class="registration-dashboard-card">
+                    <div class="registration-dashboard-icon">P</div>
+                    <div class="registration-dashboard-info">
+                        <strong>PTEC</strong>
+                        <span>Professional Tax Enrollment</span>
+                    </div>
+                    <div class="registration-dashboard-count">
+                        <strong id="dashboardPtecCount">—</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+
+                <a href="/employee/ptrc.html"
+                   class="registration-dashboard-card">
+                    <div class="registration-dashboard-icon">P</div>
+                    <div class="registration-dashboard-info">
+                        <strong>PTRC</strong>
+                        <span>Professional Tax Registration</span>
+                    </div>
+                    <div class="registration-dashboard-count">
+                        <strong id="dashboardPtrcCount">—</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+
+                <a href="/employee/tan.html"
+                   class="registration-dashboard-card">
+                    <div class="registration-dashboard-icon">T</div>
+                    <div class="registration-dashboard-info">
+                        <strong>TAN</strong>
+                        <span>Tax Deduction Account Number</span>
+                    </div>
+                    <div class="registration-dashboard-count">
+                        <strong id="dashboardTanCount">—</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+
+            </div>
+        </section>
+
+
+            <!-- =================================================
+                 OFFICE CLIENTS
+            ================================================== -->
+
+            <section class="dashboard-panel employee-office-clients">
+
+
+                <div class="employee-clients-header">
+
+
+                    <div>
+
+                        <h2>
+                            Office Clients
+                        </h2>
+
+                        <p>
+                            All active clients in the office.
+                        </p>
+
+                    </div>
+
+
+                    <a
+                        href="/employee/clients.html"
+                        class="employee-view-all"
+                    >
+                        View All
+                    </a>
+
+
+                </div>
+
+
+                <div
+                    id="officeClients"
+                    class="office-clients-list"
+                >
+
+                    <div class="clients-loading">
+                        Loading clients...
+                    </div>
+
+                </div>
+
+
+            </section>
+
+
+            <!-- =================================================
+                 MAIN GRID
+            ================================================== -->
+
+            <section
+                class="dashboard-grid"
+                style="margin-top:18px;"
+            >
+
+
+                <!-- =================================================
+                     RECENT TASKS
+                ================================================== -->
+
+                <div class="dashboard-panel">
+
+
+                    <div class="panel-header">
+
+
+                        <div>
+
+                            <h2>
+                                Recent Tasks
+                            </h2>
+
+                            <p>
+                                Your latest assigned work.
+                            </p>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div
+                        id="recentTasks"
+                        class="task-list"
+                    >
+
+
+                        <div class="task-item">
+
+                            <div class="task-status pending">
+                            </div>
+
+
+                            <div class="task-details">
+
+                                <strong>
+                                    Tasks
+                                </strong>
+
+                                <span>
+                                    Open My Tasks to view assigned work.
+                                </span>
+
+                            </div>
+
+
+                            <a
+                                href="/employee/tasks.html"
+                                class="task-date"
+                            >
+                                View
+                            </a>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- =================================================
+                     OFFICE MODULES
+                ================================================== -->
+
+                <div class="dashboard-panel">
+
+
+                    <div class="panel-header">
+
+
+                        <div>
+
+                            <h2>
+                                Office Modules
+                            </h2>
+
+                            <p>
+                                Frequently used workspace areas.
+                            </p>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="upcoming-list">
+
+
+                        <!-- CLIENTS -->
+
+                        <div class="upcoming-item">
+
+
+                            <div class="date-box">
+
+                                <strong>
+                                    01
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    Clients
+                                </strong>
+
+                                <span>
+                                    View all office clients
+                                </span>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <!-- TASKS -->
+
+                        <div class="upcoming-item">
+
+
+                            <div class="date-box">
+
+                                <strong>
+                                    02
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    Tasks
+                                </strong>
+
+                                <span>
+                                    Manage assigned work
+                                </span>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <!-- DOCUMENTS -->
+
+                        <div class="upcoming-item">
+
+
+                            <div class="date-box">
+
+                                <strong>
+                                    03
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    Documents
+                                </strong>
+
+                                <span>
+                                    Office documents
+                                </span>
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </section>
+
+
+            <!-- =================================================
+                 QUICK ACTIONS
+            ================================================== -->
+
+            <section
+                class="dashboard-panel"
+                style="margin-top:18px;"
+            >
+
+
+                <div class="panel-header">
+
+
+                    <div>
+
+                        <h2>
+                            Quick Actions
+                        </h2>
+
+                        <p>
+                            Frequently used employee actions.
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="employee-quick-grid">
+
+
+                    <!-- CLIENTS -->
+
+                    <a
+                        href="/employee/clients.html"
+                        class="employee-quick-action"
+                    >
+
+                        <span class="employee-quick-icon">
+                            ◉
+                        </span>
+
+                        <span>
+                            View Clients
+                        </span>
+
+                    </a>
+
+
+                    <!-- TASKS -->
+
+                    <a
+                        href="/employee/tasks.html"
+                        class="employee-quick-action"
+                    >
+
+                        <span class="employee-quick-icon">
+                            ✓
+                        </span>
+
+                        <span>
+                            My Tasks
+                        </span>
+
+                    </a>
+
+
+                    <!-- DOCUMENTS -->
+
+                    <a
+                        href="#"
+                        class="employee-quick-action"
+                        onclick="return false;"
+                    >
+
+                        <span class="employee-quick-icon">
+                            □
+                        </span>
+
+                        <span>
+                            Documents
+                        </span>
+
+                    </a>
+
+
+                </div>
+
+
+            </section>
+
+
+        </div>
+
+
+    </main>
+
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script src="/JS/auth.js"></script>
+
+<script src="/JS/employee.js?v=20260826-tax-live"></script>
+<script src="/JS/unified-sidebar.js"></script>
+
+<script src="/JS/dashboard-registrations.js"></script>
+
+
+<script id="live-registration-counts">
+(() => {
+    "use strict";
+
+    const fields = {
+        pan: "dashboardPanCount",
+        cin: "dashboardCinCount",
+        fssai: "dashboardFssaiCount",
+        gst: "dashboardGstCount",
+        udyam: "dashboardUdyamCount",
+        ptec: "dashboardPtecCount",
+        ptrc: "dashboardPtrcCount",
+        tan: "dashboardTanCount"
+    };
+
+    async function refreshRegistrationCounts() {
+        try {
+            const response = await fetch("/api/clients", {
+                method: "GET",
+                credentials: "include",
+                headers: { "Accept": "application/json" },
+                cache: "no-store"
+            });
+
+            if (!response.ok) {
+                throw new Error(`Clients API returned HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (!data || data.success !== true) {
+                throw new Error(data?.message || "Unable to load clients.");
+            }
+
+            const clients = Array.isArray(data.clients)
+                ? data.clients
+                : [];
+
+            Object.entries(fields).forEach(([field, elementId]) => {
+                const element = document.getElementById(elementId);
+                if (!element) return;
+
+                element.textContent = clients.filter(client =>
+                    String(client?.[field] ?? "").trim() !== ""
+                ).length;
+            });
+
+            const incomeTaxElement =
+                document.getElementById("dashboardPanCount");
+
+            if (incomeTaxElement) {
+                incomeTaxElement.textContent = clients.filter(client =>
+                    String(client?.pan ?? "").trim() !== ""
+                ).length;
+            }
+
+        } catch (error) {
+            console.error("Employee live registration count error:", error);
+        }
+    }
+
+    refreshRegistrationCounts();
+    setInterval(refreshRegistrationCounts, 10000);
+})();
+</script>
+
+</body>
+
+</html>

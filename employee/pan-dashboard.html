@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>PAN Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="/CSS/style.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/CSS/pan-dashboard.css"
+    >
+
+</head>
+
+<body>
+
+<div class="dashboard-layout">
+
+<main class="dashboard-main">
+
+<div class="pan-page">
+
+<header class="pan-header">
+
+<div>
+
+<div class="pan-eyebrow">
+CLIENT RECORDS
+</div>
+
+<h1>
+PAN Dashboard
+</h1>
+
+<p>
+Client records for PAN holders.
+</p>
+
+</div>
+
+
+<div class="pan-actions">
+
+<button
+type="button"
+id="panExcel"
+class="pan-btn"
+>
+Export Excel
+</button>
+
+<button
+type="button"
+id="panPdf"
+class="pan-btn"
+>
+Export PDF
+</button>
+
+</div>
+
+</header>
+
+
+<div
+id="panError"
+class="pan-error"
+></div>
+
+
+<section class="pan-filter-card">
+
+<div class="pan-filter-grid">
+
+<div class="pan-field">
+
+<label for="panSearch">
+Search Client
+</label>
+
+<input
+id="panSearch"
+type="search"
+placeholder="Search name, CIN, PAN, contact, email..."
+autocomplete="off"
+>
+
+</div>
+
+
+<div class="pan-field">
+
+<label for="panSort">
+Sort By
+</label>
+
+<select id="panSort">
+
+<option value="name-asc">
+Name: A to Z
+</option>
+
+<option value="name-desc">
+Name: Z to A
+</option>
+
+<option value="cin-asc">
+CIN: A to Z
+</option>
+
+<option value="cin-desc">
+CIN: Z to A
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+<div class="pan-count">
+
+Showing
+<strong id="panVisible">0</strong>
+of
+<strong id="panTotal">0</strong>
+PAN holders
+
+</div>
+
+</section>
+
+
+<section class="pan-table-card">
+
+<div
+id="panLoading"
+class="pan-loading"
+>
+Loading PAN records...
+</div>
+
+
+<div
+id="panEmpty"
+class="pan-empty"
+style="display:none"
+>
+No PAN holder records found.
+</div>
+
+
+<div
+id="panTableWrap"
+class="pan-table-wrap"
+style="display:none"
+>
+
+<table class="pan-table">
+
+<thead>
+
+<tr>
+
+<th>
+CLIENT
+</th>
+
+<th>
+CIN NUMBER
+</th>
+
+<th>
+CLIENT TYPE
+</th>
+
+<th>
+LOCATION
+</th>
+
+<th>
+PAN
+</th>
+
+<th>
+CONTACT
+</th>
+
+<th>
+EMAIL
+</th>
+
+<th>
+STATUS
+</th>
+
+<th>
+ACTION
+</th>
+
+</tr>
+
+</thead>
+
+
+<tbody
+id="panTableBody"
+>
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+</div>
+
+</main>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<script src="/JS/auth.js"></script>
+
+<script src="/JS/pan-dashboard.js?v=20260827-billing"></script>
+
+<script src="/JS/unified-sidebar.js"></script>
+
+</body>
+
+</html>

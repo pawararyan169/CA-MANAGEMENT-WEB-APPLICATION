@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>My Tasks | CA Office</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/CSS/style.css"
+    >
+
+
+    <!-- Employee sidebar scrolling -->
+    <style id="employee-sidebar-scroll">
+        /* Keep the sidebar fixed to the viewport while allowing the menu itself to scroll. */
+        .sidebar {
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        .sidebar-brand {
+            flex: 0 0 auto !important;
+        }
+
+        .sidebar-nav {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+            scrollbar-color: #c8c8c8 transparent;
+            padding-right: 4px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: #c8c8c8;
+            border-radius: 10px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb:hover {
+            background: #a9a9a9;
+        }
+
+        .sidebar-bottom {
+            flex: 0 0 auto !important;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar-nav {
+                scrollbar-width: thin;
+            }
+        }
+    </style>
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<div class="dashboard-layout">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+            <div class="brand-name">
+
+                <strong>
+                    CA Office
+                </strong>
+
+                <span>
+                    My Workspace
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+
+            <span class="nav-section">
+                WORKSPACE
+            </span>
+
+
+            <a
+                href="/employee/dashboard.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+
+            <a
+                href="/employee/tasks.html"
+                class="nav-item active"
+            >
+                <span class="nav-icon">✓</span>
+                My Tasks
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+                <span class="nav-icon">◉</span>
+                My Clients
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+                <span class="nav-icon">▣</span>
+                Compliance
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+                <span class="nav-icon">□</span>
+                Documents
+            </a>
+
+
+            <span class="nav-section">
+                OFFICE
+            </span>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+                <span class="nav-icon">◷</span>
+                Calendar
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+                <span class="nav-icon">○</span>
+                Notifications
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+                <span class="nav-icon">◎</span>
+                My Profile
+            </a>
+
+
+            <button
+                type="button"
+                class="logout-button"
+                id="logoutButton"
+            >
+                <span class="nav-icon">↪</span>
+                Sign out
+            </button>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- MAIN -->
+
+    <main class="dashboard-main">
+
+
+        <header class="dashboard-header">
+
+            <div>
+
+                <span class="dashboard-eyebrow">
+                    MY WORKSPACE
+                </span>
+
+                <h1>
+                    My tasks
+                </h1>
+
+                <p>
+                    Complete your assigned work and keep the admin updated.
+                </p>
+
+            </div>
+
+
+            <div class="user-profile">
+
+                <div class="avatar">
+                    E
+                </div>
+
+                <div class="user-info">
+
+                    <strong>
+                        Office Employee
+                    </strong>
+
+                    <span>
+                        Staff
+                    </span>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- INFORMATION -->
+
+        <section class="dashboard-panel employee-info-panel">
+
+            <div class="employee-info-content">
+
+                <div class="employee-info-icon">
+                    ✓
+                </div>
+
+                <div>
+
+                    <strong>
+                        Keep your work status updated
+                    </strong>
+
+                    <p>
+                        Update the status and progress of each task.
+                        Your admin will see your updates immediately.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- TASKS -->
+
+        <section class="dashboard-panel task-list-panel">
+
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Assigned to me
+                    </h2>
+
+                    <p>
+                        Work assigned by your administrator.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="employeeTaskList"
+                class="work-list"
+            ></div>
+
+
+        </section>
+
+
+    </main>
+
+
+</div>
+
+
+
+<script src="/JS/auth.js"></script>
+
+<script src="/JS/tasks.js"></script>
+
+
+</body>
+
+</html>

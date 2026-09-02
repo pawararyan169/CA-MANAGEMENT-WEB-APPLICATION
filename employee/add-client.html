@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Add Client | Employee | CA Office</title>
+
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../CSS/style.css"
+    >
+
+
+    <style>
+
+        .client-form-container {
+            max-width: 1200px;
+        }
+
+
+        .form-section {
+            margin-bottom: 18px;
+        }
+
+
+        .form-section .task-form {
+            padding: 24px;
+        }
+
+
+        .form-grid {
+            margin-bottom: 20px;
+        }
+
+
+        .form-grid:last-child {
+            margin-bottom: 0;
+        }
+
+
+        .form-alert {
+            margin-bottom: 18px;
+        }
+
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 24px;
+        }
+
+
+        .secondary-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 44px;
+            padding: 0 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #333;
+            text-decoration: none;
+        }
+
+
+        .primary-button {
+            height: 44px;
+            padding: 0 24px;
+        }
+
+
+        .required {
+            color: #c93636;
+        }
+
+
+        @media (max-width: 800px) {
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<div class="dashboard-layout">
+
+
+    <!-- =====================================================
+         EMPLOYEE SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+            <div class="brand-name">
+
+                <strong>
+                    CA Office
+                </strong>
+
+                <span>
+                    Employee Portal
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <span class="nav-section">
+                WORKSPACE
+            </span>
+
+
+            <a
+                href="/employee/dashboard.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ⌂
+                </span>
+
+                Dashboard
+
+            </a>
+
+
+            <a
+                href="/employee/clients.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ◉
+                </span>
+
+                Clients
+
+            </a>
+
+
+            <a
+                href="/employee/add-client.html"
+                class="nav-item active"
+            >
+
+                <span class="nav-icon">
+                    +
+                </span>
+
+                Add Client
+
+            </a>
+
+
+            <a
+                href="/employee/tasks.html"
+                class="nav-item"
+            >
+
+                <span class="nav-icon">
+                    ✓
+                </span>
+
+                My Tasks
+
+            </a>
+
+
+            <span class="nav-section">
+                OFFICE
+            </span>
+
+
+            <a
+                href="#"
+                class="nav-item"
+                onclick="return false;"
+            >
+
+                <span class="nav-icon">
+                    ◷
+                </span>
+
+                Calendar
+
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+                onclick="return false;"
+            >
+
+                <span class="nav-icon">
+                    □
+                </span>
+
+                Documents
+
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <button
+                type="button"
+                class="logout-button"
+                id="logoutButton"
+            >
+
+                <span class="nav-icon">
+                    ↪
+                </span>
+
+                Sign out
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="dashboard-main">
+
+        <div class="client-form-container">
+            <form id="clientForm" novalidate>
+
+
+            <div style="margin-bottom:20px;">
+
+                <a
+                    href="/employee/clients.html"
+                    style="text-decoration:none;color:#555;"
+                >
+
+                    ← Back to Clients
+
+                </a>
+
+            </div>
+
+
+            <header class="dashboard-header">
+
+                <div>
+
+                    <span class="dashboard-eyebrow">
+                        CLIENT MANAGEMENT
+                    </span>
+
+                    <h1>
+                        Add Client
+                    </h1>
+
+                    <p>
+                        Create a new client record for the office.
+                    </p>
+
+                </div>
+
+
+                <div class="user-profile">
+
+                    <div
+                        class="avatar"
+                        id="employeeAvatar"
+                    >
+                        E
+                    </div>
+
+
+                    <div class="user-info">
+
+                        <strong id="employeeName">
+                            Employee
+                        </strong>
+
+                        <span id="employeeRole">
+                            Staff
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- =================================================
+                 ALERTS
+            ================================================== -->
+
+            <div
+                id="clientError"
+                class="form-alert error-alert"
+                style="display:none;"
+            ></div>
+
+
+            <div
+                id="clientSuccess"
+                class="form-alert success-alert"
+                style="display:none;"
+            ></div>
+
+
+            <!-- =================================================
+                 IMPORTANT:
+                 REAL FORM STARTS HERE
+            ================================================== -->
+
+            <form
+                id="clientForm"
+                method="post"
+                novalidate
+            >
+
+
+                <!-- =================================================
+                     BASIC INFORMATION
+                ================================================== -->
+
+                <section class="dashboard-panel form-section">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Client Information
+                            </h2>
+
+                            <p>
+                                Basic personal or business information.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="task-form">
+
+
+                        <!-- FIRST / MIDDLE -->
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="firstName">
+
+                                    First Name
+
+                                    <span class="required">
+                                        *
+                                    </span>
+
+                                </label>
+
+                                <input
+                                    id="firstName"
+                                    name="firstName"
+                                    type="text"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="middleName">
+
+                                    Middle Name
+
+                                </label>
+
+                                <input
+                                    id="middleName"
+                                    name="middleName"
+                                    type="text"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- LAST / CLIENT TYPE -->
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="lastName">
+
+                                    Last Name
+
+                                    <span class="required">
+                                        *
+                                    </span>
+
+                                </label>
+
+                                <input
+                                    id="lastName"
+                                    name="lastName"
+                                    type="text"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="clientType">
+
+                                    Client Type
+
+                                    <span class="required">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <select
+                                    id="clientType"
+                                    name="clientType"
+                                    required
+                                >
+
+                                    <option value="">
+                                        Select client type
+                                    </option>
+
+                                    <option value="individual">
+                                        Individual
+                                    </option>
+
+                                    <option value="huf">
+                                        HUF
+                                    </option>
+
+                                    <option value="partnership">
+                                        Partnership Firm
+                                    </option>
+
+                                    <option value="llp">
+                                        LLP
+                                    </option>
+
+                                    <option value="private_limited">
+                                        Private Limited Company
+                                    </option>
+
+                                    <option value="cooperative_society">
+                                        Co-operative Society
+                                    </option>
+
+                                    <option value="trust">
+                                        Trust
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- STATE / DISTRICT -->
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="state">
+                                    State
+                                </label>
+
+
+                                <select
+                                    id="state"
+                                    name="state"
+                                >
+
+                                    <option value="">
+                                        Select state
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="district">
+                                    District
+                                </label>
+
+
+                                <select
+                                    id="district"
+                                    name="district"
+                                    disabled
+                                >
+
+                                    <option value="">
+                                        Select district
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CITY / GENDER -->
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="city">
+                                    City / Town
+                                </label>
+
+
+                                <select
+                                    id="city"
+                                    name="city"
+                                    disabled
+                                >
+
+                                    <option value="">
+                                        Select city / town
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="gender">
+                                    Gender
+                                </label>
+
+
+                                <select
+                                    id="gender"
+                                    name="gender"
+                                >
+
+                                    <option value="">
+                                        Select gender
+                                    </option>
+
+                                    <option value="male">
+                                        Male
+                                    </option>
+
+                                    <option value="female">
+                                        Female
+                                    </option>
+
+                                    <option value="other">
+                                        Other
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ADDRESS -->
+
+                        <div class="form-group">
+
+                            <label for="address">
+                                Complete Address
+                            </label>
+
+
+                            <textarea
+                                id="address"
+                                name="address"
+                                rows="4"
+                            ></textarea>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     OFFICE LOCATION
+                ================================================== -->
+
+                <section class="dashboard-panel form-section">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Office Location
+                            </h2>
+
+                            <p>
+                                Select the CA office responsible for this client.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="task-form">
+
+                        <div class="form-group">
+
+                            <label for="locationId">
+
+                                Office Location
+
+                                <span class="required">
+                                    *
+                                </span>
+
+                            </label>
+
+
+                            <select
+                                id="locationId"
+                                name="locationId"
+                                required
+                            >
+
+                                <option value="">
+                                    Loading office locations...
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     TAX
+                ================================================== -->
+
+                <section class="dashboard-panel form-section">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Tax & Registration
+                            </h2>
+
+                            <p>
+                                Government and business registration information.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="task-form">
+
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="pan">
+                                    PAN
+                                </label>
+
+                                <input
+                                    id="pan"
+                                    name="pan"
+                                    type="text"
+                                    maxlength="10"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="aadhaar">
+                                    Aadhaar
+                                </label>
+
+                                <input
+                                    id="aadhaar"
+                                    name="aadhaar"
+                                    type="text"
+                                    maxlength="12"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="tan">
+                                    TAN
+                                </label>
+
+                                <input
+                                    id="tan"
+                                    name="tan"
+                                    type="text"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="gst">
+                                    GST
+                                </label>
+
+                                <input
+                                    id="gst"
+                                    name="gst"
+                                    type="text"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="udyam">
+                                    MSME Udyam
+                                </label>
+
+                                <input
+                                    id="udyam"
+                                    name="udyam"
+                                    type="text"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="cin">
+                                    CIN
+                                </label>
+
+                                <input
+                                    id="cin"
+                                    name="cin"
+                                    type="text"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="fssai">
+                                    FSSAI
+                                </label>
+
+                                <input
+                                    id="fssai"
+                                    name="fssai"
+                                    type="text"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="ptec">
+                                    PTEC
+                                </label>
+
+                                <input
+                                    id="ptec"
+                                    name="ptec"
+                                    type="text"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="ptrc">
+                                PTRC
+                            </label>
+
+                            <input
+                                id="ptrc"
+                                name="ptrc"
+                                type="text"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     CONTACT
+                ================================================== -->
+
+                <section class="dashboard-panel form-section">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Contact Information
+                            </h2>
+
+                            <p>
+                                Primary contact details.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="task-form">
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="contact">
+
+                                    Contact Number
+
+                                    <span class="required">
+                                        *
+                                    </span>
+
+                                </label>
+
+
+                                <input
+                                    id="contact"
+                                    name="contact"
+                                    type="tel"
+                                    maxlength="10"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="email">
+                                    Email
+                                </label>
+
+
+                                <input
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     DATES
+                ================================================== -->
+
+                <section class="dashboard-panel form-section">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Dates
+                            </h2>
+
+                            <p>
+                                Important client dates.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="task-form">
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="dateOfBirth">
+                                    Date of Birth
+                                </label>
+
+
+                                <input
+                                    id="dateOfBirth"
+                                    name="dateOfBirth"
+                                    type="date"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="dateOfRegistration">
+                                    Date of Registration
+                                </label>
+
+
+                                <input
+                                    id="dateOfRegistration"
+                                    name="dateOfRegistration"
+                                    type="date"
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     AUTHORISED PERSON
+                ================================================== -->
+
+                <section class="dashboard-panel form-section">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Authorised Person
+                            </h2>
+
+                            <p>
+                                Person authorised to represent this client.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="task-form">
+
+
+                        <label class="checkbox-label">
+
+                            <input
+                                type="checkbox"
+                                id="authorisedSameAsClient"
+                                name="authorisedSameAsClient"
+                            >
+
+                            <span>
+                                Authorised person is the same as client
+                            </span>
+
+                        </label>
+
+
+                        <div
+                            id="authorisedFields"
+                            style="margin-top:20px;"
+                        >
+
+
+                            <div class="form-grid">
+
+
+                                <div class="form-group">
+
+                                    <label for="authorisedPersonName">
+                                        Name
+                                    </label>
+
+
+                                    <input
+                                        id="authorisedPersonName"
+                                        name="authorisedPersonName"
+                                        type="text"
+                                    >
+
+                                </div>
+
+
+                                <div class="form-group">
+
+                                    <label for="authorisedPersonContact">
+                                        Contact
+                                    </label>
+
+
+                                    <input
+                                        id="authorisedPersonContact"
+                                        name="authorisedPersonContact"
+                                        type="tel"
+                                        maxlength="10"
+                                    >
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="authorisedPersonEmail">
+                                    Email
+                                </label>
+
+
+                                <input
+                                    id="authorisedPersonEmail"
+                                    name="authorisedPersonEmail"
+                                    type="email"
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     ACTIONS
+                ================================================== -->
+
+                <section class="dashboard-panel">
+
+                    <div class="form-actions">
+
+
+                        <a
+                            href="/employee/clients.html"
+                            class="secondary-button"
+                        >
+                            Cancel
+                        </a>
+
+
+                        <button
+                            id="saveClientButton"
+                            type="submit"
+                            class="primary-button"
+                        >
+                            Save Client
+                        </button>
+
+
+                    </div>
+
+                </section>
+
+
+            </form>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script src="../JS/auth.js"></script>
+
+<script src="../JS/location-data.js"></script>
+
+<script src="../JS/employee-add-client.js"></script>
+
+
+
+<script src="../JS/unified-sidebar.js"></script>
+
+</body>
+
+</html>

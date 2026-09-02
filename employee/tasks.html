@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Tasks | CA Office</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="../CSS/style.css">
+
+    <style>
+
+        .tasks-page {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        .task-form-container {
+            margin-bottom: 24px;
+        }
+
+        .task-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            padding: 24px;
+        }
+
+        .task-form-grid .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .task-form-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            padding: 0 24px 24px;
+        }
+
+        .task-secondary-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 42px;
+            padding: 0 18px;
+            border: 1px solid #d8dee8;
+            border-radius: 8px;
+            background: #fff;
+            color: #444;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 600;
+        }
+
+        .task-primary-button {
+            height: 42px;
+            padding: 0 22px;
+        }
+
+        .required {
+            color: #c93636;
+        }
+
+        .task-help {
+            display: block;
+            margin-top: 5px;
+            color: #777;
+            font-size: 12px;
+        }
+
+        .tasks-filters {
+            display: grid;
+            grid-template-columns:
+                minmax(220px, 1.5fr)
+                minmax(140px, 1fr)
+                minmax(140px, 1fr)
+                minmax(150px, 1fr)
+                minmax(140px, 1fr)
+                minmax(140px, 1fr);
+            gap: 10px;
+            align-items: center;
+            padding: 16px 24px;
+            box-sizing: border-box;
+        }
+
+        .tasks-filters > * {
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .tasks-filters input,
+        .tasks-filters select {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .task-filter-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .task-filter-reset {
+            height: 38px;
+            padding: 0 12px;
+            border: 1px solid #d8dee8;
+            border-radius: 7px;
+            background: #fff;
+            color: #555;
+            cursor: pointer;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .task-export-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: nowrap;
+        }
+
+        .task-export-button {
+            height: 40px;
+            min-width: 130px;
+            padding: 0 16px;
+            border: 1px solid #155eef;
+            border-radius: 8px;
+            background: #155eef;
+            color: #fff;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 600;
+        }
+
+        .task-export-button:hover {
+            background: #0f4dcc;
+        }
+
+        .task-export-excel {
+            background: #155eef;
+        }
+
+        .task-export-pdf {
+            background: #155eef;
+        }
+
+        .task-table-wrapper {
+            overflow-x: auto;
+            padding: 0 24px 24px;
+        }
+
+        .task-table {
+            width: 100%;
+            min-width: 1250px;
+            border-collapse: collapse;
+        }
+
+        .task-table th,
+        .task-table td {
+            padding: 12px 11px;
+            border-bottom: 1px solid #edf0f4;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .task-table th {
+            background: #f8fafc;
+            color: #555;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .task-table td {
+            font-size: 13px;
+        }
+
+        .work-type-badge,
+        .task-status-badge,
+        .billable-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .work-office {
+            background: #edf5ff;
+            color: #2864b4;
+        }
+
+        .work-miscellaneous {
+            background: #f4f4f4;
+            color: #555;
+        }
+
+        .task-status-completed {
+            background: #edf9f0;
+            color: #28783b;
+        }
+
+        .task-status-wip {
+            background: #fff7e6;
+            color: #8a5a00;
+        }
+
+        .task-status-incomplete {
+            background: #fff0f0;
+            color: #a33;
+        }
+
+        .billable-yes {
+            background: #edf9f0;
+            color: #28783b;
+        }
+
+        .billable-no {
+            background: #f4f4f4;
+            color: #666;
+        }
+
+        .task-edit-button {
+            height: 32px;
+            padding: 0 10px;
+            border: 1px solid #155eef;
+            border-radius: 6px;
+            background: #fff;
+            color: #155eef;
+            cursor: pointer;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .task-edit-button:hover {
+            background: #f3f7ff;
+        }
+
+        .tasks-empty-cell {
+            padding: 35px !important;
+            text-align: center !important;
+            color: #777;
+        }
+
+        .task-month-note {
+            margin: 0 24px 16px;
+            padding: 10px 12px;
+            border-radius: 7px;
+            background: #f7f9fc;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .task-form-editing {
+            border-left: 4px solid #155eef;
+        }
+
+        @media (max-width: 1200px) {
+            .tasks-filters {
+                grid-template-columns:
+                    minmax(180px, 1fr)
+                    minmax(130px, 1fr)
+                    minmax(130px, 1fr)
+                    minmax(130px, 1fr);
+            }
+
+            .task-filter-actions {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 850px) {
+            .task-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .task-form-grid .full-width {
+                grid-column: auto;
+            }
+
+            .tasks-filters {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .task-filter-actions {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .tasks-filters {
+                grid-template-columns: 1fr;
+            }
+
+            .task-filter-actions {
+                grid-column: auto;
+            }
+
+            .task-export-actions {
+                width: 100%;
+            }
+
+            .task-export-button {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .task-form-actions {
+                flex-wrap: wrap;
+            }
+        }
+
+    
+        /* ---------- TASK REGISTER UI REPAIR ---------- */
+
+        .tasks-page {
+            width: 100%;
+            max-width: 1500px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        .task-form-container,
+        .tasks-page .dashboard-panel {
+            overflow: hidden;
+            border-radius: 14px;
+        }
+
+        .task-form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            padding: 24px;
+        }
+
+        .task-form-grid .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .task-form-grid .form-group {
+            min-width: 0;
+        }
+
+        .task-form-grid input,
+        .task-form-grid select,
+        .task-form-grid textarea {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .task-form-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 0 24px 24px;
+        }
+
+        .tasks-filters {
+            display: grid;
+            grid-template-columns:
+                minmax(220px, 1.7fr)
+                repeat(4, minmax(130px, 1fr))
+                minmax(150px, 1fr);
+            gap: 10px;
+            padding: 16px 24px;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .tasks-filters > * {
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .tasks-filters input,
+        .tasks-filters select {
+            width: 100%;
+            min-width: 0;
+            height: 40px;
+            box-sizing: border-box;
+        }
+
+        .task-filter-actions {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .task-filter-actions input {
+            min-width: 0;
+        }
+
+        .task-filter-reset {
+            height: 40px;
+            padding: 0 12px;
+            white-space: nowrap;
+        }
+
+        .task-export-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: nowrap;
+        }
+
+        .task-export-button {
+            height: 40px;
+            min-width: 128px;
+            padding: 0 16px;
+            border-radius: 8px;
+            border: 1px solid #155eef;
+            background: #155eef;
+            color: #fff;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .task-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            padding: 0 24px 24px;
+            box-sizing: border-box;
+        }
+
+        .task-table {
+            width: 100%;
+            min-width: 1250px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .task-table th,
+        .task-table td {
+            padding: 12px 11px;
+            border-bottom: 1px solid #edf0f4;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .task-table th {
+            background: #f8fafc;
+            color: #555;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .task-table td {
+            font-size: 13px;
+            background: #fff;
+        }
+
+        .task-table tbody tr:hover td {
+            background: #fafcff;
+        }
+
+        .tasks-empty-cell {
+            padding: 40px !important;
+            text-align: center !important;
+            color: #777;
+        }
+
+        .task-month-note {
+            margin: 0 24px 16px;
+            border: 1px solid #e7ebf1;
+            border-radius: 8px;
+            background: #f8fafc;
+            color: #626b78;
+            font-size: 12px;
+        }
+
+        @media (max-width: 1250px) {
+            .task-form-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .tasks-filters {
+                grid-template-columns:
+                    minmax(220px, 2fr)
+                    repeat(2, minmax(140px, 1fr))
+                    minmax(150px, 1fr);
+            }
+
+            .task-filter-actions {
+                grid-column: 1 / -1;
+                max-width: 650px;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .task-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .task-form-grid .full-width {
+                grid-column: auto;
+            }
+
+            .tasks-filters {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                padding: 14px 16px;
+            }
+
+            .task-filter-actions {
+                grid-column: 1 / -1;
+                max-width: none;
+            }
+
+            .task-export-actions {
+                width: 100%;
+            }
+
+            .task-export-button {
+                flex: 1;
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .tasks-filters {
+                grid-template-columns: 1fr;
+            }
+
+            .task-filter-actions {
+                grid-column: auto;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .task-filter-reset {
+                grid-column: 1 / -1;
+            }
+
+            .task-export-actions {
+                flex-direction: column;
+            }
+
+            .task-export-button {
+                width: 100%;
+            }
+        }
+
+    
+        /* ---------- SUMMARY CARD ALIGNMENT ---------- */
+
+        .document-summary {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(180px, 240px));
+            gap: 14px;
+            align-items: stretch;
+            padding: 0 24px 18px;
+        }
+
+        .document-summary-card {
+            min-width: 0;
+            min-height: 82px;
+            padding: 16px 18px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            text-align: left;
+            border: 1px solid #e7ebf1;
+            border-radius: 10px;
+            background: #fff;
+        }
+
+        .document-summary-card span {
+            display: block;
+            margin: 0 0 7px;
+            color: #697386;
+            font-size: 12px;
+            line-height: 1.2;
+            font-weight: 600;
+        }
+
+        .document-summary-card strong {
+            display: block;
+            margin: 0;
+            color: #1f2937;
+            font-size: 25px;
+            line-height: 1;
+            font-weight: 700;
+            text-align: left;
+        }
+
+        @media (max-width: 600px) {
+            .document-summary {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .document-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    
+        .edit-only-label {
+            display: inline-flex;
+            margin-left: 6px;
+            padding: 3px 7px;
+            border-radius: 999px;
+            background: #eef4ff;
+            color: #155eef;
+            font-size: 10px;
+            font-weight: 700;
+            vertical-align: middle;
+        }
+
+    </style>
+
+<style id="ca-tasks-sidebar-fix">
+/* ===== EMPLOYEE SIDEBAR — TASKS PAGE ===== */
+body.ca-tasks-fixed {
+    margin: 0 !important;
+    padding-left: 280px !important;
+    min-height: 100vh !important;
+    background: #f6f7f9 !important;
+}
+
+#caEmployeeSidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 280px !important;
+    height: 100vh !important;
+    z-index: 99999 !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    padding: 22px 16px 12px !important;
+    margin: 0 !important;
+
+    background: #fff !important;
+    border-right: 1px solid #e3e7ed !important;
+    box-sizing: border-box !important;
+
+    font-family: Inter, -apple-system, BlinkMacSystemFont,
+                 "Segoe UI", Arial, sans-serif !important;
+    color: #536174 !important;
+}
+
+#caEmployeeSidebar * {
+    box-sizing: border-box !important;
+}
+
+#caEmployeeSidebar .ca-side-brand {
+    flex: 0 0 58px !important;
+    height: 58px !important;
+    min-height: 58px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+
+    padding: 0 12px !important;
+}
+
+#caEmployeeSidebar .ca-side-logo {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border-radius: 10px !important;
+    background: #172033 !important;
+    color: #fff !important;
+
+    font-size: 13px !important;
+    font-weight: 800 !important;
+}
+
+#caEmployeeSidebar .ca-side-title {
+    display: block !important;
+    color: #172033 !important;
+    font-size: 16px !important;
+    line-height: 18px !important;
+    font-weight: 700 !important;
+}
+
+#caEmployeeSidebar .ca-side-subtitle {
+    display: block !important;
+    margin-top: 3px !important;
+    color: #8a94a6 !important;
+    font-size: 10px !important;
+    line-height: 12px !important;
+}
+
+/* THIS is the scrollable part */
+#caEmployeeSidebar .ca-side-nav {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+
+    padding: 8px 0 12px !important;
+    margin: 0 !important;
+
+    scrollbar-width: thin !important;
+    scrollbar-color: #aeb7c3 #f4f6f8 !important;
+}
+
+#caEmployeeSidebar .ca-side-nav::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+#caEmployeeSidebar .ca-side-nav::-webkit-scrollbar-track {
+    background: #f4f6f8 !important;
+    border-radius: 8px !important;
+}
+
+#caEmployeeSidebar .ca-side-nav::-webkit-scrollbar-thumb {
+    background: #aeb7c3 !important;
+    border-radius: 8px !important;
+}
+
+#caEmployeeSidebar .ca-side-nav::-webkit-scrollbar-thumb:hover {
+    background: #8e99a8 !important;
+}
+
+#caEmployeeSidebar .ca-side-section {
+    flex: 0 0 20px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+
+    display: flex !important;
+    align-items: flex-end !important;
+
+    padding: 0 12px 3px !important;
+    margin: 8px 0 1px !important;
+
+    color: #98a2b3 !important;
+    font-size: 9px !important;
+    line-height: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: .12em !important;
+}
+
+#caEmployeeSidebar .ca-side-link {
+    flex: 0 0 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+
+    padding: 0 10px !important;
+    margin: 0 !important;
+
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: #536174 !important;
+
+    text-decoration: none !important;
+    font-size: 12px !important;
+    line-height: 34px !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+}
+
+#caEmployeeSidebar .ca-side-link:hover {
+    background: #f5f7fa !important;
+    color: #172033 !important;
+}
+
+#caEmployeeSidebar .ca-side-link.active {
+    background: #eef2f6 !important;
+    color: #172033 !important;
+    font-weight: 700 !important;
+}
+
+#caEmployeeSidebar .ca-side-icon {
+    width: 18px !important;
+    min-width: 18px !important;
+    height: 18px !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    color: currentColor !important;
+    font-size: 12px !important;
+    line-height: 18px !important;
+}
+
+#caEmployeeSidebar .ca-side-bottom {
+    flex: 0 0 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+
+    padding-top: 7px !important;
+    margin-top: 4px !important;
+
+    border-top: 1px solid #e5e7eb !important;
+}
+
+#caEmployeeSidebar .ca-side-signout {
+    width: 100% !important;
+    height: 34px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+
+    padding: 0 10px !important;
+
+    border: 0 !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: #536174 !important;
+
+    font: inherit !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    text-align: left !important;
+    cursor: pointer !important;
+}
+
+#caEmployeeSidebar .ca-side-signout:hover {
+    background: #fef2f2 !important;
+    color: #b42318 !important;
+}
+
+body.ca-tasks-fixed .dashboard-layout {
+    display: block !important;
+    min-height: 100vh !important;
+}
+
+body.ca-tasks-fixed .dashboard-main {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 38px 44px !important;
+}
+
+@media (max-width: 800px) {
+    body.ca-tasks-fixed {
+        padding-left: 240px !important;
+    }
+
+    #caEmployeeSidebar {
+        width: 240px !important;
+    }
+
+    body.ca-tasks-fixed .dashboard-main {
+        padding: 28px 24px !important;
+    }
+}
+</style>
+
+</head>
+
+<body class="dashboard-body ca-tasks-fixed">
+
+
+<aside id="caEmployeeSidebar" aria-label="Employee navigation">
+    <div class="ca-side-brand">
+        <div class="ca-side-logo">CA</div>
+        <div>
+            <span class="ca-side-title">CA Office</span>
+            <span class="ca-side-subtitle">Employee Portal</span>
+        </div>
+    </div>
+
+    <nav class="ca-side-nav">
+        <div class="ca-side-section">OVERVIEW</div>
+        <a class="ca-side-link" href="/employee/dashboard.html">
+            <span class="ca-side-icon">⌂</span><span>Dashboard</span>
+        </a>
+
+        <div class="ca-side-section">WORKSPACE</div>
+        <a class="ca-side-link" href="/employee/clients.html">
+            <span class="ca-side-icon">◉</span><span>Clients</span>
+        </a>
+        <a class="ca-side-link active" href="/employee/tasks.html">
+            <span class="ca-side-icon">✓</span><span>Tasks</span>
+        </a>
+        <a class="ca-side-link" href="/employee/documents.html">
+            <span class="ca-side-icon">□</span><span>Documents</span>
+        </a>
+        <a class="ca-side-link" href="/employee/billing.html">
+            <span class="ca-side-icon">₹</span><span>Billing</span>
+        </a>
+
+        <div class="ca-side-section">REGISTRATIONS</div>
+        <a class="ca-side-link" href="/employee/cin.html">
+            <span class="ca-side-icon">◇</span><span>CIN</span>
+        </a>
+        <a class="ca-side-link" href="/employee/fssai.html">
+            <span class="ca-side-icon">◇</span><span>FSSAI</span>
+        </a>
+        <a class="ca-side-link" href="/employee/gst.html">
+            <span class="ca-side-icon">◇</span><span>GST</span>
+        </a>
+        <a class="ca-side-link" href="/employee/udyam.html">
+            <span class="ca-side-icon">◇</span><span>MSME Udyam</span>
+        </a>
+        <a class="ca-side-link" href="/employee/ptec.html">
+            <span class="ca-side-icon">◇</span><span>PTEC</span>
+        </a>
+        <a class="ca-side-link" href="/employee/ptrc.html">
+            <span class="ca-side-icon">◇</span><span>PTRC</span>
+        </a>
+        <a class="ca-side-link" href="/employee/tan.html">
+            <span class="ca-side-icon">◇</span><span>TAN</span>
+        </a>
+
+        <div class="ca-side-section">OFFICE</div>
+        <a class="ca-side-link" href="/employee/dashboard.html#calendar">
+            <span class="ca-side-icon">◷</span><span>Calendar</span>
+        </a>
+        <a class="ca-side-link" href="/employee/dashboard.html#reports">
+            <span class="ca-side-icon">◈</span><span>Reports</span>
+        </a>
+
+        <div class="ca-side-section">SYSTEM</div>
+        <a class="ca-side-link" href="/employee/dashboard.html#settings">
+            <span class="ca-side-icon">⚙</span><span>Settings</span>
+        </a>
+    </nav>
+
+    <div class="ca-side-bottom">
+        <button type="button" class="ca-side-signout" id="caTasksLogout">
+            <span class="ca-side-icon">↪</span><span>Sign out</span>
+        </button>
+    </div>
+</aside>
+
+<div class="dashboard-layout">
+<main class="dashboard-main">
+
+        <div class="tasks-page">
+
+            <header class="dashboard-header">
+
+                <div>
+                    <span class="dashboard-eyebrow">
+                        TASK MANAGEMENT
+                    </span>
+
+                    <h1>
+                        Tasks
+                    </h1>
+
+                    <p>
+                        Assign, track and complete office work and miscellaneous tasks.
+                    </p>
+                </div>
+
+                <div class="user-profile">
+
+                    <div class="avatar" id="staffAvatar">
+                        E
+                    </div>
+
+                    <div class="user-info">
+                        <strong id="staffName">
+                            Staff
+                        </strong>
+
+                        <span id="staffRole">
+                            Employee
+                        </span>
+                    </div>
+
+                </div>
+
+            </header>
+
+            <div
+                id="taskError"
+                class="form-alert error-alert"
+                style="display:none;"
+            ></div>
+
+            <div
+                id="taskSuccess"
+                class="form-alert success-alert"
+                style="display:none;"
+            ></div>
+
+            <section
+                class="dashboard-panel task-form-container"
+                id="taskEntryPanel"
+            >
+
+                <div class="panel-header">
+
+                    <div>
+                        <h2>
+                            Assign Task
+                        </h2>
+
+                        <p>
+                            Both Admin and Employee can create and manage task records.
+                        </p>
+                    </div>
+
+                </div>
+
+                <form id="taskForm">
+
+                    <div class="task-form-grid">
+
+                        <div class="form-group full-width">
+
+                            <label for="taskName">
+                                Task / Work Description
+                                <span class="required">*</span>
+                            </label>
+
+                            <input
+                                id="taskName"
+                                type="text"
+                                maxlength="250"
+                                placeholder="Enter the work to be completed"
+                                required
+                            >
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="workType">
+                                Work Type
+                                <span class="required">*</span>
+                            </label>
+
+                            <select id="workType" required>
+
+                                <option value="">
+                                    Select work type
+                                </option>
+
+                                <option value="office">
+                                    Office Work
+                                </option>
+
+                                <option value="miscellaneous">
+                                    Miscellaneous
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label id="taskClientLabel" for="taskClient">
+                                Name of Client
+                                <span class="required">*</span>
+                            </label>
+
+                            <select id="taskClient">
+                                <option value="">
+                                    Select client
+                                </option>
+                            </select>
+
+                            <small
+                                id="taskClientHelp"
+                                class="task-help"
+                            >
+                                Select the client this work is assigned to.
+                            </small>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="assignedEmployee">
+                                Assigned Employee
+                                <span class="required">*</span>
+                            </label>
+
+                            <select
+                                id="assignedEmployee"
+                                required
+                            >
+                                <option value="">
+                                    Loading employees...
+                                </option>
+                            </select>
+
+                            <small class="task-help">
+                                Select the employee responsible for this task.
+                            </small>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="assignedDate">
+                                Date of Assigning
+                                <span class="required">*</span>
+                            </label>
+
+                            <input
+                                id="assignedDate"
+                                type="date"
+                                required
+                            >
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="completionDate">
+                                Date of Completion
+                                <span class="edit-only-label">Edit only</span>
+                            </label>
+
+                            <input
+                                id="completionDate"
+                                type="date"
+                            >
+
+                            <small
+                                id="completionDateHelp"
+                                class="task-help"
+                            >
+                                Optional until the work is completed.
+                            </small>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="billable">
+                                Billing
+                                <span class="required">*</span>
+                            </label>
+
+                            <select id="billable" required>
+
+                                <option value="non_billable">
+                                    Non-billable
+                                </option>
+
+                                <option value="billable">
+                                    Billable
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    <div class="task-form-actions">
+
+                        <button
+                            type="button"
+                            id="cancelTaskEdit"
+                            class="task-secondary-button"
+                            style="display:none;"
+                        >
+                            Cancel Edit
+                        </button>
+
+                        <button
+                            type="submit"
+                            id="saveTaskButton"
+                            class="primary-button task-primary-button"
+                        >
+                            Save Task
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+            <section class="dashboard-panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h2>
+                            Task Register
+                        </h2>
+
+                        <p>
+                            Current month is shown by default. Previous months remain stored and can be viewed with the filters.
+                        </p>
+                    </div>
+
+                    <div class="task-export-actions">
+
+                        <button
+                            type="button"
+                            id="exportExcelButton"
+                            class="task-export-button task-export-excel"
+                        >
+                            Export Excel
+                        </button>
+
+                        <button
+                            type="button"
+                            id="exportPdfButton"
+                            class="task-export-button task-export-pdf"
+                        >
+                            Export PDF
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="document-summary">
+
+                    <div class="document-summary-card">
+                        <span>
+                            Total Tasks
+                        </span>
+
+                        <strong id="taskTotal">
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="document-summary-card">
+                        <span>
+                            Visible Tasks
+                        </span>
+
+                        <strong id="taskVisible">
+                            0
+                        </strong>
+                    </div>
+
+                </div>
+
+                <div class="task-month-note">
+                    Monthly reset is a view reset only. No task records are deleted; all previous data remains stored.
+                </div>
+
+                <div class="tasks-filters">
+
+                    <input
+                        id="taskSearch"
+                        type="search"
+                        placeholder="Search task, client, PAN or assigned by..."
+                    >
+
+                    <select id="taskWorkTypeFilter">
+                        <option value="">
+                            All work types
+                        </option>
+                        <option value="office">
+                            Office Work
+                        </option>
+                        <option value="miscellaneous">
+                            Miscellaneous
+                        </option>
+                    </select>
+
+                    <select id="taskBillableFilter">
+                        <option value="">
+                            All billing
+                        </option>
+                        <option value="true">
+                            Billable
+                        </option>
+                        <option value="false">
+                            Non-billable
+                        </option>
+                    </select>
+
+                    <input
+                        id="taskMonthFilter"
+                        type="month"
+                        title="Month"
+                    >
+
+                    <div class="task-filter-actions">
+
+                        <input
+                            id="taskDateFrom"
+                            type="date"
+                            title="Date from"
+                        >
+
+                        <input
+                            id="taskDateTo"
+                            type="date"
+                            title="Date to"
+                        >
+
+                        <button
+                            type="button"
+                            id="resetTaskFilters"
+                            class="task-filter-reset"
+                        >
+                            Reset
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="task-table-wrapper">
+
+                    <table class="task-table">
+
+                        <colgroup>
+                            <col style="width:300px">
+                            <col style="width:165px">
+                            <col style="width:200px">
+                            <col style="width:240px">
+                            <col style="width:155px">
+                            <col style="width:175px">
+                            <col style="width:160px">
+                            <col style="width:120px">
+                            <col style="width:120px">
+                            <col style="width:250px">
+                            <col style="width:115px">
+                        </colgroup>
+
+
+                        <thead>
+                            <tr>
+                                <th>Task / Work</th>
+                                <th>Work Type</th>
+                                <th>Client</th>
+                                <th>Assigned Employee</th>
+                                <th>Date of Assigning</th>
+                                <th>Date of Completion</th>
+                                <th>Billing</th>
+                                <th>No. of Days</th>
+                                <th>Status</th>
+                                <th>Assigned By</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tasksTableBody">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="../JS/auth.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+<script src="../JS/tasks.js?v=20260822-inlinecompletion"></script>
+
+<script>
+document.getElementById("caTasksLogout")?.addEventListener("click", function () {
+    localStorage.removeItem("caOfficeLoggedIn");
+    localStorage.removeItem("caOfficeUser");
+    window.location.href = "/login.html";
+});
+</script>
+
+</body>
+</html>

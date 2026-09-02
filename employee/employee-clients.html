@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clients | Employee | CA Office</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../CSS/style.css">
+
+    <style>
+        .filter-grid {
+            display:grid;
+            grid-template-columns:repeat(4,minmax(160px,1fr));
+            gap:14px;
+        }
+        .filter-actions {
+            display:flex;
+            justify-content:flex-end;
+            gap:10px;
+            margin-top:18px;
+            flex-wrap:wrap;
+        }
+        .client-filter-panel {
+            padding:20px;
+            border-top:1px solid #eee;
+            border-bottom:1px solid #eee;
+            background:#fafafa;
+        }
+        .secondary-button {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-height:44px;
+            padding:0 18px;
+            border-radius:8px;
+            border:1px solid #ddd;
+            background:#fff;
+            color:#333;
+            cursor:pointer;
+        }
+        @media(max-width:900px) {
+            .filter-grid { grid-template-columns:repeat(2,minmax(160px,1fr)); }
+        }
+        @media(max-width:600px) {
+            .filter-grid { grid-template-columns:1fr; }
+        }
+    
+        /* FINAL EXPORT BUTTON POSITION */
+        .filter-actions {
+            display:flex !important;
+            flex-direction:row !important;
+            align-items:center !important;
+            justify-content:flex-end !important;
+            gap:10px !important;
+            flex-wrap:nowrap !important;
+        }
+
+        .filter-actions #exportClientsExcel,
+        .filter-actions #exportClientsPdf {
+            flex:0 0 auto !important;
+            width:auto !important;
+            margin:0 !important;
+            white-space:nowrap !important;
+        }
+
+</style>
+</head>
+
+<body class="dashboard-body">
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+            <div class="logo-mark">CA</div>
+
+            <div class="brand-name">
+                <strong>CA Office</strong>
+                <span>Employee Portal</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <span class="nav-section">WORKSPACE</span>
+
+            <a href="/employee/dashboard.html" class="nav-item">
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a href="/employee/clients.html" class="nav-item active">
+                <span class="nav-icon">◉</span>
+                Clients
+            </a>
+
+            <a href="/employee/add-client.html" class="nav-item">
+                <span class="nav-icon">+</span>
+                Add Client
+            </a>
+
+            <a href="/employee/tasks.html" class="nav-item">
+                <span class="nav-icon">✓</span>
+                My Tasks
+            </a>
+
+            <span class="nav-section">OFFICE</span>
+
+            <a href="#" class="nav-item" onclick="return false;">
+                <span class="nav-icon">◷</span>
+                Calendar
+            </a>
+
+            <a href="#" class="nav-item" onclick="return false;">
+                <span class="nav-icon">□</span>
+                Documents
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="logoutButton"
+                    type="button"
+                    class="logout-button">
+                <span class="nav-icon">↪</span>
+                Sign out
+            </button>
+        </div>
+
+    </aside>
+
+    <main class="dashboard-main">
+
+        <header class="dashboard-header">
+
+            <div>
+                <span class="dashboard-eyebrow">CLIENT MANAGEMENT</span>
+                <h1>Clients</h1>
+                <p>View, filter and export client records.</p>
+            </div>
+
+            <div class="user-profile">
+                <div class="avatar" id="employeeAvatar">E</div>
+
+                <div class="user-info">
+                    <strong id="employeeName">Employee</strong>
+                    <span id="employeeRole">Staff</span>
+                </div>
+            </div>
+
+        </header>
+
+        <section class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Clients</span>
+                    <span class="stat-icon">◉</span>
+                </div>
+
+                <strong id="clientCount">—</strong>
+                <span class="stat-change">Live database count</span>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Filtered Records</span>
+                    <span class="stat-icon">▣</span>
+                </div>
+
+                <strong id="visibleClientCount">—</strong>
+                <span class="stat-change">Currently displayed</span>
+            </div>
+
+        </section>
+
+        <section class="dashboard-panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <h2>Client Records</h2>
+                    <p>Filter records and export exactly the records currently shown.</p>
+                </div>
+
+                <a href="/employee/add-client.html"
+                   class="primary-button"
+                   style="width:auto;padding:0 20px;">
+                    + Add Client
+                </a>
+
+            </div>
+
+            <div class="client-filter-panel">
+
+                <div class="filter-grid">
+
+                    <div class="form-group">
+                        <label for="clientSearch">Search Client</label>
+                        <input id="clientSearch"
+                               type="text"
+                               placeholder="Name, PAN, GST, email, phone..."
+                               autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="filterClientType">Client Type</label>
+                        <select id="filterClientType">
+                            <option value="">All client types</option>
+                            <option value="individual">Individual</option>
+                            <option value="huf">HUF</option>
+                            <option value="partnership">Partnership Firm</option>
+                            <option value="llp">LLP</option>
+                            <option value="private_limited">Private Limited Company</option>
+                            <option value="cooperative_society">Co-operative Society</option>
+                            <option value="trust">Trust</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="filterState">State</label>
+                        <select id="filterState">
+                            <option value="">All states</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="filterDistrict">District</label>
+                        <select id="filterDistrict" disabled>
+                            <option value="">All districts</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="filterCity">City / Town</label>
+                        <select id="filterCity" disabled>
+                            <option value="">All cities</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="filterStatus">Status</label>
+                        <select id="filterStatus">
+                            <option value="">All statuses</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="filterLocation">Office Location</label>
+                        <select id="filterLocation">
+                            <option value="">All office locations</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="display:flex;align-items:end;">
+                        <button id="clearClientFilters"
+                                type="button"
+                                class="secondary-button"
+                                style="width:100%;">
+                            Clear Filters
+                        </button>
+                    </div>
+
+                </div>
+
+                <div
+    class="filter-actions"
+    style="
+        display:flex !important;
+        flex-direction:row !important;
+        align-items:center !important;
+        justify-content:flex-end !important;
+        gap:10px !important;
+        flex-wrap:nowrap !important;
+        width:100% !important;
+        margin-top:18px !important;
+    "
+>
+
+    <button
+        id="exportClientsExcel"
+        type="button"
+        class="primary-button"
+        style="
+            display:inline-flex !important;
+            flex:0 0 auto !important;
+            width:auto !important;
+            min-width:140px !important;
+            margin:0 !important;
+            white-space:nowrap !important;
+        "
+    >
+        Export Excel
+    </button>
+
+    <button
+        id="exportClientsPdf"
+        type="button"
+        class="primary-button"
+        style="
+            display:inline-flex !important;
+            flex:0 0 auto !important;
+            width:auto !important;
+            min-width:140px !important;
+            margin:0 !important;
+            white-space:nowrap !important;
+        "
+    >
+        Export PDF
+    </button>
+
+</div>
+
+            </div>
+
+            <div id="clientsError"
+                 class="form-alert error-alert"
+                 style="display:none;margin:20px;">
+            </div>
+
+            <div id="clientsLoading"
+                 style="padding:40px;text-align:center;color:#777;">
+                Loading clients...
+            </div>
+
+            <div id="clientsTableContainer"
+                 style="display:none;overflow-x:auto;">
+
+                <table style="width:100%;border-collapse:collapse;min-width:1100px;">
+
+                    <thead>
+                    <tr>
+                        <th style="padding:14px;text-align:left;">Client</th>
+                        <th style="padding:14px;text-align:left;">Type</th>
+                        <th style="padding:14px;text-align:left;">Location</th>
+                        <th style="padding:14px;text-align:left;">Contact</th>
+                        <th style="padding:14px;text-align:left;">Assigned Employees</th>
+                        <th style="padding:14px;text-align:left;">Status</th>
+                        <th style="padding:14px;text-align:left;">Action</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="clientsTableBody"></tbody>
+
+                </table>
+
+            </div>
+
+            <div id="clientsEmpty"
+                 style="display:none;padding:50px;text-align:center;">
+                <h3>No clients found</h3>
+                <p>No client records match the selected filters.</p>
+            </div>
+
+        </section>
+
+    </main>
+</div>
+
+<script src="../JS/auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="../JS/employee-clients.js"></script>
+
+<script src="../JS/unified-sidebar.js"></script>
+</body>
+</html>

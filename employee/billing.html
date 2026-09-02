@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing Record</title>
+    <link rel="stylesheet" href="/billing.css?v=20260829-ui-fixed">
+</head>
+
+<body>
+<main class="billing-page">
+
+    <section class="excel-sheet">
+
+        <div class="sheet-topbar">
+            <div class="sheet-title">
+                <span class="sheet-icon">₹</span>
+                <div>
+                    <h1>Billing Record</h1>
+                    <span id="registerState">Loading...</span>
+                </div>
+            </div>
+
+            <div class="sheet-actions">
+                <button id="refreshBilling" type="button" class="toolbar-button">
+                    ↻ Refresh
+                </button>
+
+                <button id="exportBillingExcel" type="button" class="toolbar-button primary">
+                    ↓ Excel
+                </button>
+
+                <button id="exportBillingPdf" type="button" class="toolbar-button">
+                    ↓ PDF
+                </button>
+            </div>
+        </div>
+
+        <div class="sheet-toolbar">
+
+            <div class="search-box">
+                <span>⌕</span>
+                <input
+                    id="billingSearch"
+                    type="search"
+                    placeholder="Search client, task, PAN or serial number..."
+                >
+            </div>
+
+            <div class="toolbar-date">
+                <span>Receipt from</span>
+                <input id="billingDateFrom" type="date">
+            </div>
+
+            <div class="toolbar-date">
+                <span>Receipt to</span>
+                <input id="billingDateTo" type="date">
+            </div>
+
+            <button id="resetBillingFilters" type="button" class="toolbar-button">
+                Reset
+            </button>
+
+            <div class="sheet-count">
+                <strong id="visibleCount">0</strong>
+                records
+            </div>
+        </div>
+
+        <div id="billingError" class="sheet-message error" hidden></div>
+        <div id="billingSuccess" class="sheet-message success" hidden></div>
+
+        <div class="spreadsheet-wrap">
+
+            <table class="spreadsheet">
+
+                <thead>
+                    <tr>
+                        <th class="row-number-head">#</th>
+                        <th class="serial-col">Serial Number</th>
+                        <th class="client-col">Name</th>
+                        <th class="task-col">Name of Task</th>
+                        <th class="charge-col">Chargeable Amount</th>
+                        <th class="date-col">Date of Receipt</th>
+                        <th class="amount-col">Amount</th>
+                        <th class="mode-col">Mode</th>
+                        <th class="advance-date-col">Date of Advance Payment</th>
+                        <th class="advance-col">Advance Paid Amount</th>
+                        <th class="advance-mode-col">Mode of Advance Payment</th>
+                        <th class="balance-col">Balance</th>
+                        <th class="action-col">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="billingTableBody">
+                    <tr>
+                        <td colspan="13" class="sheet-empty">
+                            Loading billing records...
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="sheet-footer">
+            <span>
+                Only <strong>Completed + Billable</strong> tasks are shown.
+            </span>
+
+            <span>
+                Editable cells are white. Task/client information is locked.
+            </span>
+        </div>
+
+    </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="/JS/billing.js?v=20260829-ui-fixed"></script>
+</body>
+</html>
