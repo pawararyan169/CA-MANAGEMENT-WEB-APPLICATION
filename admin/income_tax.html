@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin - Income Tax Dashboard</title>
+<link rel="stylesheet" href="/CSS/style.css">
+<link rel="stylesheet" href="/CSS/income-tax.css">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-layout">
+<main class="dashboard-main">
+<div class="income-tax-page">
+
+<header class="it-head">
+  <div>
+    <span class="dashboard-eyebrow">ADMINISTRATION</span>
+    <h1>Income Tax Dashboard</h1>
+    <p>Income Tax working register with PAN-linked parties and monthly records.</p>
+  </div>
+  <div class="it-actions">
+    <button id="itCurrentMonth" class="it-btn" type="button">Current Month</button>
+    <button id="itExportExcel" class="it-btn" type="button">Export Excel</button>
+    <button id="itExportPdf" class="it-btn primary" type="button">Export PDF</button>
+    <button id="itSaveAll" class="it-btn save" type="button">Save All</button>
+  </div>
+</header>
+
+<div id="itError" class="it-error"></div>
+
+<section class="it-toolbar">
+<div class="it-filters">
+  <div class="it-field"><label>Search Party</label><input id="itSearch" type="search" placeholder="Party name..."></div>
+  <div class="it-field"><label>Month</label><input id="itMonth" type="month"></div>
+  <div class="it-field"><label>Advance Payment</label><select id="itAdvanceFilter"><option value="">All</option><option value="YES">YES</option><option value="NO">NO</option></select></div>
+  <div class="it-field"><label>Status</label><select id="itStatusFilter"><option value="">All Statuses</option></select></div>
+  <div class="it-field"><label>Working Date</label><select id="itWorkingFilter"><option value="">All</option><option value="ENTERED">Entered</option><option value="PENDING">Pending</option></select></div>
+  <div class="it-field"><label>Tax Payment Date</label><select id="itTaxFilter"><option value="">All</option><option value="ENTERED">Entered</option><option value="PENDING">Pending</option></select></div>
+  <div class="it-field"><label>Filing Date</label><select id="itFilingFilter"><option value="">All</option><option value="ENTERED">Entered</option><option value="PENDING">Pending</option></select></div>
+  <div class="it-field"><label>Set Date</label><select id="itSetFilter"><option value="">All</option><option value="ENTERED">Entered</option><option value="PENDING">Pending</option></select></div>
+</div>
+<div class="it-note">Month: <strong id="itMonthLabel"></strong>. Admin can see all PAN parties.</div>
+</section>
+
+<section class="it-summary">
+  <div class="it-summary-card"><span>Total PAN Parties</span><strong id="itTotal">0</strong></div>
+  <div class="it-summary-card"><span>Visible Records</span><strong id="itVisible">0</strong></div>
+</section>
+
+<section class="it-table-card">
+<div id="itLoading" class="it-loading">Loading Income Tax records...</div>
+<div id="itEmpty" class="it-empty" style="display:none">No Income Tax records match the selected filters.</div>
+<div id="itTableWrap" class="it-table-wrap" style="display:none">
+<table class="it-table">
+<thead><tr>
+<th>SR NO.</th><th>PARTY NAME</th><th>ADVANCE PAYMENT</th><th>ADVANCE PAYMENT DATE</th>
+<th>WORKING DATE</th><th>TAX PAYMENT DATE</th><th>FILING DATE</th><th>SET DATE</th><th>STATUS</th>
+</tr></thead>
+<tbody id="itTableBody"></tbody>
+</table>
+</div>
+</section>
+
+</div>
+</main>
+</div>
+<div id="itToast" class="it-toast"></div>
+<script src="/JS/auth.js"></script>
+<script src="/JS/income-tax.js"></script>
+<script src="/JS/unified-sidebar.js"></script>
+</body>
+</html>

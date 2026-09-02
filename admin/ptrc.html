@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PTRC Clients | CA Office</title>
+<link rel="stylesheet" href="/CSS/style.css">
+<style>
+.registration-page{max-width:1450px;margin:0 auto}
+.registration-section{margin-top:8px}
+.registration-section-title{padding:12px 14px;color:#777;font-size:11px;font-weight:700;letter-spacing:.08em}
+.registration-menu{padding:0 10px 12px}
+.registration-menu-item{display:block;text-decoration:none;color:#555;padding:9px 12px;margin:2px 0;border-radius:7px;font-size:13px}
+.registration-menu-item:hover{background:#f2f5fa;color:#2563eb}
+.registration-menu-item.active{background:#eaf1ff;color:#2563eb;font-weight:700}
+.registration-filter{padding:20px;background:#fafafa;border-top:1px solid #eee;border-bottom:1px solid #eee}
+.registration-filter-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px}
+.registration-table-wrap{overflow-x:auto}
+.registration-table{width:100%;min-width:1200px;border-collapse:collapse}
+.registration-table th,.registration-table td{padding:14px;text-align:left;border-bottom:1px solid #eee}
+.registration-table th{background:#f7f8fa;font-size:13px;white-space:nowrap}
+.registration-number{color:#2563eb;letter-spacing:.2px}
+.muted{font-size:12px;color:#777;margin-top:4px}
+.view-button{height:38px;padding:0 14px;border:0;border-radius:7px;background:#2563eb;color:#fff;font-weight:600;cursor:pointer;white-space:nowrap}
+.view-button:hover{background:#1d4ed8}
+.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-bottom:18px}
+.summary-card{padding:20px;background:#fff;border:1px solid #eee;border-radius:10px}
+.summary-card span{display:block;color:#777;font-size:13px;margin-bottom:7px}
+.summary-card strong{font-size:28px}
+.modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.55)}
+.modal.open{display:flex}
+.modal-card{width:min(1050px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:12px}
+.modal-header{position:sticky;top:0;z-index:2;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #eee}
+.modal-header h2{margin:0}
+.modal-close{border:0;background:#eee;border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer}
+.modal-body{padding:24px}
+.detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px}
+.detail-item{padding:12px;border:1px solid #eee;border-radius:8px;background:#fafafa}
+.detail-item span{display:block;font-size:12px;color:#777;margin-bottom:5px}
+.detail-item strong{word-break:break-word}
+.registration-highlight{padding:18px;border:1px solid #dbe7ff;background:#f5f8ff;border-radius:10px;margin-bottom:24px}
+.registration-highlight span{display:block;font-size:12px;color:#666;margin-bottom:5px}
+.registration-highlight strong{font-size:22px;color:#2563eb;letter-spacing:.5px}
+.modal-body h3{margin:20px 0 10px;font-size:15px}
+.address-box{padding:14px;border:1px solid #eee;border-radius:8px}
+.address-box span{font-size:12px;color:#777}
+.address-box p{white-space:pre-wrap;margin:7px 0 0}
+.modal-open{overflow:hidden}
+@media(max-width:900px){.registration-filter-grid,.detail-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.registration-filter-grid,.summary,.detail-grid{grid-template-columns:1fr}}
+</style>
+/* Constant sidebar with independent vertical scrolling */
+#CA_ADMIN_CONSTANT_SIDEBAR {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #aeb7c4 #f4f6f8 !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar-track {
+    background: #f4f6f8 !important;
+    border-radius: 8px !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar-thumb {
+    background: #aeb7c4 !important;
+    border-radius: 8px !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar-thumb:hover {
+    background: #8e99a8 !important;
+}
+
+/* Navigation itself stays intact; only the sidebar viewport scrolls. */
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-nav {
+    overflow: visible !important;
+    flex: 0 0 auto !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-bottom {
+    flex: 0 0 auto !important;
+}
+
+
+/* ============================================================
+   FINAL: SCROLL THE SIDEBAR ITSELF
+   ============================================================ */
+
+#CA_ADMIN_CONSTANT_SIDEBAR {
+    position: fixed !important;
+    inset: 0 auto 0 0 !important;
+
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+
+    height: 100vh !important;
+    max-height: 100vh !important;
+
+    display: block !important;
+
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+
+    box-sizing: border-box !important;
+
+    scrollbar-width: auto !important;
+    scrollbar-color: #8f99a6 #eef1f4 !important;
+
+    overscroll-behavior: contain !important;
+}
+
+/* Do NOT make the inner navigation a scroll container.
+   The OUTER SIDEBAR is the only thing that scrolls. */
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-nav {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+
+    overflow: visible !important;
+
+    flex: none !important;
+}
+
+/* Keep every navigation item in normal document flow. */
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-link,
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-section,
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-bottom {
+    position: static !important;
+}
+
+/* Bottom controls are part of the sidebar's scrollable content. */
+#CA_ADMIN_CONSTANT_SIDEBAR .ca-bottom {
+    height: auto !important;
+    min-height: 0 !important;
+    margin-top: 8px !important;
+    padding-bottom: 12px !important;
+}
+
+/* Visible Chromium scrollbar. */
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar {
+    width: 10px !important;
+    display: block !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar-track {
+    background: #eef1f4 !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar-thumb {
+    background: #8f99a6 !important;
+    border-radius: 8px !important;
+    border: 2px solid #eef1f4 !important;
+}
+
+#CA_ADMIN_CONSTANT_SIDEBAR::-webkit-scrollbar-thumb:hover {
+    background: #6f7a88 !important;
+}
+
+</head>
+<body class="ca-admin-constant-page" class="dashboard-body">
+<div class="dashboard-layout">
+
+
+<main class="dashboard-main">
+
+<div class="registration-page">
+
+<header class="dashboard-header">
+
+    <div>
+
+        <span class="dashboard-eyebrow">
+            TAX & REGISTRATION
+        </span>
+
+        <h1 id="registrationTitle">
+            PTRC
+        </h1>
+
+        <p id="registrationDescription">
+            Professional Tax Registration Certificate
+        </p>
+
+    </div>
+
+</header>
+
+<div
+    id="registrationError"
+    class="form-alert error-alert"
+    style="display:none;margin-bottom:18px;"
+></div>
+
+<section class="summary">
+
+    <div class="summary-card">
+
+        <span id="registrationCountLabel">
+            Total clients with PTRC
+        </span>
+
+        <strong id="registrationTotal">
+            0
+        </strong>
+
+    </div>
+
+    <div class="summary-card">
+
+        <span>
+            Currently Visible
+        </span>
+
+        <strong id="registrationVisible">
+            0
+        </strong>
+
+    </div>
+
+</section>
+
+<section class="dashboard-panel">
+
+    <div class="panel-header">
+
+        <div>
+
+            <h2>
+                PTRC Register
+            </h2>
+
+            <p>
+                Only clients who have provided a PTRC
+                registration number are shown.
+            </p>
+
+        </div>
+
+    </div>
+
+    <div class="registration-filter">
+
+        <div class="registration-filter-grid">
+
+            <div class="form-group">
+
+                <label for="registrationSearch">
+                    Search
+                </label>
+
+                <input
+                    id="registrationSearch"
+                    type="text"
+                    placeholder="Search client, registration number, PAN, email, city..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="registrationLocation">
+                    Office Location
+                </label>
+
+                <select id="registrationLocation">
+
+                    <option value="">
+                        All office locations
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div
+                class="form-group"
+                style="display:flex;align-items:end;"
+            >
+
+                <button
+                    id="clearRegistrationFilters"
+                    type="button"
+                    class="secondary-button"
+                    style="width:100%;"
+                >
+                    Clear Filter
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div
+        id="registrationLoading"
+        style="padding:45px;text-align:center;color:#777;"
+    >
+        Loading PTRC clients...
+    </div>
+
+    <div
+        id="registrationEmpty"
+        style="display:none;padding:50px;text-align:center;"
+    >
+
+        <h3>
+            No PTRC clients found
+        </h3>
+
+        <p>
+            No client has provided a PTRC number,
+            or no record matches the selected filter.
+        </p>
+
+    </div>
+
+    <div class="registration-table-wrap">
+
+        <table
+            id="registrationTable"
+            class="registration-table"
+            style="display:none;"
+        >
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Client
+                    </th>
+
+                    <th id="registrationTableHeading">
+                        PTRC Number
+                    </th>
+
+                    <th>
+                        Client Type
+                    </th>
+
+                    <th>
+                        Location
+                    </th>
+
+                    <th>
+                        PAN
+                    </th>
+
+                    <th>
+                        Contact
+                    </th>
+
+                    <th>
+                        Email
+                    </th>
+
+                    <th>
+                        Action
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="registrationTableBody"></tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+</div>
+
+</main>
+
+</div>
+
+<div id="detailsModal" class="modal">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="dashboard-eyebrow">
+                    CLIENT RECORD
+                </span>
+
+                <h2 id="detailsTitle">
+                    PTRC Client Details
+                </h2>
+
+            </div>
+
+            <button
+                id="detailsClose"
+                type="button"
+                class="modal-close"
+                aria-label="Close"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div
+            id="detailsBody"
+            class="modal-body"
+        ></div>
+
+    </div>
+
+</div>
+
+<script src="/JS/auth.js"></script>
+<script src="/JS/registrations.js"></script>
+
+    <script src="/JS/unified-sidebar.js"></script>
+
+<script>
+document.getElementById("logoutButton")?.addEventListener("click", function () {
+    localStorage.removeItem("caOfficeLoggedIn");
+    localStorage.removeItem("caOfficeUser");
+    window.location.href = "/login.html";
+});
+</script>
+
+</body>
+</html>

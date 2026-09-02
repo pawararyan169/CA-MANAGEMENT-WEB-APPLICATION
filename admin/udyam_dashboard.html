@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Udyam Dashboard</title>
+<link rel="stylesheet" href="/CSS/style.css">
+<link rel="stylesheet" href="/CSS/udyam-dashboard.css">
+</head>
+<body>
+
+<div class="dashboard-layout">
+
+<main class="dashboard-main">
+
+<div class="udyam-page">
+
+<header class="udyam-header">
+
+<div>
+
+<span class="udyam-eyebrow">
+REGISTRATION
+</span>
+
+<h1>
+Udyam Dashboard
+</h1>
+
+<p>
+Year-wise Udyam renewal records.
+</p>
+
+</div>
+
+
+<div class="udyam-actions">
+
+<button
+id="udyamExcel"
+class="udyam-btn"
+type="button">
+Export Excel
+</button>
+
+<button
+id="udyamPdf"
+class="udyam-btn"
+type="button">
+Export PDF
+</button>
+
+<button
+id="udyamSave"
+class="udyam-btn save"
+type="button">
+Save All
+</button>
+
+</div>
+
+</header>
+
+
+<div
+id="udyamError"
+class="udyam-error">
+</div>
+
+
+<section class="udyam-filter-card">
+
+<div class="udyam-filters">
+
+<div class="udyam-field">
+
+<label for="udyamYear">
+Year
+</label>
+
+<select id="udyamYear">
+</select>
+
+</div>
+
+
+<div class="udyam-field">
+
+<label for="udyamSearch">
+Search
+</label>
+
+<input
+id="udyamSearch"
+type="search"
+placeholder="Search name or Udyam number..."
+>
+
+</div>
+
+
+<div class="udyam-field">
+
+<label for="udyamStatus">
+Status
+</label>
+
+<select id="udyamStatus">
+
+<option value="">
+All Statuses
+</option>
+
+<option value="RENEWAL PENDING">
+Renewal Pending
+</option>
+
+<option value="RENEWAL DONE">
+Renewal Done
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+<div class="udyam-filter-info">
+
+Showing
+<strong id="udyamVisible">0</strong>
+of
+<strong id="udyamTotal">0</strong>
+records for
+<strong id="udyamYearLabel"></strong>
+
+</div>
+
+</section>
+
+
+<section class="udyam-table-card">
+
+<div
+id="udyamLoading"
+class="udyam-loading">
+Loading Udyam records...
+</div>
+
+
+<div
+id="udyamEmpty"
+class="udyam-empty"
+style="display:none">
+No Udyam records found.
+</div>
+
+
+<div
+id="udyamTableWrap"
+class="udyam-table-wrap"
+style="display:none">
+
+<table class="udyam-table">
+
+<thead>
+
+<tr>
+
+<th>
+SR. NO.
+</th>
+
+<th>
+NAME
+</th>
+
+<th>
+UDYAM NUMBER
+</th>
+
+<th>
+DATE OF RENEWAL
+</th>
+
+<th>
+STATUS
+</th>
+
+</tr>
+
+</thead>
+
+<tbody
+id="udyamTableBody">
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+</div>
+
+</main>
+
+</div>
+
+
+<div
+id="udyamToast"
+class="udyam-toast">
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<script src="/JS/auth.js"></script>
+
+<script src="/JS/udyam-dashboard.js"></script>
+
+<script src="/JS/unified-sidebar.js"></script>
+
+</body>
+</html>

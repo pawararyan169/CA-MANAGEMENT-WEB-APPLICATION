@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Employees | CA Office</title>
+
+    <link
+        rel="stylesheet"
+        href="/CSS/style.css"
+    >
+
+    <style>
+
+        .employee-toolbar {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            padding: 18px 20px;
+
+            border-bottom:
+                1px solid var(--border);
+
+        }
+
+
+        .employee-search {
+
+            width: 300px;
+
+            height: 42px;
+
+            padding: 0 13px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 8px;
+
+            outline: none;
+
+            font-family: var(--font);
+
+            font-size: 11px;
+
+        }
+
+
+        .employee-list {
+
+            display: flex;
+
+            flex-direction: column;
+
+        }
+
+
+        .employee-card {
+
+            padding: 22px 20px;
+
+            background: white;
+
+            border-bottom:
+                1px solid var(--border);
+
+        }
+
+
+        .employee-card:last-child {
+
+            border-bottom: none;
+
+        }
+
+
+        .employee-top {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+        }
+
+
+        .employee-person {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 13px;
+
+        }
+
+
+        .employee-avatar {
+
+            width: 43px;
+
+            height: 43px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #edf2f6;
+
+            color: #42637e;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+        }
+
+
+        .employee-name {
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+        }
+
+
+        .employee-designation {
+
+            margin-top: 4px;
+
+            color: var(--text-muted);
+
+            font-size: 9px;
+
+        }
+
+
+        .employee-status {
+
+            padding: 5px 10px;
+
+            border-radius: 20px;
+
+            background: #ecfdf3;
+
+            color: #18794e;
+
+            font-size: 9px;
+
+            font-weight: 600;
+
+        }
+
+
+        .employee-status.inactive {
+
+            background: #f2f4f7;
+
+            color: #667085;
+
+        }
+
+
+        .employee-details {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 15px;
+
+            margin-top: 18px;
+
+            padding-top: 16px;
+
+            border-top:
+                1px solid var(--border);
+
+        }
+
+
+        .employee-detail {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 5px;
+
+        }
+
+
+        .employee-detail span {
+
+            color: var(--text-muted);
+
+            font-size: 9px;
+
+        }
+
+
+        .employee-detail strong {
+
+            color: var(--text);
+
+            font-size: 10px;
+
+            word-break: break-word;
+
+        }
+
+
+        @media(max-width:700px) {
+
+            .employee-toolbar {
+
+                flex-direction: column;
+
+                align-items: stretch;
+
+            }
+
+
+            .employee-search {
+
+                width: 100%;
+
+            }
+
+
+            .employee-details {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body class="ca-admin-constant-page" class="dashboard-body">
+<div class="dashboard-layout">
+
+
+    
+
+
+    <main class="dashboard-main">
+
+
+        <header class="dashboard-header">
+
+            <div>
+
+                <span class="dashboard-eyebrow">
+                    STAFF MANAGEMENT
+                </span>
+
+                <h1>
+                    Employees
+                </h1>
+
+                <p>
+                    Manage the employees working in your CA office.
+                </p>
+
+            </div>
+
+
+            <a
+                href="/admin/add-employee.html"
+                class="primary-button"
+                style="
+                    width:auto;
+                    padding:0 18px;
+                "
+            >
+                + Add employee
+            </a>
+
+        </header>
+
+
+        <section class="dashboard-panel">
+
+
+            <div class="employee-toolbar">
+
+                <strong
+                    id="employeeCount"
+                    style="font-size:12px;"
+                >
+                    0 employees
+                </strong>
+
+
+                <input
+                    id="employeeSearch"
+                    class="employee-search"
+                    type="search"
+                    placeholder="Search employees..."
+                >
+
+            </div>
+
+
+            <div
+                id="employeeList"
+                class="employee-list"
+            >
+
+                <div class="empty-state">
+
+                    <strong>
+                        Loading employees...
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+</div>
+
+
+<script src="/JS/auth.js"></script>
+
+<script src="/JS/employees.js"></script>
+
+
+    <script src="/JS/unified-sidebar.js"></script>
+
+<script>
+document.getElementById("logoutButton")?.addEventListener("click", function () {
+    localStorage.removeItem("caOfficeLoggedIn");
+    localStorage.removeItem("caOfficeUser");
+    window.location.href = "/login.html";
+});
+</script>
+
+</body>
+
+</html>

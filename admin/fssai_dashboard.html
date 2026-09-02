@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>FSSAI Dashboard</title>
+<link rel="stylesheet" href="/CSS/style.css">
+<link rel="stylesheet" href="/CSS/fssai-dashboard.css">
+</head>
+<body>
+<div class="dashboard-layout">
+  <main class="dashboard-main">
+    <div class="fssai-page">
+
+      <header class="fssai-header">
+        <div>
+          <span class="fssai-eyebrow">COMPLIANCE</span>
+          <h1>FSSAI Dashboard</h1>
+          <p>Year-wise FSSAI renewal and expiry records.</p>
+        </div>
+
+        <div class="fssai-actions">
+          <button id="fssaiExportExcel" class="fssai-btn" type="button">Export Excel</button>
+          <button id="fssaiExportPdf" class="fssai-btn" type="button">Export PDF</button>
+          <button id="fssaiSaveAll" class="fssai-btn save" type="button">Save All</button>
+        </div>
+      </header>
+
+      <div id="fssaiError" class="fssai-error"></div>
+
+      <section class="fssai-filter-card">
+        <div class="fssai-filters">
+          <div class="fssai-field">
+            <label for="fssaiYear">Year</label>
+            <select id="fssaiYear"></select>
+          </div>
+
+          <div class="fssai-field">
+            <label for="fssaiSearch">Search FSSAI Number</label>
+            <input id="fssaiSearch" type="search" placeholder="Search FSSAI number...">
+          </div>
+
+          <div class="fssai-field">
+            <label for="fssaiStatusFilter">Status</label>
+            <select id="fssaiStatusFilter">
+              <option value="">All Statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="EXPIRED">Expired</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fssai-filter-info">
+          Showing <strong id="fssaiVisibleCount">0</strong>
+          of <strong id="fssaiTotalCount">0</strong>
+          records for <strong id="fssaiYearLabel"></strong>.
+        </div>
+      </section>
+
+      <section class="fssai-table-card">
+        <div id="fssaiLoading" class="fssai-loading">
+          Loading FSSAI records...
+        </div>
+
+        <div id="fssaiEmpty" class="fssai-empty" style="display:none">
+          No FSSAI records found.
+        </div>
+
+        <div id="fssaiTableWrap" class="fssai-table-wrap" style="display:none">
+          <table class="fssai-table">
+            <thead>
+              <tr>
+                <th>SR. NO.</th>
+                <th>FSSAI NUMBER</th>
+                <th>DATE OF EXPIRY</th>
+                <th>RENEWAL DATE</th>
+                <th>NEW EXPIRY DATE</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody id="fssaiTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<div id="fssaiToast" class="fssai-toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="/JS/auth.js"></script>
+<script src="/JS/fssai-dashboard.js"></script>
+<script src="/JS/unified-sidebar.js"></script>
+</body>
+</html>

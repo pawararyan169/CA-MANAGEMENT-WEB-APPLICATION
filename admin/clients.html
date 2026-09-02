@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Clients | CA Office Administration</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="/CSS/style.css">
+
+<style id="client-registration-panel-style">
+.client-registrations-panel { margin-bottom: 20px; }
+.client-registration-grid {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+}
+.client-registration-card {
+    min-width:0;
+    min-height:76px;
+    display:grid;
+    grid-template-columns:38px minmax(0,1fr) auto;
+    align-items:center;
+    gap:10px;
+    padding:12px 13px;
+    box-sizing:border-box;
+    border:1px solid #e5e7eb;
+    border-radius:10px;
+    background:#fff;
+    color:inherit;
+    text-decoration:none;
+    transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease;
+}
+.client-registration-card:hover {
+    border-color:#cbd5e1;
+    background:#f8fafc;
+    box-shadow:0 3px 12px rgba(15,23,42,.06);
+    transform:translateY(-1px);
+}
+.client-registration-card-icon {
+    width:38px;height:38px;display:flex;align-items:center;justify-content:center;
+    border-radius:9px;background:#f1f5f9;color:#334155;font-size:13px;font-weight:800;
+}
+.client-registration-card-body { min-width:0;display:flex;flex-direction:column;gap:3px; }
+.client-registration-card-body strong { font-size:14px;line-height:1.2;color:#1e293b; }
+.client-registration-card-body span {
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-size:11px;line-height:1.2;color:#64748b;
+}
+.client-registration-card-count {
+    min-width:42px;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;padding-left:8px;border-left:1px solid #e5e7eb;
+}
+.client-registration-card-count strong {
+    font-size:18px;line-height:1;color:#0f172a;font-variant-numeric:tabular-nums;
+}
+.client-registration-card-count span { margin-top:4px;font-size:9px;color:#64748b; }
+@media (max-width:1100px) {
+    .client-registration-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:650px) {
+    .client-registration-grid { grid-template-columns:1fr; }
+}
+</style>
+
+
+<style id="admin-client-filter-style">
+    .client-filter-panel {
+        margin-top: 4px;
+        padding: 20px;
+        border-top: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
+        background: #fafbfc;
+        box-sizing: border-box;
+    }
+
+    .client-filter-panel .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        align-items: end;
+    }
+
+    .client-filter-panel .form-group {
+        min-width: 0;
+        margin: 0;
+    }
+
+    .client-filter-panel .form-group label {
+        display: block;
+        margin: 0 0 7px;
+        min-height: 17px;
+        font-size: 12px;
+        line-height: 17px;
+        font-weight: 600;
+        color: #475569;
+    }
+
+    .client-filter-panel .form-group input,
+    .client-filter-panel .form-group select {
+        width: 100%;
+        height: 44px;
+        min-width: 0;
+        box-sizing: border-box;
+        padding: 0 12px;
+        border: 1px solid #d8dee8;
+        border-radius: 8px;
+        background: #fff;
+        color: #1f2937;
+        font: inherit;
+        font-size: 13px;
+        line-height: 44px;
+        outline: none;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .client-filter-panel .form-group select {
+        line-height: normal;
+        cursor: pointer;
+    }
+
+    .client-filter-panel .form-group input:focus,
+    .client-filter-panel .form-group select:focus {
+        border-color: #94a3b8;
+        box-shadow: 0 0 0 3px rgba(148, 163, 184, .16);
+    }
+
+    .client-filter-panel .form-group select:disabled {
+        background: #f1f5f9;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    .client-filter-panel .filter-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+        margin-top: 18px;
+        padding-top: 2px;
+        flex-wrap: wrap;
+    }
+
+    .client-filter-panel .filter-actions button {
+        width: auto;
+        min-width: 132px;
+        min-height: 42px;
+        box-sizing: border-box;
+    }
+
+    .client-filter-panel .filter-actions #clearClientFilters {
+        margin-right: auto;
+    }
+
+    @media (max-width: 1050px) {
+        .client-filter-panel .filter-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 620px) {
+        .client-filter-panel {
+            padding: 16px;
+        }
+
+        .client-filter-panel .filter-grid {
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        .client-filter-panel .filter-actions {
+            justify-content: stretch;
+        }
+
+        .client-filter-panel .filter-actions #clearClientFilters {
+            margin-right: 0;
+        }
+
+        .client-filter-panel .filter-actions button {
+            flex: 1 1 100%;
+            width: 100%;
+        }
+    }
+</style>
+
+<style id="button-alignment-pan-fix">
+.primary-button,.secondary-button,#clearClientFilters,#exportClientsExcel,#exportClientsPdf{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ text-align:center!important;vertical-align:middle!important;line-height:1!important;
+ box-sizing:border-box!important;white-space:nowrap!important;
+}
+#clearClientFilters,#exportClientsExcel,#exportClientsPdf{height:44px!important;min-height:44px!important;margin:0!important;padding:0 18px!important;}
+</style>
+</head>
+
+
+<body class="dashboard-body">
+
+
+<div class="dashboard-layout">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="logo-mark">
+                CA
+            </div>
+
+            <div class="brand-name">
+
+                <strong>
+                    CA Office
+                </strong>
+
+                <span>
+                    Administration
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <span class="nav-section">
+                OVERVIEW
+            </span>
+
+            <a
+                href="/admin/dashboard.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+
+            <span class="nav-section">
+                MANAGEMENT
+            </span>
+
+
+            <a
+                href="/admin/employees.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">◌</span>
+                Employees
+            </a>
+
+
+            <a
+                href="/admin/clients.html"
+                class="nav-item active"
+            >
+                <span class="nav-icon">◉</span>
+                Clients
+            </a>
+
+
+            <a
+                href="/admin/tasks.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">✓</span>
+                Tasks
+            </a>
+
+
+            <a
+                href="/admin/signup-requests.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">✉</span>
+                Signup Requests
+            </a>
+
+
+            <a
+                href="/admin/locations.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">◇</span>
+                Locations
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <button
+                id="logoutButton"
+                class="logout-button"
+                type="button"
+            >
+                <span class="nav-icon">↪</span>
+                Sign out
+            </button>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="dashboard-main">
+
+
+        <!-- HEADER -->
+
+        <header class="dashboard-header">
+
+            <div>
+
+                <span class="dashboard-eyebrow">
+                    CLIENT MANAGEMENT
+                </span>
+
+                <h1>
+                    Clients
+                </h1>
+
+                <p>
+                    View and manage all active clients of the office.
+                </p>
+
+            </div>
+
+
+            <div class="user-profile">
+
+                <div
+                    class="avatar"
+                    id="adminAvatar"
+                >
+                    A
+                </div>
+
+                <div class="user-info">
+
+                    <strong id="adminName">
+                        Administrator
+                    </strong>
+
+                    <span id="adminRole">
+                        Administrator
+                    </span>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =====================================================
+             CLIENT COUNT
+        ====================================================== -->
+
+        <section class="stats-grid">
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span>
+                        Active Clients
+                    </span>
+
+                    <span class="stat-icon">
+                        ◉
+                    </span>
+
+                </div>
+
+                <strong id="clientCount">
+                    —
+                </strong>
+
+                <span class="stat-change">
+                    Live database count
+                </span>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span>
+                        Records
+                    </span>
+
+                    <span class="stat-icon">
+                        ▣
+                    </span>
+
+                </div>
+
+                <strong id="visibleClientCount">
+                    —
+                </strong>
+
+                <span class="stat-change">
+                    Currently displayed
+                </span>
+
+            </div>
+
+        </section>
+
+
+
+        
+        <!-- CLIENT REGISTRATIONS -->
+        <section class="dashboard-panel client-registrations-panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Client Registrations</h2>
+                    <p>Quick access to client registrations. Counts are live from the client database.</p>
+                </div>
+            </div>
+            <div class="client-registration-grid">
+                <a href="/admin/Pan-dashboard.html"
+                   class="client-registration-card"
+                   title="Permanent Account Number">
+                    <div class="client-registration-card-icon">P</div>
+                    <div class="client-registration-card-body">
+                        <strong>PAN</strong>
+                        <span>Permanent Account Number</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="pan">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                
+
+                <a href="/admin/cin.html"
+                   class="client-registration-card"
+                   title="Corporate Identification Number">
+                    <div class="client-registration-card-icon">C</div>
+                    <div class="client-registration-card-body">
+                        <strong>CIN</strong>
+                        <span>Corporate Identification Number</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="cin">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                <a href="/admin/fssai.html"
+                   class="client-registration-card"
+                   title="Food Safety Registration">
+                    <div class="client-registration-card-icon">F</div>
+                    <div class="client-registration-card-body">
+                        <strong>FSSAI</strong>
+                        <span>Food Safety Registration</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="fssai">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                <a href="/admin/gst.html"
+                   class="client-registration-card"
+                   title="Goods & Services Tax">
+                    <div class="client-registration-card-icon">G</div>
+                    <div class="client-registration-card-body">
+                        <strong>GST</strong>
+                        <span>Goods & Services Tax</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="gst">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                <a href="/admin/registrations.html?type=udyam"
+                   class="client-registration-card"
+                   title="MSME Udyam Registration">
+                    <div class="client-registration-card-icon">M</div>
+                    <div class="client-registration-card-body">
+                        <strong>MSME Udyam</strong>
+                        <span>MSME Udyam Registration</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="udyam">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                <a href="/admin/registrations.html?type=ptec"
+                   class="client-registration-card"
+                   title="Professional Tax Enrollment">
+                    <div class="client-registration-card-icon">P</div>
+                    <div class="client-registration-card-body">
+                        <strong>PTEC</strong>
+                        <span>Professional Tax Enrollment</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="ptec">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                <a href="/admin/registrations.html?type=ptrc"
+                   class="client-registration-card"
+                   title="Professional Tax Registration">
+                    <div class="client-registration-card-icon">P</div>
+                    <div class="client-registration-card-body">
+                        <strong>PTRC</strong>
+                        <span>Professional Tax Registration</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="ptrc">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+                <a href="/admin/registrations.html?type=tan"
+                   class="client-registration-card"
+                   title="Tax Deduction Account Number">
+                    <div class="client-registration-card-icon">T</div>
+                    <div class="client-registration-card-body">
+                        <strong>TAN</strong>
+                        <span>Tax Deduction Account Number</span>
+                    </div>
+                    <div class="client-registration-card-count">
+                        <strong data-registration-count="tan">0</strong>
+                        <span>Clients</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+<!-- =====================================================
+             CLIENT PANEL
+        ====================================================== -->
+
+        <section class="dashboard-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Client records
+                    </h2>
+
+                    <p>
+                        All active clients registered with the office.
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="/admin/add-client.html"
+                    class="primary-button"
+                    style="width:auto;padding:0 20px;"
+                >
+                    + Add Client
+                </a>
+
+            </div>
+
+
+            <!-- CLIENT FILTERS -->
+            <div class="client-filter-panel">
+                <div class="filter-grid">
+                    <div class="form-group"><label for="clientSearch">Search Client</label><input id="clientSearch" type="text" placeholder="Name, PAN, GST, email, phone..." autocomplete="off"></div>
+                    <div class="form-group"><label for="filterClientType">Client Type</label><select id="filterClientType"><option value="">All client types</option><option value="individual">Individual</option><option value="huf">HUF</option><option value="partnership">Partnership Firm</option><option value="llp">LLP</option><option value="private_limited">Private Limited Company</option><option value="cooperative_society">Co-operative Society</option><option value="trust">Trust</option></select></div>
+                    <div class="form-group"><label for="filterState">State</label><select id="filterState"><option value="">All states</option></select></div>
+                    <div class="form-group"><label for="filterDistrict">District</label><select id="filterDistrict" disabled><option value="">All districts</option></select></div>
+                    <div class="form-group"><label for="filterCity">City / Town</label><select id="filterCity" disabled><option value="">All cities</option></select></div>
+                    <div class="form-group"><label for="filterStatus">Status</label><select id="filterStatus"><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+                    <div class="form-group"><label for="filterLocation">Office Location</label><select id="filterLocation"><option value="">All office locations</option></select></div>
+                    <div class="form-group"><label for="filterApplicableRegistration">Applicable Registration</label><select id="filterApplicableRegistration"><option value="">All registrations</option><option value="pan">PAN</option><option value="cin">CIN</option><option value="fssai">FSSAI</option><option value="gst">GST</option><option value="udyam">MSME Udyam</option><option value="ptec">PTEC</option><option value="ptrc">PTRC</option><option value="tan">TAN</option></select></div>
+                </div>
+                <div class="filter-actions">
+                    <button id="clearClientFilters" type="button" class="secondary-button">Clear Filters</button>
+                    <button id="exportClientsExcel" type="button" class="secondary-button">Export Excel</button>
+                    <button id="exportClientsPdf" type="button" class="primary-button">Export PDF</button>
+                </div>
+            </div>
+
+            <!-- ERROR -->
+
+            <div
+                id="clientsError"
+                class="form-alert error-alert"
+                style="margin:20px;"
+            ></div>
+
+
+            <!-- LOADING -->
+
+            <div
+                id="clientsLoading"
+                style="
+                    padding:40px;
+                    text-align:center;
+                    color:#777;
+                "
+            >
+                Loading clients...
+            </div>
+
+
+            <!-- TABLE -->
+
+            <div
+                id="clientsTableContainer"
+                style="
+                    display:none;
+                    overflow-x:auto;
+                "
+            >
+
+                <table
+                    style="
+                        width:100%;
+                        border-collapse:collapse;
+                        min-width:850px;
+                    "
+                >
+
+                    <thead>
+
+                        <tr>
+
+                            <th style="padding:14px;text-align:left;">
+                                Client
+                            </th>
+
+                            <th style="padding:14px;text-align:left;">
+                                Type
+                            </th>
+
+                            <th style="padding:14px;text-align:left;">
+                                Location
+                            </th>
+
+                            <th style="padding:14px;text-align:left;">
+                                Contact
+                            </th>
+
+                            <th style="padding:14px;text-align:left;">
+                                Assigned Employees
+                            </th>
+
+                            <th style="padding:14px;text-align:left;">
+                                Action
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="clientsTableBody">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- EMPTY -->
+
+            <div
+                id="clientsEmpty"
+                style="
+                    display:none;
+                    padding:50px;
+                    text-align:center;
+                "
+            >
+
+                <h3>
+                    No clients found
+                </h3>
+
+                <p>
+                    Add your first client to begin.
+                </p>
+
+                <a
+                    href="/admin/add-client.html"
+                    class="primary-button"
+                    style="
+                        display:inline-flex;
+                        width:auto;
+                        padding:0 20px;
+                        margin-top:15px;
+                    "
+                >
+                    + Add Client
+                </a>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+</div>
+
+
+<script src="/JS/auth.js"></script>
+
+<script src="/JS/admin.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="/JS/admin-clients.js?v=client-filters-4"></script>
+<script src="../JS/unified-sidebar.js"></script>
+</body>
+
+</html>
