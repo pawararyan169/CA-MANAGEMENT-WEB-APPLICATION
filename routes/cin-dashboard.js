@@ -1,39 +1,12 @@
 const express = require("express");
 
-const db =
-    require("../database/database");
+const db = require("../database/database");
 
 const {
     requireAuth
 } = require("../middleware/auth");
 
-const router =
-    express.Router();
-
-
-/* =========================================================
-   CREATE CIN TABLE
-========================================================= */
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS cin_records (
-
-        id TEXT PRIMARY KEY,
-
-        client_id TEXT NOT NULL UNIQUE,
-
-        annual_filing_date TEXT,
-
-        created_at TEXT NOT NULL,
-
-        updated_at TEXT NOT NULL,
-
-        FOREIGN KEY(client_id)
-            REFERENCES clients(id)
-            ON DELETE CASCADE
-
-    );
-`);
+const router = express.Router();
 
 
 /* =========================================================
@@ -41,34 +14,24 @@ db.exec(`
 ========================================================= */
 
 function clean(value) {
-
-    return String(
-        value ?? ""
-    ).trim();
-
+    return String(value ?? "").trim();
 }
 
 
 function isValidDate(value) {
-
     return (
         value === "" ||
-        /^\\d{4}-\\d{2}-\\d{2}$/.test(value)
+        /^\d{4}-\d{2}-\d{2}$/.test(value)
     );
-
 }
 
 
 function makeId() {
-
     return (
         "CIN" +
         Date.now() +
-        Math.floor(
-            Math.random() * 10000
-        )
+        Math.floor(Math.random() * 10000)
     );
-
 }
 
 
@@ -76,71 +39,68 @@ function makeId() {
    SYNC CLIENTS HAVING CIN
 ========================================================= */
 
-function syncCinRecords() {
+async function syncCinRecords() {
 
-    const clients =
-        db.prepare(`
-            SELECT id
-            FROM clients
+    const clientsSnapshot =
+        await db.collection("clients").get();
 
-            WHERE cin IS NOT NULL
-              AND TRIM(cin) <> ''
-        `).all();
+    const cinSnapshot =
+        await db.collection("cin_records").get();
 
+    const existingClientIds = new Set();
 
-    const find =
-        db.prepare(`
-            SELECT id
-            FROM cin_records
+    cinSnapshot.forEach(doc => {
+        const data = doc.data();
 
-            WHERE client_id = ?
-        `);
+        if (data.client_id) {
+            existingClientIds.add(data.client_id);
+        }
+    });
 
+    const batch = db.batch();
 
-    const insert =
-        db.prepare(`
-            INSERT INTO cin_records
-            (
-                id,
-                client_id,
-                created_at,
-                updated_at
-            )
+    let hasChanges = false;
 
-            VALUES
-            (?, ?, ?, ?)
-        `);
+    clientsSnapshot.forEach(clientDoc => {
 
+        const client = clientDoc.data();
 
-    const now =
-        new Date().toISOString();
+        if (
+            client.cin !== null &&
+            client.cin !== undefined &&
+            clean(client.cin) !== ""
+        ) {
 
+            const clientId =
+                client.id || clientDoc.id;
 
-    db.transaction(() => {
+            if (!existingClientIds.has(clientId)) {
 
-        clients.forEach(client => {
+                const id = makeId();
 
-            const existing =
-                find.get(
-                    client.id
-                );
+                const recordRef =
+                    db.collection("cin_records").doc(id);
 
+                const now =
+                    new Date().toISOString();
 
-            if (!existing) {
+                batch.set(recordRef, {
+                    id,
+                    client_id: clientId,
+                    annual_filing_date: null,
+                    created_at: now,
+                    updated_at: now
+                });
 
-                insert.run(
-                    makeId(),
-                    client.id,
-                    now,
-                    now
-                );
-
+                hasChanges = true;
             }
+        }
 
-        });
+    });
 
-    })();
-
+    if (hasChanges) {
+        await batch.commit();
+    }
 }
 
 
@@ -148,73 +108,96 @@ function syncCinRecords() {
    GET RECORDS
 ========================================================= */
 
-function getRecords() {
+async function getRecords() {
 
-    syncCinRecords();
+    await syncCinRecords();
+
+    const [
+        cinSnapshot,
+        clientsSnapshot
+    ] = await Promise.all([
+        db.collection("cin_records").get(),
+        db.collection("clients").get()
+    ]);
+
+    const clients = new Map();
+
+    clientsSnapshot.forEach(doc => {
+
+        const client = doc.data();
+
+        const clientId =
+            client.id || doc.id;
+
+        clients.set(clientId, {
+            ...client,
+            id: clientId
+        });
+
+    });
 
 
-    return db.prepare(`
-        SELECT
+    const records = [];
 
-            cr.id,
+    cinSnapshot.forEach(doc => {
 
-            cr.client_id,
+        const record =
+            doc.data();
 
-            c.cin,
+        const client =
+            clients.get(record.client_id);
 
-            cr.annual_filing_date,
+        if (!client) {
+            return;
+        }
 
-            c.first_name,
 
-            c.middle_name,
+        const cin =
+            clean(client.cin);
 
-            c.last_name
+        if (!cin) {
+            return;
+        }
 
-        FROM cin_records cr
 
-        INNER JOIN clients c
+        records.push({
 
-            ON c.id =
-               cr.client_id
+            id:
+                record.id || doc.id,
 
-        WHERE c.cin IS NOT NULL
+            clientId:
+                record.client_id,
 
-          AND TRIM(c.cin) <> ''
+            cin,
 
-        ORDER BY
-            c.cin ASC
+            partyName:
+                [
+                    client.first_name,
+                    client.middle_name,
+                    client.last_name
+                ]
+                    .filter(Boolean)
+                    .join(" "),
 
-    `).all().map(row => ({
+            annualFilingDate:
+                record.annual_filing_date || "",
 
-        id:
-            row.id,
+            status:
+                record.annual_filing_date
+                    ? "FILED"
+                    : "PENDING"
 
-        clientId:
-            row.client_id,
+        });
 
-        cin:
-            row.cin,
+    });
 
-        partyName:
-            [
-                row.first_name,
-                row.middle_name,
-                row.last_name
-            ]
-                .filter(Boolean)
-                .join(" "),
 
-        annualFilingDate:
-            row.annual_filing_date ||
-            "",
+    records.sort((a, b) =>
+        a.cin.localeCompare(b.cin)
+    );
 
-        status:
-            row.annual_filing_date
-                ? "FILED"
-                : "PENDING"
 
-    }));
-
+    return records;
 }
 
 
@@ -225,18 +208,17 @@ function getRecords() {
 router.get(
     "/cin-dashboard",
     requireAuth,
-    (req, res) => {
+    async (req, res) => {
 
         try {
 
             const records =
-                getRecords();
+                await getRecords();
 
 
             res.json({
 
-                success:
-                    true,
+                success: true,
 
                 records
 
@@ -253,8 +235,7 @@ router.get(
 
             res.status(500).json({
 
-                success:
-                    false,
+                success: false,
 
                 message:
                     error.message ||
@@ -275,7 +256,7 @@ router.get(
 router.patch(
     "/cin-dashboard/bulk",
     requireAuth,
-    (req, res) => {
+    async (req, res) => {
 
         try {
 
@@ -287,61 +268,69 @@ router.patch(
                     : [];
 
 
-            const update =
-                db.prepare(`
-                    UPDATE cin_records
-
-                    SET
-                        annual_filing_date = ?,
-                        updated_at = ?
-
-                    WHERE id = ?
-                `);
-
-
             const now =
                 new Date().toISOString();
 
 
-            db.transaction(() => {
-
-                records.forEach(record => {
-
-                    const date =
-                        clean(
-                            record.annualFilingDate
-                        );
+            const batch =
+                db.batch();
 
 
-                    if (
-                        !isValidDate(date)
-                    ) {
+            records.forEach(record => {
 
-                        throw new Error(
-                            "Annual Filing Date must use YYYY-MM-DD."
-                        );
-
-                    }
-
-
-                    update.run(
-                        date || null,
-                        now,
-                        clean(record.id)
+                const date =
+                    clean(
+                        record.annualFilingDate
                     );
 
-                });
 
-            })();
+                if (!isValidDate(date)) {
+
+                    throw new Error(
+                        "Annual Filing Date must use YYYY-MM-DD."
+                    );
+
+                }
+
+
+                const id =
+                    clean(record.id);
+
+
+                if (!id) {
+                    return;
+                }
+
+
+                const recordRef =
+                    db
+                        .collection("cin_records")
+                        .doc(id);
+
+
+                batch.update(
+                    recordRef,
+                    {
+                        annual_filing_date:
+                            date || null,
+
+                        updated_at:
+                            now
+                    }
+                );
+
+            });
+
+
+            await batch.commit();
 
 
             res.json({
 
-                success:
-                    true,
+                success: true,
 
                 records:
-                    getRecords()
+                    await getRecords()
 
             });
 
@@ -356,8 +345,7 @@ router.patch(
 
             res.status(400).json({
 
-                success:
-                    false,
+                success: false,
 
                 message:
                     error.message ||
@@ -371,5 +359,4 @@ router.patch(
 );
 
 
-module.exports =
-    router;
+module.exports = router;

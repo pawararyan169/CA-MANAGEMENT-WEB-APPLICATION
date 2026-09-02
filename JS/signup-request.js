@@ -1,285 +1,495 @@
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+/* =========================================================
+   SIGNUP REQUESTS — ADMIN
+========================================================= */
+
+(() => {
+
+    'use strict';
 
 
-        const container =
-            document.getElementById(
-                "signupRequestsList"
+    /* =====================================================
+       DOM HELPERS
+    ===================================================== */
+
+    const $ = id =>
+        document.getElementById(id);
+
+
+    const escapeHtml = value => {
+
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
+    };
+
+
+    /* =====================================================
+       API REQUEST HELPER
+    ===================================================== */
+
+    async function apiRequest(
+        url,
+        options = {}
+    ) {
+
+        const config = {
+            credentials: 'same-origin',
+            cache: 'no-store',
+            ...options,
+
+            headers: {
+                Accept: 'application/json',
+                ...(options.headers || {})
+            }
+        };
+
+
+        let response;
+
+
+        try {
+
+            response =
+                await fetch(
+                    url,
+                    config
+                );
+
+        } catch (error) {
+
+            console.error(
+                'API connection error:',
+                error
+            );
+
+            throw new Error(
+                'Unable to connect to the server. Please check your internet connection and try again.'
+            );
+
+        }
+
+
+        let data = null;
+
+
+        try {
+
+            data =
+                await response.json();
+
+        } catch (_) {
+
+            data = null;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data?.message ||
+                `Server returned HTTP ${response.status}.`
+            );
+
+        }
+
+
+        if (
+            data &&
+            data.success === false
+        ) {
+
+            throw new Error(
+                data.message ||
+                'The server rejected the request.'
+            );
+
+        }
+
+
+        return data || {};
+
+    }
+
+
+    /* =====================================================
+       LOAD REQUESTS
+    ===================================================== */
+
+    async function loadRequests() {
+
+        const list =
+            $('requestsList');
+
+        const count =
+            $('requestCount');
+
+
+        if (list) {
+
+            list.innerHTML = `
+                <div class="empty-state">
+                    <strong>
+                        Loading requests...
+                    </strong>
+                </div>
+            `;
+
+        }
+
+
+        if (count) {
+
+            count.textContent =
+                'Loading...';
+
+        }
+
+
+        try {
+
+            const data =
+                await apiRequest(
+                    '/api/admin/signup-requests',
+                    {
+                        method: 'GET'
+                    }
+                );
+
+
+            const requests =
+                Array.isArray(
+                    data.requests
+                )
+                    ? data.requests
+                    : [];
+
+
+            renderRequests(
+                requests
             );
 
 
-        if (!container) {
+        } catch (error) {
+
+            console.error(
+                'Load signup requests error:',
+                error
+            );
+
+
+            if (count) {
+
+                count.textContent =
+                    'Unable to load';
+
+            }
+
+
+            if (list) {
+
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <strong>
+                            Unable to load signup requests.
+                        </strong>
+
+                        <div class="request-error">
+                            ${escapeHtml(error.message)}
+                        </div>
+
+                        <button
+                            type="button"
+                            class="approve-btn"
+                            id="retrySignupRequests"
+                            style="margin-top:12px;"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                `;
+
+
+                const retry =
+                    $('retrySignupRequests');
+
+
+                retry?.addEventListener(
+                    'click',
+                    loadRequests
+                );
+
+            }
+
+        }
+
+    }
+
+
+    /* =====================================================
+       RENDER REQUESTS
+    ===================================================== */
+
+    function renderRequests(
+        requests
+    ) {
+
+        const list =
+            $('requestsList');
+
+        const count =
+            $('requestCount');
+
+
+        if (!list) {
+            return;
+        }
+
+
+        if (count) {
+
+            count.textContent =
+                `${requests.length} request${requests.length === 1 ? '' : 's'}`;
+
+        }
+
+
+        if (!requests.length) {
+
+            list.innerHTML = `
+                <div class="empty-state">
+                    <strong>
+                        No signup requests
+                    </strong>
+
+                    <span>
+                        There are currently no employee registration requests.
+                    </span>
+                </div>
+            `;
 
             return;
 
         }
 
 
-        loadRequests();
-
-
-        async function loadRequests() {
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/admin/signup-requests"
-                    );
-
-
-                const result =
-                    await response.json();
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        result.message
-                    );
-
-                }
-
-
-                renderRequests(
-                    result.requests
-                );
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    error
-                );
-
-
-                container.innerHTML = `
-
-                    <div class="empty-state">
-
-                        <strong>
-                            Unable to load requests
-                        </strong>
-
-                        <span>
-                            Make sure the server is running.
-                        </span>
-
-                    </div>
-
-                `;
-
-            }
-
-        }
-
-
-        function renderRequests(
+        list.innerHTML =
             requests
-        ) {
-
-            const pending =
-                requests.filter(
-                    request =>
-                        request.status ===
-                        "pending"
-                );
+                .map(renderRequest)
+                .join('');
 
 
-            if (
-                pending.length ===
-                0
-            ) {
+        attachEvents();
 
-                container.innerHTML = `
-
-                    <div class="empty-state">
-
-                        <strong>
-                            No pending requests
-                        </strong>
-
-                        <span>
-                            New employee registration requests will appear here.
-                        </span>
-
-                    </div>
-
-                `;
-
-                return;
-
-            }
+    }
 
 
-            container.innerHTML =
-                pending.map(
-                    request =>
-                        createRequestCard(
-                            request
-                        )
-                ).join("");
+    /* =====================================================
+       RENDER SINGLE REQUEST
+    ===================================================== */
+
+    function renderRequest(
+        request
+    ) {
+
+        const id =
+            escapeHtml(
+                request.id
+            );
 
 
-            attachEvents();
+        const firstName =
+            escapeHtml(
+                request.firstName
+            );
+
+        const middleName =
+            escapeHtml(
+                request.middleName
+            );
+
+        const lastName =
+            escapeHtml(
+                request.lastName
+            );
+
+        const email =
+            escapeHtml(
+                request.email
+            );
+
+        const phone =
+            escapeHtml(
+                request.phone
+            );
+
+        const aadhaar =
+            escapeHtml(
+                request.aadhaar
+            );
+
+        const pan =
+            escapeHtml(
+                request.pan
+            );
+
+        const message =
+            escapeHtml(
+                request.message
+            );
+
+
+        const fullName =
+            [
+                request.firstName,
+                request.middleName,
+                request.lastName
+            ]
+                .filter(Boolean)
+                .join(' ');
+
+
+        const status =
+            String(
+                request.status || 'pending'
+            ).toLowerCase();
+
+
+        const createdAt =
+            formatDate(
+                request.createdAt
+            );
+
+
+        let statusLabel =
+            status;
+
+
+        if (status === 'pending') {
+
+            statusLabel =
+                'PENDING';
+
+        } else if (status === 'approved') {
+
+            statusLabel =
+                'APPROVED';
+
+        } else if (status === 'rejected') {
+
+            statusLabel =
+                'REJECTED';
 
         }
 
 
-        function createRequestCard(
-            request
-        ) {
-
-            return `
-
-                <div
-                    class="signup-request-card"
-                    data-request-id="${request.id}"
-                >
-
-                    <div class="request-main">
+        const processed =
+            status !== 'pending';
 
 
-                        <div class="request-avatar">
+        return `
+            <article
+                class="request-card"
+                data-request-id="${id}"
+            >
 
-                            ${escapeHtml(
-                                request.fullName
-                                    .charAt(0)
-                                    .toUpperCase()
-                            )}
+                <div class="request-header">
 
-                        </div>
+                    <div>
+                        <strong class="request-title">
+                            ${fullName || 'Unnamed applicant'}
+                        </strong>
 
+                        <span class="request-id">
+                            Request ID: ${id}
+                        </span>
+                    </div>
 
-                        <div class="request-details">
+                    <span class="request-status ${status}">
+                        ${statusLabel}
+                    </span>
 
-                            <div class="request-title-row">
-
-                                <div>
-
-                                    <span class="work-id">
-                                        ${request.id}
-                                    </span>
-
-                                    <h3>
-                                        ${escapeHtml(request.fullName)}
-                                    </h3>
-
-                                </div>
-
-                                <span class="request-status">
-                                    Pending
-                                </span>
-
-                            </div>
+                </div>
 
 
-                            <div class="request-information">
+                <div class="request-info">
 
-                                <div>
+                    <div class="request-info-item">
+                        <span>Name</span>
+                        <strong>
+                            ${fullName || '—'}
+                        </strong>
+                    </div>
 
-                                    <span>
-                                        Email
-                                    </span>
 
+                    <div class="request-info-item">
+                        <span>Email</span>
+                        <strong>
+                            ${email || '—'}
+                        </strong>
+                    </div>
+
+
+                    <div class="request-info-item">
+                        <span>Phone</span>
+                        <strong>
+                            ${phone || '—'}
+                        </strong>
+                    </div>
+
+
+                    <div class="request-info-item">
+                        <span>Aadhaar</span>
+                        <strong>
+                            ${aadhaar || '—'}
+                        </strong>
+                    </div>
+
+
+                    <div class="request-info-item">
+                        <span>PAN</span>
+                        <strong>
+                            ${pan || '—'}
+                        </strong>
+                    </div>
+
+
+                    <div class="request-info-item">
+                        <span>Submitted</span>
+                        <strong>
+                            ${createdAt}
+                        </strong>
+                    </div>
+
+
+                    ${
+                        message
+                            ? `
+                                <div class="request-info-item full-width">
+                                    <span>Message</span>
                                     <strong>
-                                        ${escapeHtml(request.email)}
+                                        ${message}
                                     </strong>
-
                                 </div>
+                            `
+                            : ''
+                    }
+
+                </div>
 
 
-                                <div>
+                ${
+                    !processed
+                        ? `
+                            <div class="approval-section">
 
-                                    <span>
-                                        Phone
-                                    </span>
+                                <div class="approval-fields">
 
-                                    <strong>
-                                        ${escapeHtml(request.phone)}
-                                    </strong>
-
-                                </div>
-
-
-                                <div>
-
-                                    <span>
-                                        Designation
-                                    </span>
-
-                                    <strong>
-                                        ${escapeHtml(
-                                            request.designation ||
-                                            "Not specified"
-                                        )}
-                                    </strong>
-
-                                </div>
-
-
-                                <div>
-
-                                    <span>
-                                        Submitted
-                                    </span>
-
-                                    <strong>
-                                        ${formatDate(
-                                            request.createdAt
-                                        )}
-                                    </strong>
-
-                                </div>
-
-                            </div>
-
-
-                            ${
-                                request.message
-                                    ? `
-                                    <div class="request-message">
-
-                                        <span>
-                                            Applicant note
-                                        </span>
-
-                                        <p>
-                                            ${escapeHtml(
-                                                request.message
-                                            )}
-                                        </p>
-
-                                    </div>
-                                    `
-                                    : ""
-                            }
-
-
-                            <div
-                                class="approval-form"
-                                id="approval-${request.id}"
-                            >
-
-                                <div class="approval-heading">
-
-                                    <strong>
-                                        Create employee credentials
-                                    </strong>
-
-                                    <span>
-                                        These credentials will be used for login.
-                                    </span>
-
-                                </div>
-
-
-                                <div class="approval-grid">
-
-                                    <div class="form-group">
-
+                                    <div>
                                         <label>
                                             Username
                                         </label>
@@ -287,393 +497,476 @@ document.addEventListener(
                                         <input
                                             type="text"
                                             class="approval-username"
-                                            data-id="${request.id}"
-                                            placeholder="e.g. rahul.mehta"
+                                            placeholder="Employee username"
+                                            minlength="4"
+                                            autocomplete="off"
                                         >
-
                                     </div>
 
 
-                                    <div class="form-group">
-
+                                    <div>
                                         <label>
-                                            Temporary password
+                                            Password
                                         </label>
 
                                         <input
                                             type="password"
                                             class="approval-password"
-                                            data-id="${request.id}"
                                             placeholder="Minimum 8 characters"
+                                            minlength="8"
+                                            autocomplete="new-password"
                                         >
-
                                     </div>
 
                                 </div>
-
-
-                                <div
-                                    class="approval-error"
-                                    id="approvalError-${request.id}"
-                                ></div>
 
 
                                 <div class="approval-actions">
 
                                     <button
                                         type="button"
-                                        class="approve-request-button"
-                                        data-id="${request.id}"
+                                        class="approve-btn"
+                                        data-action="approve"
+                                        data-id="${id}"
                                     >
-                                        Approve & create account
+                                        Approve & Create Account
                                     </button>
 
 
                                     <button
                                         type="button"
-                                        class="reject-request-button"
-                                        data-id="${request.id}"
+                                        class="reject-btn"
+                                        data-action="reject"
+                                        data-id="${id}"
                                     >
                                         Reject
                                     </button>
 
                                 </div>
 
+
+                                <div
+                                    class="request-error"
+                                    data-error-for="${id}"
+                                    style="display:none;"
+                                ></div>
+
                             </div>
-
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            `;
-
-        }
-
-
-        function attachEvents() {
-
-            document
-                .querySelectorAll(
-                    ".approve-request-button"
-                )
-                .forEach(
-                    button => {
-
-                        button.addEventListener(
-                            "click",
-                            () => {
-
-                                approveRequest(
-                                    button.dataset.id
-                                );
-
-                            }
-                        );
-
-                    }
-                );
-
-
-            document
-                .querySelectorAll(
-                    ".reject-request-button"
-                )
-                .forEach(
-                    button => {
-
-                        button.addEventListener(
-                            "click",
-                            () => {
-
-                                rejectRequest(
-                                    button.dataset.id
-                                );
-
-                            }
-                        );
-
-                    }
-                );
-
-        }
-
-
-        async function approveRequest(
-            requestId
-        ) {
-
-            const username =
-                document.querySelector(
-                    `.approval-username[data-id="${requestId}"]`
-                )?.value.trim();
-
-
-            const password =
-                document.querySelector(
-                    `.approval-password[data-id="${requestId}"]`
-                )?.value;
-
-
-            const errorElement =
-                document.getElementById(
-                    `approvalError-${requestId}`
-                );
-
-
-            if (!username) {
-
-                showError(
-                    errorElement,
-                    "Enter a username."
-                );
-
-                return;
-
-            }
-
-
-            if (
-                username.length <
-                4
-            ) {
-
-                showError(
-                    errorElement,
-                    "Username must contain at least 4 characters."
-                );
-
-                return;
-
-            }
-
-
-            if (!password) {
-
-                showError(
-                    errorElement,
-                    "Enter a temporary password."
-                );
-
-                return;
-
-            }
-
-
-            if (
-                password.length <
-                8
-            ) {
-
-                showError(
-                    errorElement,
-                    "Password must contain at least 8 characters."
-                );
-
-                return;
-
-            }
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        `/api/admin/signup-requests/${requestId}/approve`,
-                        {
-
-                            method:
-                                "POST",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    username,
-
-                                    password
-
-                                })
-
-                        }
-                    );
-
-
-                const result =
-                    await response.json();
-
-
-                if (!response.ok) {
-
-                    showError(
-                        errorElement,
-                        result.message
-                    );
-
-                    return;
-
+                        `
+                        : ''
                 }
 
+            </article>
+        `;
 
-                alert(
-                    `Account created successfully.\n\nUsername: ${username}\nPassword: ${password}`
-                );
-
-
-                loadRequests();
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    error
-                );
+    }
 
 
-                showError(
-                    errorElement,
-                    "Unable to connect to server."
-                );
+    /* =====================================================
+       FORMAT DATE
+    ===================================================== */
 
-            }
+    function formatDate(
+        value
+    ) {
 
+        if (!value) {
+            return '—';
         }
 
 
-        async function rejectRequest(
-            requestId
+        const date =
+            new Date(value);
+
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
         ) {
 
-            const confirmed =
-                confirm(
-                    "Are you sure you want to reject this registration request?"
-                );
-
-
-            if (!confirmed) {
-
-                return;
-
-            }
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        `/api/admin/signup-requests/${requestId}/reject`,
-                        {
-                            method:
-                                "POST"
-                        }
-                    );
-
-
-                const result =
-                    await response.json();
-
-
-                if (!response.ok) {
-
-                    alert(
-                        result.message
-                    );
-
-                    return;
-
-                }
-
-
-                loadRequests();
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    error
-                );
-
-                alert(
-                    "Unable to connect to server."
-                );
-
-            }
-
-        }
-
-
-        function showError(
-            element,
-            message
-        ) {
-
-            if (!element) {
-
-                return;
-
-            }
-
-
-            element.textContent =
-                message;
-
-        }
-
-
-        function formatDate(
-            date
-        ) {
-
-            return new Date(
-                date
-            ).toLocaleString(
-                "en-IN",
-                {
-                    day:
-                        "2-digit",
-
-                    month:
-                        "short",
-
-                    year:
-                        "numeric",
-
-                    hour:
-                        "2-digit",
-
-                    minute:
-                        "2-digit"
-                }
+            return escapeHtml(
+                value
             );
 
         }
 
 
-        function escapeHtml(
-            value
-        ) {
+        return date.toLocaleString(
+            undefined,
+            {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            }
+        );
 
-            const div =
-                document.createElement(
-                    "div"
+    }
+
+
+    /* =====================================================
+       ATTACH EVENTS
+    ===================================================== */
+
+    function attachEvents() {
+
+        document
+            .querySelectorAll(
+                '[data-action="approve"]'
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    'click',
+                    () => {
+
+                        approveRequest(
+                            button.dataset.id,
+                            button
+                        );
+
+                    }
+                );
+
+            });
+
+
+        document
+            .querySelectorAll(
+                '[data-action="reject"]'
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    'click',
+                    () => {
+
+                        rejectRequest(
+                            button.dataset.id,
+                            button
+                        );
+
+                    }
+                );
+
+            });
+
+    }
+
+
+    /* =====================================================
+       APPROVE REQUEST
+    ===================================================== */
+
+    async function approveRequest(
+        id,
+        button
+    ) {
+
+        const card =
+            document.querySelector(
+                `[data-request-id="${CSS.escape(id)}"]`
+            );
+
+
+        if (!card) {
+            return;
+        }
+
+
+        const usernameInput =
+            card.querySelector(
+                '.approval-username'
+            );
+
+
+        const passwordInput =
+            card.querySelector(
+                '.approval-password'
+            );
+
+
+        const errorBox =
+            card.querySelector(
+                `[data-error-for="${CSS.escape(id)}"]`
+            );
+
+
+        const username =
+            usernameInput?.value.trim() ||
+            '';
+
+        const password =
+            passwordInput?.value ||
+            '';
+
+
+        if (username.length < 4) {
+
+            showRequestError(
+                errorBox,
+                'Username must contain at least 4 characters.'
+            );
+
+            usernameInput?.focus();
+
+            return;
+
+        }
+
+
+        if (password.length < 8) {
+
+            showRequestError(
+                errorBox,
+                'Password must contain at least 8 characters.'
+            );
+
+            passwordInput?.focus();
+
+            return;
+
+        }
+
+
+        const confirmed =
+            window.confirm(
+                `Approve this signup request and create the employee account "${username}"?`
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        button.disabled = true;
+
+        button.dataset.originalText =
+            button.textContent;
+
+        button.textContent =
+            'Creating account...';
+
+
+        hideRequestError(
+            errorBox
+        );
+
+
+        try {
+
+            const data =
+                await apiRequest(
+                    `/api/admin/signup-requests/${encodeURIComponent(id)}/approve`,
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/json'
+                        },
+
+                        body:
+                            JSON.stringify({
+                                username,
+                                password
+                            })
+                    }
                 );
 
 
-            div.textContent =
-                value || "";
+            alert(
+                data.message ||
+                'Employee account created successfully.'
+            );
 
 
-            return div.innerHTML;
+            await loadRequests();
+
+
+        } catch (error) {
+
+            console.error(
+                'Approve request error:',
+                error
+            );
+
+
+            showRequestError(
+                errorBox,
+                error.message
+            );
+
+
+            button.disabled = false;
+
+            button.textContent =
+                button.dataset.originalText ||
+                'Approve & Create Account';
 
         }
 
     }
-);
+
+
+    /* =====================================================
+       REJECT REQUEST
+    ===================================================== */
+
+    async function rejectRequest(
+        id,
+        button
+    ) {
+
+        const confirmed =
+            window.confirm(
+                'Reject this signup request?'
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        const card =
+            document.querySelector(
+                `[data-request-id="${CSS.escape(id)}"]`
+            );
+
+
+        const errorBox =
+            card?.querySelector(
+                `[data-error-for="${CSS.escape(id)}"]`
+            );
+
+
+        button.disabled = true;
+
+        button.dataset.originalText =
+            button.textContent;
+
+        button.textContent =
+            'Rejecting...';
+
+
+        hideRequestError(
+            errorBox
+        );
+
+
+        try {
+
+            const data =
+                await apiRequest(
+                    `/api/admin/signup-requests/${encodeURIComponent(id)}/reject`,
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/json'
+                        },
+
+                        body:
+                            JSON.stringify({})
+                    }
+                );
+
+
+            alert(
+                data.message ||
+                'Signup request rejected.'
+            );
+
+
+            await loadRequests();
+
+
+        } catch (error) {
+
+            console.error(
+                'Reject request error:',
+                error
+            );
+
+
+            showRequestError(
+                errorBox,
+                error.message
+            );
+
+
+            button.disabled = false;
+
+            button.textContent =
+                button.dataset.originalText ||
+                'Reject';
+
+        }
+
+    }
+
+
+    /* =====================================================
+       ERROR HELPERS
+    ===================================================== */
+
+    function showRequestError(
+        element,
+        message
+    ) {
+
+        if (!element) {
+
+            alert(
+                message
+            );
+
+            return;
+
+        }
+
+
+        element.textContent =
+            message;
+
+        element.style.display =
+            'block';
+
+    }
+
+
+    function hideRequestError(
+        element
+    ) {
+
+        if (!element) {
+            return;
+        }
+
+
+        element.textContent =
+            '';
+
+        element.style.display =
+            'none';
+
+    }
+
+
+    /* =====================================================
+       INITIAL LOAD
+    ===================================================== */
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        () => {
+
+            loadRequests();
+
+        }
+    );
+
+
+})();

@@ -1,1090 +1,447 @@
-const Database = require("better-sqlite3");
-const path = require("path");
+/*
+ * Firebase-backed database bridge.
+ *
+ * The application still uses its existing better-sqlite3 query code so
+ * existing routes, APIs and UI do not need to change. SQLite is used only
+ * as a local query/cache engine; Firebase Firestore is the persistent store.
+ */
+
 const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+const sqlite = require("./database-sqlite-engine");
+const { getFirestore } = require("../firebase-admin");
 
-/* =========================================================
-   DATABASE LOCATION
-========================================================= */
+const firestore = getFirestore();
 
-const dataDirectory = path.join(
-    __dirname,
-    "..",
-    "data"
-);
+let firebaseReady = false;
+let writeQueue = Promise.resolve();
 
-if (!fs.existsSync(dataDirectory)) {
-    fs.mkdirSync(
-        dataDirectory,
-        {
-            recursive: true
+function sleepTick() {
+    return new Promise(resolve => setImmediate(resolve));
+}
+
+function cleanFirestoreValue(value) {
+    if (value === undefined) return null;
+    if (value === null) return null;
+
+    if (Buffer.isBuffer(value)) {
+        return {
+            __type: "Buffer",
+            base64: value.toString("base64")
+        };
+    }
+
+    if (Array.isArray(value)) {
+        return value.map(cleanFirestoreValue);
+    }
+
+    if (typeof value === "object") {
+        const output = {};
+        for (const [key, child] of Object.entries(value)) {
+            output[key] = cleanFirestoreValue(child);
         }
-    );
+        return output;
+    }
+
+    if (typeof value === "number") {
+        if (!Number.isFinite(value)) return null;
+        return value;
+    }
+
+    return value;
 }
 
-const databasePath = path.join(
-    dataDirectory,
-    "ca-office.sqlite"
-);
+function restoreFirestoreValue(value) {
+    if (value && typeof value === "object") {
+        if (
+            value.__type === "Buffer" &&
+            typeof value.base64 === "string"
+        ) {
+            return Buffer.from(value.base64, "base64");
+        }
 
-console.log(
-    "Database:",
-    databasePath
-);
+        if (Array.isArray(value)) {
+            return value.map(restoreFirestoreValue);
+        }
 
-const db = new Database(
-    databasePath
-);
+        const output = {};
+        for (const [key, child] of Object.entries(value)) {
+            output[key] = restoreFirestoreValue(child);
+        }
+        return output;
+    }
 
-db.pragma(
-    "journal_mode = WAL"
-);
+    return value;
+}
 
-db.pragma(
-    "foreign_keys = ON"
-);
-
-
-/* =========================================================
-   GST DASHBOARD
-   Basic GST details persist; working dates are stored per month.
-========================================================= */
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS gst_profiles (
-        id TEXT PRIMARY KEY,
-        client_id TEXT NOT NULL UNIQUE,
-        trade_name TEXT NOT NULL DEFAULT '',
-        wef TEXT NOT NULL DEFAULT '',
-        registration_type TEXT NOT NULL DEFAULT 'REGULAR',
-        filing_frequency TEXT NOT NULL DEFAULT 'MONTHLY',
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS gst_monthly_records (
-        id TEXT PRIMARY KEY,
-        gst_profile_id TEXT NOT NULL,
-        month_key TEXT NOT NULL,
-        document_received_date TEXT,
-        working_date TEXT,
-        gstr1_iff_filing_date TEXT,
-        tax_payment_date TEXT,
-        three_b_filing_date TEXT,
-        set_date TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        UNIQUE (gst_profile_id, month_key),
-        FOREIGN KEY (gst_profile_id) REFERENCES gst_profiles(id) ON DELETE CASCADE
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_gst_monthly_month
-        ON gst_monthly_records(month_key);
-`);
-
-
-/* =========================================================
-   GST GSTR-1 / IFF MIGRATION
-========================================================= */
-
-try {
-
-    const cols = db
-        .prepare(
-            `PRAGMA table_info(gst_monthly_records)`
-        )
+function tableNames() {
+    return sqlite
+        .prepare(`
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name NOT LIKE 'sqlite_%'
+            ORDER BY name
+        `)
         .all()
-        .map(c => c.name);
+        .map(row => row.name);
+}
 
-    if (!cols.includes("gstr1_iff_filing_date")) {
+function rowsForTable(table) {
+    return sqlite
+        .prepare(`SELECT * FROM "${table.replace(/"/g, '""')}"`)
+        .all();
+}
 
-        db.exec(
-            `ALTER TABLE gst_monthly_records
-             ADD COLUMN gstr1_iff_filing_date TEXT`
-        );
+function collectionFor(table) {
+    return firestore.collection(table);
+}
+
+function documentIdForRow(row, index) {
+    if (row.id !== undefined && row.id !== null && String(row.id) !== "") {
+        return String(row.id);
     }
-
-    const cols2 = db
-        .prepare(
-            `PRAGMA table_info(gst_monthly_records)`
-        )
-        .all()
-        .map(c => c.name);
 
     if (
-        cols2.includes("gstr1_filing_date") ||
-        cols2.includes("iff_filing_date")
+        row.client_id !== undefined &&
+        row.client_id !== null
     ) {
-
-        const g =
-            cols2.includes("gstr1_filing_date")
-                ? "gstr1_filing_date"
-                : "NULL";
-
-        const i =
-            cols2.includes("iff_filing_date")
-                ? "iff_filing_date"
-                : "NULL";
-
-        db.exec(`
-            UPDATE gst_monthly_records
-            SET gstr1_iff_filing_date =
-                COALESCE(${g}, ${i})
-            WHERE gstr1_iff_filing_date IS NULL
-        `);
+        return `client_${String(row.client_id)}`;
     }
 
-} catch (e) {
-
-    console.warn(
-        "GST GSTR-1/IFF migration warning:",
-        e.message
-    );
+    return crypto
+        .createHash("sha256")
+        .update(JSON.stringify(row) + `:${index}`)
+        .digest("hex")
+        .slice(0, 40);
 }
 
-
-/* =========================================================
-   USERS
-========================================================= */
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-
-        id TEXT PRIMARY KEY,
-
-        username TEXT NOT NULL UNIQUE,
-
-        password_hash TEXT NOT NULL,
-
-        first_name TEXT NOT NULL,
-
-        middle_name TEXT,
-
-        last_name TEXT NOT NULL,
-
-        email TEXT,
-
-        phone TEXT,
-
-        designation TEXT,
-
-        role TEXT NOT NULL DEFAULT 'employee',
-
-        status TEXT NOT NULL DEFAULT 'active',
-
-        created_at TEXT NOT NULL,
-
-        approved_at TEXT
-
-    );
-`);
-
-
-/* =========================================================
-   SIGNUP REQUESTS
-========================================================= */
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS signup_requests (
-
-        id TEXT PRIMARY KEY,
-
-        first_name TEXT NOT NULL,
-
-        middle_name TEXT,
-
-        last_name TEXT NOT NULL,
-
-        email TEXT NOT NULL,
-
-        phone TEXT NOT NULL,
-
-        aadhaar TEXT,
-
-        pan TEXT,
-
-        designation TEXT,
-
-        message TEXT,
-
-        status TEXT NOT NULL DEFAULT 'pending',
-
-        created_at TEXT NOT NULL,
-
-        reviewed_at TEXT,
-
-        reviewed_by TEXT,
-
-        approved_username TEXT
-
-    );
-`);
-
-
-/* =========================================================
-   LOCATIONS
-========================================================= */
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS locations (
-
-        id TEXT PRIMARY KEY,
-
-        name TEXT NOT NULL UNIQUE,
-
-        city TEXT,
-
-        state TEXT,
-
-        country TEXT,
-
-        address TEXT,
-
-        status TEXT NOT NULL DEFAULT 'active',
-
-        created_by TEXT,
-
-        created_at TEXT NOT NULL
-
-    );
-`);
-
-
-/* =========================================================
-   CLIENTS
-========================================================= */
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS clients (
-
-        id TEXT PRIMARY KEY,
-
-        first_name TEXT NOT NULL,
-
-        middle_name TEXT,
-
-        last_name TEXT NOT NULL,
-
-        client_type TEXT NOT NULL,
-
-        location_id TEXT NOT NULL,
-
-        address TEXT NOT NULL,
-
-        pan TEXT,
-
-        aadhaar TEXT,
-
-        tan TEXT,
-
-        gst TEXT,
-
-        udyam TEXT,
-
-        cin TEXT,
-
-        fssai TEXT,
-
-        ptec TEXT,
-
-        ptrc TEXT,
-
-        contact TEXT NOT NULL,
-
-        email TEXT,
-
-        date_of_birth TEXT,
-
-        date_of_registration TEXT,
-
-        gender TEXT,
-
-        authorised_person_same_as_client
-            INTEGER DEFAULT 0,
-
-        authorised_person_name TEXT,
-
-        authorised_person_contact TEXT,
-
-        authorised_person_email TEXT,
-
-        created_by TEXT NOT NULL,
-
-        created_at TEXT NOT NULL,
-
-        updated_at TEXT,
-
-        state TEXT,
-
-        district TEXT,
-
-        city TEXT,
-
-        contact_number TEXT,
-
-        status TEXT DEFAULT 'active',
-
-        authorised_same_as_client
-            INTEGER DEFAULT 0,
-
-        FOREIGN KEY (
-            location_id
-        )
-        REFERENCES locations(id)
-
-    );
-`);
-
-
-/* =========================================================
-   BILLING RECORDS
-========================================================= */
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS billing_records (
-
-        id TEXT PRIMARY KEY,
-
-        serial_number TEXT NOT NULL UNIQUE,
-
-        task_id TEXT NOT NULL UNIQUE,
-
-        chargeable_amount REAL NOT NULL DEFAULT 0,
-
-        receipt_date TEXT,
-
-        amount REAL NOT NULL DEFAULT 0,
-
-        payment_mode TEXT,
-
-        advance_payment_date TEXT,
-
-        advance_amount REAL NOT NULL DEFAULT 0,
-
-        advance_payment_mode TEXT,
-
-        balance REAL NOT NULL DEFAULT 0,
-
-        created_by TEXT,
-
-        created_at TEXT NOT NULL,
-
-        updated_at TEXT NOT NULL
-
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_billing_task
-        ON billing_records(task_id);
-`);
-
-
-/* =========================================================
-   TASKS
-========================================================= */
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS tasks (
-
-        id TEXT PRIMARY KEY,
-
-        title TEXT NOT NULL,
-
-        description TEXT,
-
-        client_id TEXT,
-
-        employee_id TEXT,
-
-        priority TEXT DEFAULT 'medium',
-
-        status TEXT DEFAULT 'pending',
-
-        progress INTEGER DEFAULT 0,
-
-        due_date TEXT,
-
-        latest_update TEXT,
-
-        created_by TEXT NOT NULL,
-
-        created_at TEXT NOT NULL,
-
-        updated_at TEXT NOT NULL
-
-    );
-`);
-
-
-/* =========================================================
-   CLIENT ASSIGNMENTS
-========================================================= */
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS client_assignments (
-
-        id TEXT PRIMARY KEY,
-
-        client_id TEXT NOT NULL,
-
-        employee_id TEXT NOT NULL,
-
-        assigned_by TEXT NOT NULL,
-
-        assigned_at TEXT NOT NULL,
-
-        UNIQUE (
-            client_id,
-            employee_id
-        )
-
-    );
-`);
-
-
-/* =========================================================
-   AUDIT LOGS
-========================================================= */
-
-db.exec(`
-    CREATE TABLE IF NOT EXISTS audit_logs (
-
-        id TEXT PRIMARY KEY,
-
-        user_id TEXT,
-
-        action TEXT NOT NULL,
-
-        entity_type TEXT,
-
-        entity_id TEXT,
-
-        description TEXT,
-
-        created_at TEXT NOT NULL
-
-    );
-`);
-
-
-/* =========================================================
-   GENERIC MIGRATION HELPER
-========================================================= */
-
-function addColumnIfMissing(
-    tableName,
-    columnName,
-    columnDefinition
-) {
-
-    const columns =
-        db
-            .prepare(
-                `PRAGMA table_info(${tableName})`
-            )
-            .all();
-
-    const exists =
-        columns.some(
-            column =>
-                column.name === columnName
-        );
-
-    if (!exists) {
-
-        console.log(
-            `Adding ${columnName} to ${tableName}...`
-        );
-
-        db.prepare(
-            `ALTER TABLE ${tableName}
-             ADD COLUMN ${columnName}
-             ${columnDefinition}`
-        ).run();
-
-    }
-
-}
-
-
-/* =========================================================
-   TASK MIGRATIONS
-========================================================= */
-
-addColumnIfMissing(
-    "tasks",
-    "assigned_to",
-    "TEXT"
-);
-
-addColumnIfMissing(
-    "tasks",
-    "client_id",
-    "TEXT"
-);
-
-addColumnIfMissing(
-    "tasks",
-    "description",
-    "TEXT"
-);
-
-addColumnIfMissing(
-    "tasks",
-    "status",
-    "TEXT DEFAULT 'pending'"
-);
-
-addColumnIfMissing(
-    "tasks",
-    "priority",
-    "TEXT DEFAULT 'medium'"
-);
-
-addColumnIfMissing(
-    "tasks",
-    "due_date",
-    "TEXT"
-);
-
-addColumnIfMissing(
-    "tasks",
-    "updated_at",
-    "TEXT"
-);
-
-addColumnIfMissing(
-    "tasks",
-    "progress",
-    "INTEGER DEFAULT 0"
-);
-
-addColumnIfMissing(
-    "tasks",
-    "latest_update",
-    "TEXT"
-);
-
-
-/* =========================================================
-   CLIENT MIGRATIONS
-========================================================= */
-
-function addClientColumnIfMissing(
-    columnName,
-    definition
-) {
-
-    const columns =
-        db
-            .prepare(
-                `PRAGMA table_info(clients)`
-            )
-            .all();
-
-    const exists =
-        columns.some(
-            column =>
-                column.name === columnName
-        );
-
-    if (!exists) {
-
-        console.log(
-            `Adding clients.${columnName}...`
-        );
-
-        db.prepare(
-            `ALTER TABLE clients
-             ADD COLUMN ${columnName}
-             ${definition}`
-        ).run();
-
-    }
-
-}
-
-
-/* =========================================================
-   REQUIRED CLIENT COLUMNS
-========================================================= */
-
-addClientColumnIfMissing(
-    "first_name",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "middle_name",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "last_name",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "client_type",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "location_id",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "state",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "district",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "city",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "address",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "gender",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "pan",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "aadhaar",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "tan",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "gst",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "udyam",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "cin",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "fssai",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "ptec",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "ptrc",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "contact_number",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "email",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "date_of_birth",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "date_of_registration",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "authorised_person_name",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "authorised_person_contact",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "authorised_person_email",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "created_by",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "created_at",
-    "TEXT"
-);
-
-
-/* =========================================================
-   IMPORTANT FIXES
-========================================================= */
-
-addClientColumnIfMissing(
-    "updated_at",
-    "TEXT"
-);
-
-addClientColumnIfMissing(
-    "status",
-    "TEXT DEFAULT 'active'"
-);
-
-addClientColumnIfMissing(
-    "authorised_same_as_client",
-    "INTEGER DEFAULT 0"
-);
-
-
-/* =========================================================
-   CLIENT COMPATIBILITY MIGRATION
-========================================================= */
-
-try {
-
-    const clientColumns =
-        db
-            .prepare(
-                `PRAGMA table_info(clients)`
-            )
-            .all()
-            .map(
-                column =>
-                    column.name
-            );
-
-
-    /*
-     * Copy old authorised-person flag
-     * into the new field.
-     */
-
-    if (
-        clientColumns.includes(
-            "authorised_person_same_as_client"
-        ) &&
-        clientColumns.includes(
-            "authorised_same_as_client"
-        )
-    ) {
-
-        db.prepare(`
-            UPDATE clients
-
-            SET authorised_same_as_client =
-                COALESCE(
-                    authorised_person_same_as_client,
-                    0
-                )
-
-            WHERE
-                authorised_same_as_client IS NULL
-                OR authorised_same_as_client = 0
-
-        `).run();
-
-    }
-
-
-    /*
-     * Existing clients should be active.
-     */
-
-    if (
-        clientColumns.includes(
-            "status"
-        )
-    ) {
-
-        db.prepare(`
-            UPDATE clients
-
-            SET status = 'active'
-
-            WHERE
-                status IS NULL
-                OR TRIM(status) = ''
-
-        `).run();
-
-    }
-
-
-    /*
-     * Keep contact fields synchronized.
-     */
-
-    if (
-        clientColumns.includes(
-            "contact"
-        ) &&
-        clientColumns.includes(
-            "contact_number"
-        )
-    ) {
-
-        db.prepare(`
-            UPDATE clients
-
-            SET contact_number = contact
-
-            WHERE
-                (
-                    contact_number IS NULL
-                    OR TRIM(contact_number) = ''
-                )
-                AND contact IS NOT NULL
-
-        `).run();
-
-
-        db.prepare(`
-            UPDATE clients
-
-            SET contact = contact_number
-
-            WHERE
-                (
-                    contact IS NULL
-                    OR TRIM(contact) = ''
-                )
-                AND contact_number IS NOT NULL
-
-        `).run();
-
-    }
-
-}
-catch (migrationError) {
-
-    console.error(
-        "Client compatibility migration warning:",
-        migrationError
-    );
-
-}
-
-
-/* =========================================================
-   OPTIONAL ONE-TIME PRODUCTION DATABASE RESET
-
-   Set RESET_DATABASE=true in Render ONLY for the
-   one-time clean production initialization.
-
-   This will:
-
-   - Keep the admin account
-   - Delete non-admin users
-   - Delete clients
-   - Delete GST records
-   - Delete PAN / Income Tax records
-   - Delete billing records
-   - Delete documents
-   - Delete tasks
-   - Delete signup requests
-   - Delete assignments
-   - Delete audit logs
-   - Preserve the database schema
-
-   IMPORTANT:
-   After the reset deployment succeeds,
-   REMOVE RESET_DATABASE from Render.
-========================================================= */
-
-if (
-    String(
-        process.env.RESET_DATABASE || ""
-    ).toLowerCase() === "true"
-) {
-
-    console.log("");
-    console.log(
-        "========================================"
-    );
-    console.log(
-        " RESET_DATABASE=true"
-    );
-    console.log(
-        " Cleaning application records..."
-    );
-    console.log(
-        "========================================"
-    );
-
-
-    const resetTables = [
-
-        "audit_logs",
-
-        "billing_records",
-
-        "client_assignments",
-
-        "fssai_yearly_records",
-
-        "gst_monthly_records",
-
-        "gst_profiles",
-
-        "income_tax_monthly_records",
-
-        "income_tax_profiles",
-
-        "office_billing",
-
-        "office_documents",
-
-        "office_tasks",
-
-        "pan_billing_status",
-
-        "professional_tax_yearly_records",
-
-        "signup_requests",
-
-        "tan_yearly_records",
-
-        "tasks",
-
-        "udyam_yearly_records",
-
-        "clients"
-
-    ];
-
-
-    const resetDatabase =
-        db.transaction(() => {
-
-            for (
-                const table
-                of resetTables
-            ) {
-
-                try {
-
-                    const result =
-                        db
-                            .prepare(
-                                `DELETE FROM "${table}"`
-                            )
-                            .run();
-
-                    console.log(
-                        `Reset ${table}: ${result.changes} row(s) deleted`
-                    );
-
-                }
-                catch (error) {
-
-                    console.error(
-                        `Reset ${table} failed:`,
-                        error.message
-                    );
-
-                    throw error;
-                }
-
+async function commitOperations(operations) {
+    for (let i = 0; i < operations.length; i += 450) {
+        const chunk = operations.slice(i, i + 450);
+        const batch = firestore.batch();
+
+        for (const operation of chunk) {
+            if (operation.type === "set") {
+                batch.set(
+                    operation.ref,
+                    operation.data,
+                    { merge: false }
+                );
+            } else if (operation.type === "delete") {
+                batch.delete(operation.ref);
             }
+        }
 
+        if (chunk.length) {
+            await batch.commit();
+        }
+    }
+}
 
-            /*
-             * Keep ONLY the admin account.
-             */
+async function syncTable(table) {
+    const rows = rowsForTable(table);
+    const collection = collectionFor(table);
+    const existing = await collection.get();
 
-            const usersResult =
-                db.prepare(`
-                    DELETE FROM users
-                    WHERE LOWER(username) <> 'admin'
-                `).run();
+    const operations = [];
+    const currentIds = new Set();
 
+    rows.forEach((row, index) => {
+        const docId = documentIdForRow(row, index);
+        currentIds.add(docId);
 
-            console.log(
-                `Reset users: ${usersResult.changes} non-admin user(s) deleted`
-            );
+        operations.push({
+            type: "set",
+            ref: collection.doc(docId),
+            data: cleanFirestoreValue(row)
+        });
+    });
 
+    existing.forEach(doc => {
+        if (!currentIds.has(doc.id)) {
+            operations.push({
+                type: "delete",
+                ref: doc.ref
+            });
+        }
+    });
+
+    await commitOperations(operations);
+}
+
+async function syncAllTables() {
+    for (const table of tableNames()) {
+        await syncTable(table);
+    }
+}
+
+async function clearTable(table) {
+    const tableName = table.replace(/"/g, '""');
+    sqlite.prepare(`DELETE FROM "${tableName}"`).run();
+}
+
+async function hydrateTable(table) {
+    const snapshot = await collectionFor(table).get();
+    const rows = snapshot.docs.map(doc => restoreFirestoreValue(doc.data()));
+
+    await clearTable(table);
+
+    if (!rows.length) return;
+
+    const columns = sqlite
+        .prepare(`PRAGMA table_info("${table.replace(/"/g, '""')}")`)
+        .all()
+        .map(column => column.name);
+
+    const usableRows = rows.map(row => {
+        const output = {};
+        for (const column of columns) {
+            if (Object.prototype.hasOwnProperty.call(row, column)) {
+                output[column] = row[column];
+            }
+        }
+        return output;
+    });
+
+    const insert = sqlite.transaction(() => {
+        for (const row of usableRows) {
+            const keys = Object.keys(row);
+            if (!keys.length) continue;
+
+            const quotedColumns = keys
+                .map(column => `"${column.replace(/"/g, '""')}"`)
+                .join(", ");
+
+            const placeholders = keys.map(() => "?").join(", ");
+
+            sqlite
+                .prepare(
+                    `INSERT OR REPLACE INTO "${table.replace(/"/g, '""')}" (${quotedColumns}) VALUES (${placeholders})`
+                )
+                .run(...keys.map(key => row[key]));
+        }
+    });
+
+    insert();
+}
+
+async function hydrateFromFirestore() {
+    const metaRef = firestore
+        .collection("_ca_office_meta")
+        .doc("database");
+
+    const meta = await metaRef.get();
+    const resetRequested =
+        String(process.env.RESET_DATABASE || "").toLowerCase() === "true";
+
+    if (!meta.exists || resetRequested) {
+        console.log("Firebase database initialization: uploading local database to Firestore...");
+        await syncAllTables();
+
+        await metaRef.set({
+            initialized: true,
+            updated_at: new Date().toISOString(),
+            mode: "sqlite-compatibility-bridge"
         });
 
+        console.log("Firebase database initialization completed.");
+        return;
+    }
 
-    resetDatabase();
+    console.log("Firebase database found: loading data into local query cache...");
 
+    sqlite.pragma("foreign_keys = OFF");
 
-    console.log("");
-    console.log(
-        "========================================"
-    );
-    console.log(
-        " DATABASE RESET COMPLETED"
-    );
-    console.log(
-        "========================================"
-    );
+    try {
+        for (const table of tableNames()) {
+            await hydrateTable(table);
+        }
+    } finally {
+        sqlite.pragma("foreign_keys = ON");
+    }
 
-
-    console.log(
-        "Remaining users:",
-        db
-            .prepare(`
-                SELECT
-                    id,
-                    username,
-                    role,
-                    status
-                FROM users
-            `)
-            .all()
-    );
-
-
-    console.log("");
-
-    console.log(
-        "IMPORTANT: Remove RESET_DATABASE from Render after this deployment."
-    );
-
+    console.log("Firebase data loaded successfully.");
 }
 
+function scheduleTableSync(table) {
+    if (!firebaseReady) return;
 
-console.log(
-    "Client database migration completed."
-);
+    writeQueue = writeQueue
+        .then(() => syncTable(table))
+        .catch(error => {
+            console.error(
+                `Firebase sync failed for ${table}:`,
+                error.message
+            );
+        });
+}
 
+function mutatedTables(sql) {
+    const tables = new Set();
+    const patterns = [
+        /\bINSERT\s+(?:OR\s+\w+\s+)?INTO\s+["`]?([\w-]+)["`]?/gi,
+        /\bUPDATE\s+["`]?([\w-]+)["`]?/gi,
+        /\bDELETE\s+FROM\s+["`]?([\w-]+)["`]?/gi,
+        /\bALTER\s+TABLE\s+["`]?([\w-]+)["`]?/gi,
+        /\bDROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?["`]?([\w-]+)["`]?/gi,
+        /\bCREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?["`]?([\w-]+)["`]?/gi
+    ];
 
-/* =========================================================
-   EXPORT DATABASE
-========================================================= */
+    for (const pattern of patterns) {
+        let match;
+        while ((match = pattern.exec(sql))) {
+            tables.add(match[1]);
+        }
+    }
 
-module.exports = db;
+    return [...tables];
+}
+
+function wrapStatement(statement, sql) {
+    const mutations = mutatedTables(sql).filter(
+        table => !/^sqlite_/i.test(table)
+    );
+
+    const originalRun = statement.run.bind(statement);
+    const originalGet = statement.get.bind(statement);
+    const originalAll = statement.all.bind(statement);
+    const originalIterate = statement.iterate
+        ? statement.iterate.bind(statement)
+        : null;
+
+    statement.run = (...args) => {
+        const result = originalRun(...args);
+        for (const table of mutations) {
+            scheduleTableSync(table);
+        }
+        return result;
+    };
+
+    statement.get = (...args) => originalGet(...args);
+    statement.all = (...args) => originalAll(...args);
+
+    if (originalIterate) {
+        statement.iterate = (...args) => originalIterate(...args);
+    }
+
+    return statement;
+}
+
+const originalPrepare = sqlite.prepare.bind(sqlite);
+const originalExec = sqlite.exec.bind(sqlite);
+const originalTransaction = sqlite.transaction.bind(sqlite);
+
+const database = {
+    prepare(sql) {
+        return wrapStatement(
+            originalPrepare(sql),
+            String(sql)
+        );
+    },
+
+    exec(sql) {
+        const result = originalExec(sql);
+
+        if (firebaseReady) {
+            const mutations = mutatedTables(String(sql));
+
+            if (mutations.length) {
+                for (const table of mutations) {
+                    scheduleTableSync(table);
+                }
+            } else {
+                writeQueue = writeQueue
+                    .then(() => syncAllTables())
+                    .catch(error => {
+                        console.error(
+                            "Firebase full sync failed:",
+                            error.message
+                        );
+                    });
+            }
+        }
+
+        return result;
+    },
+
+    transaction(fn) {
+        const transaction = originalTransaction(() => fn());
+
+        return (...args) => {
+            const result = transaction(...args);
+
+            if (firebaseReady) {
+                writeQueue = writeQueue
+                    .then(() => syncAllTables())
+                    .catch(error => {
+                        console.error(
+                            "Firebase transaction sync failed:",
+                            error.message
+                        );
+                    });
+            }
+
+            return result;
+        };
+    },
+
+    pragma(...args) {
+        return sqlite.pragma(...args);
+    },
+
+    get backup() {
+        return sqlite.backup.bind(sqlite);
+    },
+
+    get inTransaction() {
+        return sqlite.inTransaction;
+    },
+
+    get memory() {
+        return sqlite.memory;
+    },
+
+    get name() {
+        return sqlite.name;
+    },
+
+    get readonly() {
+        return sqlite.readonly;
+    },
+
+    get open() {
+        return sqlite.open;
+    },
+
+    get defaultSafeIntegers() {
+        return sqlite.defaultSafeIntegers.bind(sqlite);
+    },
+
+    get function() {
+        return sqlite.function.bind(sqlite);
+    },
+
+    get aggregate() {
+        return sqlite.aggregate.bind(sqlite);
+    }
+};
+
+/*
+ * Give route modules a moment to finish their existing CREATE TABLE / ALTER
+ * TABLE setup. Then Firestore becomes the source of truth before the server
+ * starts accepting requests.
+ */
+const ready = (async () => {
+    await sleepTick();
+    await hydrateFromFirestore();
+    firebaseReady = true;
+    return true;
+})();
+
+database.ready = ready;
+database.firestore = firestore;
+database.raw = sqlite;
+
+module.exports = database;

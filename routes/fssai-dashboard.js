@@ -8,23 +8,6 @@ const router = express.Router();
   FSSAI data is stored separately for every client + year.
   The FSSAI number itself comes from clients.fssai.
 */
-db.exec(`
-  CREATE TABLE IF NOT EXISTS fssai_yearly_records (
-    id TEXT PRIMARY KEY,
-    client_id TEXT NOT NULL,
-    record_year INTEGER NOT NULL,
-    date_of_expiry TEXT,
-    renewal_date TEXT,
-    new_expiry_date TEXT,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    UNIQUE(client_id, record_year),
-    FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE CASCADE
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_fssai_year
-  ON fssai_yearly_records(record_year);
-`);
 
 function clean(v) {
   return String(v ?? "").trim();
@@ -47,144 +30,421 @@ function makeId() {
   return `FSSAI_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
 }
 
-function syncYear(year) {
-  const clients = db.prepare(`
-    SELECT id
-    FROM clients
-    WHERE fssai IS NOT NULL
-      AND TRIM(fssai) <> ''
-  `).all();
 
-  const find = db.prepare(`
-    SELECT id
-    FROM fssai_yearly_records
-    WHERE client_id = ? AND record_year = ?
-  `);
+/* =========================================================
+   SYNC CLIENTS HAVING FSSAI
+========================================================= */
 
-  const insert = db.prepare(`
-    INSERT INTO fssai_yearly_records
-      (id, client_id, record_year, date_of_expiry,
-       renewal_date, new_expiry_date, created_at, updated_at)
-    VALUES (?, ?, ?, NULL, NULL, NULL, ?, ?)
-  `);
+async function syncYear(year) {
 
-  const now = new Date().toISOString();
+  const clientsSnapshot =
+    await db.collection("clients").get();
 
-  db.transaction(() => {
-    for (const client of clients) {
-      if (!find.get(client.id, year)) {
-        insert.run(makeId(), client.id, year, now, now);
-      }
+  const recordsSnapshot =
+    await db.collection("fssai_yearly_records")
+      .where("record_year", "==", year)
+      .get();
+
+  const existingClientIds = new Set();
+
+  recordsSnapshot.forEach(doc => {
+    const data = doc.data();
+
+    if (data.client_id) {
+      existingClientIds.add(data.client_id);
     }
-  })();
+  });
+
+
+  const batch = db.batch();
+
+  let hasChanges = false;
+
+  clientsSnapshot.forEach(clientDoc => {
+
+    const client = clientDoc.data();
+
+    const clientId =
+      client.id || clientDoc.id;
+
+    const fssai =
+      clean(client.fssai);
+
+    if (!fssai) {
+      return;
+    }
+
+    if (existingClientIds.has(clientId)) {
+      return;
+    }
+
+
+    const id = makeId();
+
+    const recordRef =
+      db
+        .collection("fssai_yearly_records")
+        .doc(id);
+
+    const now =
+      new Date().toISOString();
+
+
+    batch.set(recordRef, {
+
+      id,
+
+      client_id:
+        clientId,
+
+      record_year:
+        year,
+
+      date_of_expiry:
+        null,
+
+      renewal_date:
+        null,
+
+      new_expiry_date:
+        null,
+
+      created_at:
+        now,
+
+      updated_at:
+        now
+
+    });
+
+    hasChanges = true;
+
+  });
+
+
+  if (hasChanges) {
+    await batch.commit();
+  }
 }
 
-function getRecords(year) {
+
+/* =========================================================
+   GET RECORDS
+========================================================= */
+
+async function getRecords(year) {
+
   year = yearOf(year);
-  syncYear(year);
 
-  const rows = db.prepare(`
-    SELECT
-      fy.id,
-      fy.client_id,
-      fy.record_year,
-      fy.date_of_expiry,
-      fy.renewal_date,
-      fy.new_expiry_date,
-      c.fssai
-    FROM fssai_yearly_records fy
-    INNER JOIN clients c ON c.id = fy.client_id
-    WHERE fy.record_year = ?
-      AND c.fssai IS NOT NULL
-      AND TRIM(c.fssai) <> ''
-    ORDER BY c.fssai ASC
-  `).all(year);
+  await syncYear(year);
 
-  return rows.map(row => ({
-    id: row.id,
-    clientId: row.client_id,
-    year: row.record_year,
-    fssaiNumber: row.fssai,
-    dateOfExpiry: row.date_of_expiry || "",
-    renewalDate: row.renewal_date || "",
-    newExpiryDate: row.new_expiry_date || "",
-    status: row.date_of_expiry ? "ACTIVE" : "EXPIRED"
-  }));
+
+  const [
+    recordsSnapshot,
+    clientsSnapshot
+  ] = await Promise.all([
+
+    db
+      .collection("fssai_yearly_records")
+      .where("record_year", "==", year)
+      .get(),
+
+    db
+      .collection("clients")
+      .get()
+
+  ]);
+
+
+  const clients = new Map();
+
+
+  clientsSnapshot.forEach(doc => {
+
+    const client =
+      doc.data();
+
+    const clientId =
+      client.id || doc.id;
+
+    clients.set(
+      clientId,
+      {
+        ...client,
+        id: clientId
+      }
+    );
+
+  });
+
+
+  const rows = [];
+
+
+  recordsSnapshot.forEach(doc => {
+
+    const record =
+      doc.data();
+
+    const client =
+      clients.get(record.client_id);
+
+
+    if (!client) {
+      return;
+    }
+
+
+    const fssai =
+      clean(client.fssai);
+
+
+    if (!fssai) {
+      return;
+    }
+
+
+    rows.push({
+
+      id:
+        record.id || doc.id,
+
+      clientId:
+        record.client_id,
+
+      year:
+        record.record_year,
+
+      fssaiNumber:
+        fssai,
+
+      dateOfExpiry:
+        record.date_of_expiry || "",
+
+      renewalDate:
+        record.renewal_date || "",
+
+      newExpiryDate:
+        record.new_expiry_date || "",
+
+      status:
+        record.date_of_expiry
+          ? "ACTIVE"
+          : "EXPIRED"
+
+    });
+
+  });
+
+
+  rows.sort((a, b) =>
+    a.fssaiNumber.localeCompare(
+      b.fssaiNumber
+    )
+  );
+
+
+  return rows;
 }
 
-/* GET current selected year's records */
-router.get("/fssai-dashboard", requireAuth, (req, res) => {
-  try {
-    const year = yearOf(req.query.year);
-    res.json({
-      success: true,
-      year,
-      records: getRecords(year)
-    });
-  } catch (error) {
-    console.error("FSSAI GET ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message || "Unable to load FSSAI records."
-    });
+
+/* =========================================================
+   GET CURRENT SELECTED YEAR
+========================================================= */
+
+router.get(
+  "/fssai-dashboard",
+  requireAuth,
+  async (req, res) => {
+
+    try {
+
+      const year =
+        yearOf(req.query.year);
+
+
+      res.json({
+
+        success:
+          true,
+
+        year,
+
+        records:
+          await getRecords(year)
+
+      });
+
+    } catch (error) {
+
+      console.error(
+        "FSSAI GET ERROR:",
+        error
+      );
+
+
+      res.status(500).json({
+
+        success:
+          false,
+
+        message:
+          error.message ||
+          "Unable to load FSSAI records."
+
+      });
+
+    }
+
   }
-});
+);
 
-/* Save all rows for the selected year */
-router.patch("/fssai-dashboard/bulk", requireAuth, (req, res) => {
-  try {
-    const year = yearOf(req.body?.year);
-    const records = Array.isArray(req.body?.records) ? req.body.records : [];
 
-    syncYear(year);
+/* =========================================================
+   SAVE ALL ROWS
+========================================================= */
 
-    const update = db.prepare(`
-      UPDATE fssai_yearly_records
-      SET
-        date_of_expiry = ?,
-        renewal_date = ?,
-        new_expiry_date = ?,
-        updated_at = ?
-      WHERE id = ? AND record_year = ?
-    `);
+router.patch(
+  "/fssai-dashboard/bulk",
+  requireAuth,
+  async (req, res) => {
 
-    const now = new Date().toISOString();
+    try {
 
-    db.transaction(() => {
+      const year =
+        yearOf(req.body?.year);
+
+
+      const records =
+        Array.isArray(
+          req.body?.records
+        )
+          ? req.body.records
+          : [];
+
+
+      await syncYear(year);
+
+
+      const now =
+        new Date().toISOString();
+
+
+      const batch =
+        db.batch();
+
+
       for (const record of records) {
-        const id = clean(record.id);
-        const expiry = clean(record.dateOfExpiry);
-        const renewal = clean(record.renewalDate);
-        const newExpiry = clean(record.newExpiryDate);
 
-        if (!id) throw new Error("Invalid FSSAI record ID.");
-        if (!validDate(expiry)) throw new Error("Invalid Date of Expiry.");
-        if (!validDate(renewal)) throw new Error("Invalid Renewal Date.");
-        if (!validDate(newExpiry)) throw new Error("Invalid New Expiry Date.");
+        const id =
+          clean(record.id);
 
-        update.run(
-          expiry || null,
-          renewal || null,
-          newExpiry || null,
-          now,
-          id,
-          year
+        const expiry =
+          clean(record.dateOfExpiry);
+
+        const renewal =
+          clean(record.renewalDate);
+
+        const newExpiry =
+          clean(record.newExpiryDate);
+
+
+        if (!id) {
+          throw new Error(
+            "Invalid FSSAI record ID."
+          );
+        }
+
+
+        if (!validDate(expiry)) {
+          throw new Error(
+            "Invalid Date of Expiry."
+          );
+        }
+
+
+        if (!validDate(renewal)) {
+          throw new Error(
+            "Invalid Renewal Date."
+          );
+        }
+
+
+        if (!validDate(newExpiry)) {
+          throw new Error(
+            "Invalid New Expiry Date."
+          );
+        }
+
+
+        const recordRef =
+          db
+            .collection("fssai_yearly_records")
+            .doc(id);
+
+
+        batch.update(
+          recordRef,
+          {
+
+            date_of_expiry:
+              expiry || null,
+
+            renewal_date:
+              renewal || null,
+
+            new_expiry_date:
+              newExpiry || null,
+
+            updated_at:
+              now
+
+          }
         );
-      }
-    })();
 
-    res.json({
-      success: true,
-      year,
-      records: getRecords(year)
-    });
-  } catch (error) {
-    console.error("FSSAI SAVE ERROR:", error);
-    res.status(400).json({
-      success: false,
-      message: error.message || "Unable to save FSSAI records."
-    });
+      }
+
+
+      if (records.length > 0) {
+        await batch.commit();
+      }
+
+
+      res.json({
+
+        success:
+          true,
+
+        year,
+
+        records:
+          await getRecords(year)
+
+      });
+
+    } catch (error) {
+
+      console.error(
+        "FSSAI SAVE ERROR:",
+        error
+      );
+
+
+      res.status(400).json({
+
+        success:
+          false,
+
+        message:
+          error.message ||
+          "Unable to save FSSAI records."
+
+      });
+
+    }
+
   }
-});
+);
+
 
 module.exports = router;
