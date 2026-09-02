@@ -1,295 +1,522 @@
+/* =========================================================
+   SIGNUP REQUESTS — ADMIN
+========================================================= */
+
 (() => {
-    "use strict";
 
-    const requestsList = document.getElementById("requestsList");
-    const requestCount = document.getElementById("requestCount");
+    'use strict';
 
-    /*
-     * =========================================================
-     * HELPERS
-     * =========================================================
-     */
 
-    const esc = value =>
-        String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+    /* =====================================================
+       DOM HELPERS
+    ===================================================== */
 
-    const value = value => {
-        const text = String(value ?? "").trim();
-        return text ? esc(text) : "—";
+    const $ = id =>
+        document.getElementById(id);
+
+
+    const escapeHtml = value => {
+
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
     };
 
-    const date = value => {
-        if (!value) return "—";
 
-        const d = new Date(value);
+    /* =====================================================
+       API REQUEST HELPER
+    ===================================================== */
 
-        if (Number.isNaN(d.getTime())) {
-            return esc(value);
-        }
+    async function apiRequest(
+        url,
+        options = {}
+    ) {
 
-        return esc(
-            d.toLocaleString(undefined, {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit"
-            })
-        );
-    };
-
-    const nameOf = r =>
-        [
-            r.firstName,
-            r.middleName,
-            r.lastName
-        ]
-            .filter(v => String(v ?? "").trim())
-            .join(" ") || "Unnamed applicant";
-
-
-    /*
-     * =========================================================
-     * API HELPER
-     * =========================================================
-     *
-     * All API requests go through the same helper.
-     * credentials: "same-origin" ensures the browser sends
-     * authentication cookies/session credentials when required.
-     */
-
-    async function apiRequest(url, options = {}) {
         const config = {
-            credentials: "same-origin",
-            cache: "no-store",
+            credentials: 'same-origin',
+            cache: 'no-store',
             ...options,
+
             headers: {
-                Accept: "application/json",
+                Accept: 'application/json',
                 ...(options.headers || {})
             }
         };
 
+
         let response;
 
+
         try {
-            response = await fetch(url, config);
+
+            response =
+                await fetch(
+                    url,
+                    config
+                );
+
         } catch (error) {
-            console.error("Network error:", error);
+
+            console.error(
+                'API connection error:',
+                error
+            );
 
             throw new Error(
-                "Unable to connect to the server. Please check your internet connection and try again."
+                'Unable to connect to the server. Please check your internet connection and try again.'
             );
+
         }
 
-        let result = null;
+
+        let data = null;
+
 
         try {
-            result = await response.json();
-        } catch (error) {
-            console.error("Invalid server response:", error);
+
+            data =
+                await response.json();
+
+        } catch (_) {
+
+            data = null;
+
         }
+
 
         if (!response.ok) {
+
             throw new Error(
-                result?.message ||
-                `Server returned error ${response.status}.`
+                data?.message ||
+                `Server returned HTTP ${response.status}.`
             );
+
         }
 
-        if (!result || result.success !== true) {
+
+        if (
+            data &&
+            data.success === false
+        ) {
+
             throw new Error(
-                result?.message ||
-                "The server could not complete the request."
+                data.message ||
+                'The server rejected the request.'
             );
+
         }
 
-        return result;
+
+        return data || {};
+
     }
 
 
-    /*
-     * =========================================================
-     * INFORMATION ITEM
-     * =========================================================
-     */
+    /* =====================================================
+       LOAD REQUESTS
+    ===================================================== */
 
-    function item(label, val) {
-        return `
-            <div class="request-info-item">
-                <span>${esc(label)}</span>
-                <strong>${val}</strong>
-            </div>
-        `;
+    async function loadRequests() {
+
+        const list =
+            $('requestsList');
+
+        const count =
+            $('requestCount');
+
+
+        if (list) {
+
+            list.innerHTML = `
+                <div class="empty-state">
+                    <strong>
+                        Loading requests...
+                    </strong>
+                </div>
+            `;
+
+        }
+
+
+        if (count) {
+
+            count.textContent =
+                'Loading...';
+
+        }
+
+
+        try {
+
+            const data =
+                await apiRequest(
+                    '/api/admin/signup-requests',
+                    {
+                        method: 'GET'
+                    }
+                );
+
+
+            const requests =
+                Array.isArray(
+                    data.requests
+                )
+                    ? data.requests
+                    : [];
+
+
+            renderRequests(
+                requests
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                'Load signup requests error:',
+                error
+            );
+
+
+            if (count) {
+
+                count.textContent =
+                    'Unable to load';
+
+            }
+
+
+            if (list) {
+
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <strong>
+                            Unable to load signup requests.
+                        </strong>
+
+                        <div class="request-error">
+                            ${escapeHtml(error.message)}
+                        </div>
+
+                        <button
+                            type="button"
+                            class="approve-btn"
+                            id="retrySignupRequests"
+                            style="margin-top:12px;"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                `;
+
+
+                const retry =
+                    $('retrySignupRequests');
+
+
+                retry?.addEventListener(
+                    'click',
+                    loadRequests
+                );
+
+            }
+
+        }
+
     }
 
 
-    /*
-     * =========================================================
-     * RENDER SINGLE REQUEST
-     * =========================================================
-     */
+    /* =====================================================
+       RENDER REQUESTS
+    ===================================================== */
 
-    function render(r) {
-        const name = nameOf(r);
+    function renderRequests(
+        requests
+    ) {
 
-        const initials =
-            name
-                .split(/\s+/)
+        const list =
+            $('requestsList');
+
+        const count =
+            $('requestCount');
+
+
+        if (!list) {
+            return;
+        }
+
+
+        if (count) {
+
+            count.textContent =
+                `${requests.length} request${requests.length === 1 ? '' : 's'}`;
+
+        }
+
+
+        if (!requests.length) {
+
+            list.innerHTML = `
+                <div class="empty-state">
+                    <strong>
+                        No signup requests
+                    </strong>
+
+                    <span>
+                        There are currently no employee registration requests.
+                    </span>
+                </div>
+            `;
+
+            return;
+
+        }
+
+
+        list.innerHTML =
+            requests
+                .map(renderRequest)
+                .join('');
+
+
+        attachEvents();
+
+    }
+
+
+    /* =====================================================
+       RENDER SINGLE REQUEST
+    ===================================================== */
+
+    function renderRequest(
+        request
+    ) {
+
+        const id =
+            escapeHtml(
+                request.id
+            );
+
+
+        const firstName =
+            escapeHtml(
+                request.firstName
+            );
+
+        const middleName =
+            escapeHtml(
+                request.middleName
+            );
+
+        const lastName =
+            escapeHtml(
+                request.lastName
+            );
+
+        const email =
+            escapeHtml(
+                request.email
+            );
+
+        const phone =
+            escapeHtml(
+                request.phone
+            );
+
+        const aadhaar =
+            escapeHtml(
+                request.aadhaar
+            );
+
+        const pan =
+            escapeHtml(
+                request.pan
+            );
+
+        const message =
+            escapeHtml(
+                request.message
+            );
+
+
+        const fullName =
+            [
+                request.firstName,
+                request.middleName,
+                request.lastName
+            ]
                 .filter(Boolean)
-                .slice(0, 2)
-                .map(x => x[0])
-                .join("")
-                .toUpperCase() || "?";
+                .join(' ');
+
 
         const status =
-            String(r.status || "pending").toLowerCase();
+            String(
+                request.status || 'pending'
+            ).toLowerCase();
 
-        const pending = status === "pending";
+
+        const createdAt =
+            formatDate(
+                request.createdAt
+            );
+
+
+        let statusLabel =
+            status;
+
+
+        if (status === 'pending') {
+
+            statusLabel =
+                'PENDING';
+
+        } else if (status === 'approved') {
+
+            statusLabel =
+                'APPROVED';
+
+        } else if (status === 'rejected') {
+
+            statusLabel =
+                'REJECTED';
+
+        }
+
+
+        const processed =
+            status !== 'pending';
+
 
         return `
-            <article class="request-card">
+            <article
+                class="request-card"
+                data-request-id="${id}"
+            >
 
                 <div class="request-header">
 
-                    <div class="request-person">
+                    <div>
+                        <strong class="request-title">
+                            ${fullName || 'Unnamed applicant'}
+                        </strong>
 
-                        <div class="request-avatar">
-                            ${esc(initials)}
-                        </div>
-
-                        <div>
-
-                            <div class="request-name">
-                                ${esc(name)}
-                            </div>
-
-                            <div class="request-date">
-                                Submitted ${date(r.createdAt)}
-                            </div>
-
-                            <div class="request-id">
-                                Request ID: ${value(r.id)}
-                            </div>
-
-                        </div>
-
+                        <span class="request-id">
+                            Request ID: ${id}
+                        </span>
                     </div>
 
-
-                    <span
-                        class="request-status ${
-                            status === "approved"
-                                ? "approved"
-                                : status === "rejected"
-                                    ? "rejected"
-                                    : ""
-                        }"
-                    >
-                        ${esc(status)}
+                    <span class="request-status ${status}">
+                        ${statusLabel}
                     </span>
 
-                </div>
-
-
-                <div class="request-section-title">
-                    All submitted information
                 </div>
 
 
                 <div class="request-info">
 
-                    ${item(
-                        "First name",
-                        value(r.firstName)
-                    )}
-
-                    ${item(
-                        "Middle name",
-                        value(r.middleName)
-                    )}
-
-                    ${item(
-                        "Last name",
-                        value(r.lastName)
-                    )}
-
-                    ${item(
-                        "Email",
-                        value(r.email)
-                    )}
-
-                    ${item(
-                        "Phone",
-                        value(r.phone)
-                    )}
-
-                    ${item(
-                        "Aadhaar",
-                        value(r.aadhaar)
-                    )}
-
-                    ${item(
-                        "PAN",
-                        value(r.pan)
-                    )}
-
-                    ${item(
-                        "Request date",
-                        date(r.createdAt)
-                    )}
-
-                </div>
+                    <div class="request-info-item">
+                        <span>Name</span>
+                        <strong>
+                            ${fullName || '—'}
+                        </strong>
+                    </div>
 
 
-                <div class="request-message">
+                    <div class="request-info-item">
+                        <span>Email</span>
+                        <strong>
+                            ${email || '—'}
+                        </strong>
+                    </div>
 
-                    <span>
-                        Message
-                    </span>
 
-                    <p>
-                        ${value(r.message)}
-                    </p>
+                    <div class="request-info-item">
+                        <span>Phone</span>
+                        <strong>
+                            ${phone || '—'}
+                        </strong>
+                    </div>
+
+
+                    <div class="request-info-item">
+                        <span>Aadhaar</span>
+                        <strong>
+                            ${aadhaar || '—'}
+                        </strong>
+                    </div>
+
+
+                    <div class="request-info-item">
+                        <span>PAN</span>
+                        <strong>
+                            ${pan || '—'}
+                        </strong>
+                    </div>
+
+
+                    <div class="request-info-item">
+                        <span>Submitted</span>
+                        <strong>
+                            ${createdAt}
+                        </strong>
+                    </div>
+
+
+                    ${
+                        message
+                            ? `
+                                <div class="request-info-item full-width">
+                                    <span>Message</span>
+                                    <strong>
+                                        ${message}
+                                    </strong>
+                                </div>
+                            `
+                            : ''
+                    }
 
                 </div>
 
 
                 ${
-                    pending
+                    !processed
                         ? `
-                            <div class="approval-box">
-
-                                <h3>
-                                    Approve registration
-                                </h3>
-
-                                <p>
-                                    Create the employee's login credentials after reviewing the information above.
-                                </p>
-
+                            <div class="approval-section">
 
                                 <div class="approval-fields">
 
-                                    <input
-                                        type="text"
-                                        class="approval-username"
-                                        placeholder="Username"
-                                        minlength="4"
-                                        autocomplete="off"
-                                    >
+                                    <div>
+                                        <label>
+                                            Username
+                                        </label>
 
-                                    <input
-                                        type="password"
-                                        class="approval-password"
-                                        placeholder="Password"
-                                        minlength="8"
-                                        autocomplete="new-password"
-                                    >
+                                        <input
+                                            type="text"
+                                            class="approval-username"
+                                            placeholder="Employee username"
+                                            minlength="4"
+                                            autocomplete="off"
+                                        >
+                                    </div>
+
+
+                                    <div>
+                                        <label>
+                                            Password
+                                        </label>
+
+                                        <input
+                                            type="password"
+                                            class="approval-password"
+                                            placeholder="Minimum 8 characters"
+                                            minlength="8"
+                                            autocomplete="new-password"
+                                        >
+                                    </div>
 
                                 </div>
 
@@ -300,9 +527,9 @@
                                         type="button"
                                         class="approve-btn"
                                         data-action="approve"
-                                        data-id="${esc(r.id)}"
+                                        data-id="${id}"
                                     >
-                                        Approve &amp; Create Account
+                                        Approve & Create Account
                                     </button>
 
 
@@ -310,9 +537,9 @@
                                         type="button"
                                         class="reject-btn"
                                         data-action="reject"
-                                        data-id="${esc(r.id)}"
+                                        data-id="${id}"
                                     >
-                                        Reject Request
+                                        Reject
                                     </button>
 
                                 </div>
@@ -320,366 +547,237 @@
 
                                 <div
                                     class="request-error"
-                                    hidden
+                                    data-error-for="${id}"
+                                    style="display:none;"
                                 ></div>
 
                             </div>
                         `
-                        : (
-                            r.approvedUsername
-                                ? `
-                                    <div class="request-message">
-
-                                        <span>
-                                            Approved username
-                                        </span>
-
-                                        <p>
-                                            ${value(r.approvedUsername)}
-                                        </p>
-
-                                    </div>
-                                `
-                                : ""
-                        )
+                        : ''
                 }
 
             </article>
         `;
+
     }
 
 
-    /*
-     * =========================================================
-     * RENDER ALL REQUESTS
-     * =========================================================
-     */
+    /* =====================================================
+       FORMAT DATE
+    ===================================================== */
 
-    function renderRequests(requests) {
+    function formatDate(
+        value
+    ) {
+
+        if (!value) {
+            return '—';
+        }
+
+
+        const date =
+            new Date(value);
+
 
         if (
-            !Array.isArray(requests) ||
-            !requests.length
+            Number.isNaN(
+                date.getTime()
+            )
         ) {
 
-            requestCount.textContent =
-                "0 requests";
+            return escapeHtml(
+                value
+            );
 
-            requestsList.innerHTML = `
-                <div class="empty-state">
+        }
 
-                    <strong>
-                        No signup requests
-                    </strong>
 
-                    <p>
-                        New employee registration requests will appear here.
-                    </p>
+        return date.toLocaleString(
+            undefined,
+            {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            }
+        );
 
-                </div>
-            `;
+    }
 
+
+    /* =====================================================
+       ATTACH EVENTS
+    ===================================================== */
+
+    function attachEvents() {
+
+        document
+            .querySelectorAll(
+                '[data-action="approve"]'
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    'click',
+                    () => {
+
+                        approveRequest(
+                            button.dataset.id,
+                            button
+                        );
+
+                    }
+                );
+
+            });
+
+
+        document
+            .querySelectorAll(
+                '[data-action="reject"]'
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    'click',
+                    () => {
+
+                        rejectRequest(
+                            button.dataset.id,
+                            button
+                        );
+
+                    }
+                );
+
+            });
+
+    }
+
+
+    /* =====================================================
+       APPROVE REQUEST
+    ===================================================== */
+
+    async function approveRequest(
+        id,
+        button
+    ) {
+
+        const card =
+            document.querySelector(
+                `[data-request-id="${CSS.escape(id)}"]`
+            );
+
+
+        if (!card) {
             return;
         }
 
 
-        requestCount.textContent =
-            `${requests.length} request${
-                requests.length === 1
-                    ? ""
-                    : "s"
-            }`;
-
-
-        requestsList.innerHTML =
-            requests
-                .map(render)
-                .join("");
-    }
-
-
-    /*
-     * =========================================================
-     * LOAD SIGNUP REQUESTS
-     * =========================================================
-     */
-
-    async function loadRequests() {
-
-        requestsList.innerHTML = `
-            <div class="empty-state">
-                <strong>
-                    Loading requests...
-                </strong>
-            </div>
-        `;
-
-
-        try {
-
-            const result =
-                await apiRequest(
-                    "/api/admin/signup-requests",
-                    {
-                        method: "GET"
-                    }
-                );
-
-
-            renderRequests(
-                result.requests
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Load signup requests error:",
-                error
-            );
-
-
-            requestCount.textContent =
-                "Error";
-
-
-            requestsList.innerHTML = `
-                <div class="empty-state">
-
-                    <strong>
-                        Unable to load signup requests
-                    </strong>
-
-                    <p>
-                        ${esc(error.message)}
-                    </p>
-
-                </div>
-            `;
-        }
-    }
-
-
-    /*
-     * =========================================================
-     * APPROVE REQUEST
-     * =========================================================
-     */
-
-    async function approve(card, id) {
-
         const usernameInput =
             card.querySelector(
-                ".approval-username"
+                '.approval-username'
             );
+
 
         const passwordInput =
             card.querySelector(
-                ".approval-password"
+                '.approval-password'
             );
+
 
         const errorBox =
             card.querySelector(
-                ".request-error"
-            );
-
-        const approveBtn =
-            card.querySelector(
-                '[data-action="approve"]'
-            );
-
-        const rejectBtn =
-            card.querySelector(
-                '[data-action="reject"]'
+                `[data-error-for="${CSS.escape(id)}"]`
             );
 
 
         const username =
-            usernameInput?.value.trim() || "";
+            usernameInput?.value.trim() ||
+            '';
 
         const password =
-            passwordInput?.value || "";
+            passwordInput?.value ||
+            '';
 
-
-        /*
-         * VALIDATE USERNAME
-         */
 
         if (username.length < 4) {
 
-            errorBox.textContent =
-                "Username must contain at least 4 characters.";
-
-            errorBox.hidden = false;
+            showRequestError(
+                errorBox,
+                'Username must contain at least 4 characters.'
+            );
 
             usernameInput?.focus();
 
             return;
+
         }
 
 
-        /*
-         * VALIDATE PASSWORD
-         */
-
         if (password.length < 8) {
 
-            errorBox.textContent =
-                "Password must contain at least 8 characters.";
-
-            errorBox.hidden = false;
+            showRequestError(
+                errorBox,
+                'Password must contain at least 8 characters.'
+            );
 
             passwordInput?.focus();
 
             return;
+
         }
 
 
-        /*
-         * DISABLE BUTTONS
-         */
-
-        errorBox.hidden = true;
-
-        approveBtn.disabled = true;
-        rejectBtn.disabled = true;
-
-        approveBtn.textContent =
-            "Creating account...";
-
-
-        try {
-
-            /*
-             * SEND APPROVAL REQUEST
-             */
-
-            const result =
-                await apiRequest(
-                    `/api/admin/signup-requests/${encodeURIComponent(id)}/approve`,
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-                            username,
-                            password
-                        })
-                    }
-                );
-
-
-            /*
-             * SUCCESS
-             */
-
-            console.log(
-                "Signup approval successful:",
-                result
+        const confirmed =
+            window.confirm(
+                `Approve this signup request and create the employee account "${username}"?`
             );
 
 
-            /*
-             * Reload the list so the request
-             * changes from pending -> approved.
-             */
-
-            await loadRequests();
-
-
-        } catch (error) {
-
-            console.error(
-                "Approve signup request error:",
-                error
-            );
-
-
-            errorBox.textContent =
-                error.message ||
-                "Unable to approve request.";
-
-
-            errorBox.hidden = false;
-
-
-            approveBtn.disabled = false;
-            rejectBtn.disabled = false;
-
-
-            approveBtn.textContent =
-                "Approve & Create Account";
-        }
-    }
-
-
-    /*
-     * =========================================================
-     * REJECT REQUEST
-     * =========================================================
-     */
-
-    async function reject(card, id) {
-
-        if (
-            !window.confirm(
-                "Reject this signup request?"
-            )
-        ) {
+        if (!confirmed) {
             return;
         }
 
 
-        const errorBox =
-            card.querySelector(
-                ".request-error"
-            );
+        button.disabled = true;
 
-        const approveBtn =
-            card.querySelector(
-                '[data-action="approve"]'
-            );
+        button.dataset.originalText =
+            button.textContent;
 
-        const rejectBtn =
-            card.querySelector(
-                '[data-action="reject"]'
-            );
+        button.textContent =
+            'Creating account...';
 
 
-        errorBox.hidden = true;
-
-        approveBtn.disabled = true;
-        rejectBtn.disabled = true;
-
-        rejectBtn.textContent =
-            "Rejecting...";
+        hideRequestError(
+            errorBox
+        );
 
 
         try {
 
-            /*
-             * SEND REJECTION REQUEST
-             */
-
-            const result =
+            const data =
                 await apiRequest(
-                    `/api/admin/signup-requests/${encodeURIComponent(id)}/reject`,
+                    `/api/admin/signup-requests/${encodeURIComponent(id)}/approve`,
                     {
-                        method: "POST"
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/json'
+                        },
+
+                        body:
+                            JSON.stringify({
+                                username,
+                                password
+                            })
                     }
                 );
 
 
-            /*
-             * SUCCESS
-             */
-
-            console.log(
-                "Signup rejection successful:",
-                result
+            alert(
+                data.message ||
+                'Employee account created successfully.'
             );
 
 
@@ -689,101 +787,186 @@
         } catch (error) {
 
             console.error(
-                "Reject signup request error:",
+                'Approve request error:',
                 error
             );
 
 
-            errorBox.textContent =
-                error.message ||
-                "Unable to reject request.";
+            showRequestError(
+                errorBox,
+                error.message
+            );
 
 
-            errorBox.hidden = false;
+            button.disabled = false;
 
+            button.textContent =
+                button.dataset.originalText ||
+                'Approve & Create Account';
 
-            approveBtn.disabled = false;
-            rejectBtn.disabled = false;
-
-
-            rejectBtn.textContent =
-                "Reject Request";
         }
+
     }
 
 
-    /*
-     * =========================================================
-     * BUTTON EVENT HANDLER
-     * =========================================================
-     */
+    /* =====================================================
+       REJECT REQUEST
+    ===================================================== */
 
-    requestsList.addEventListener(
-        "click",
-        event => {
+    async function rejectRequest(
+        id,
+        button
+    ) {
 
-            const button =
-                event.target.closest(
-                    "[data-action][data-id]"
+        const confirmed =
+            window.confirm(
+                'Reject this signup request?'
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        const card =
+            document.querySelector(
+                `[data-request-id="${CSS.escape(id)}"]`
+            );
+
+
+        const errorBox =
+            card?.querySelector(
+                `[data-error-for="${CSS.escape(id)}"]`
+            );
+
+
+        button.disabled = true;
+
+        button.dataset.originalText =
+            button.textContent;
+
+        button.textContent =
+            'Rejecting...';
+
+
+        hideRequestError(
+            errorBox
+        );
+
+
+        try {
+
+            const data =
+                await apiRequest(
+                    `/api/admin/signup-requests/${encodeURIComponent(id)}/reject`,
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/json'
+                        },
+
+                        body:
+                            JSON.stringify({})
+                    }
                 );
 
 
-            if (!button) {
-                return;
-            }
+            alert(
+                data.message ||
+                'Signup request rejected.'
+            );
 
 
-            const card =
-                button.closest(
-                    ".request-card"
-                );
+            await loadRequests();
 
 
-            const id =
-                button.dataset.id;
+        } catch (error) {
+
+            console.error(
+                'Reject request error:',
+                error
+            );
 
 
-            if (!card || !id) {
-                return;
-            }
+            showRequestError(
+                errorBox,
+                error.message
+            );
 
 
-            if (
-                button.dataset.action ===
-                "approve"
-            ) {
+            button.disabled = false;
 
-                approve(
-                    card,
-                    id
-                );
+            button.textContent =
+                button.dataset.originalText ||
+                'Reject';
 
-                return;
-            }
+        }
+
+    }
 
 
-            if (
-                button.dataset.action ===
-                "reject"
-            ) {
+    /* =====================================================
+       ERROR HELPERS
+    ===================================================== */
 
-                reject(
-                    card,
-                    id
-                );
+    function showRequestError(
+        element,
+        message
+    ) {
 
-                return;
-            }
+        if (!element) {
+
+            alert(
+                message
+            );
+
+            return;
+
+        }
+
+
+        element.textContent =
+            message;
+
+        element.style.display =
+            'block';
+
+    }
+
+
+    function hideRequestError(
+        element
+    ) {
+
+        if (!element) {
+            return;
+        }
+
+
+        element.textContent =
+            '';
+
+        element.style.display =
+            'none';
+
+    }
+
+
+    /* =====================================================
+       INITIAL LOAD
+    ===================================================== */
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        () => {
+
+            loadRequests();
+
         }
     );
 
-
-    /*
-     * =========================================================
-     * INITIAL LOAD
-     * =========================================================
-     */
-
-    loadRequests();
 
 })();
