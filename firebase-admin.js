@@ -11,7 +11,7 @@ if (!projectId || !clientEmail || !privateKey) {
     );
 }
 
-initializeApp({
+const app = initializeApp({
     credential: cert({
         projectId,
         clientEmail,
@@ -19,6 +19,10 @@ initializeApp({
     })
 });
 
-const db = getFirestore();
+const db = getFirestore(app);
 
-module.exports = { db };
+module.exports = {
+    app,
+    db,
+    getFirestore: () => db
+};
