@@ -1,507 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GST Clients | CA Office</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>GST Dashboard | CA Office</title>
 <link rel="stylesheet" href="/CSS/style.css">
-<style>
-.registration-page{max-width:1450px;margin:0 auto}
-.registration-section{margin-top:8px}
-.registration-section-title{padding:12px 14px;color:#777;font-size:11px;font-weight:700;letter-spacing:.08em}
-.registration-menu{padding:0 10px 12px}
-.registration-menu-item{display:block;text-decoration:none;color:#555;padding:9px 12px;margin:2px 0;border-radius:7px;font-size:13px}
-.registration-menu-item:hover{background:#f2f5fa;color:#2563eb}
-.registration-menu-item.active{background:#eaf1ff;color:#2563eb;font-weight:700}
-.registration-filter{padding:20px;background:#fafafa;border-top:1px solid #eee;border-bottom:1px solid #eee}
-.registration-filter-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px}
-.registration-table-wrap{overflow-x:auto}
-.registration-table{width:100%;min-width:1200px;border-collapse:collapse}
-.registration-table th,.registration-table td{padding:14px;text-align:left;border-bottom:1px solid #eee}
-.registration-table th{background:#f7f8fa;font-size:13px;white-space:nowrap}
-.registration-number{color:#2563eb;letter-spacing:.2px}
-.muted{font-size:12px;color:#777;margin-top:4px}
-.view-button{height:38px;padding:0 14px;border:0;border-radius:7px;background:#2563eb;color:#fff;font-weight:600;cursor:pointer;white-space:nowrap}
-.view-button:hover{background:#1d4ed8}
-.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-bottom:18px}
-.summary-card{padding:20px;background:#fff;border:1px solid #eee;border-radius:10px}
-.summary-card span{display:block;color:#777;font-size:13px;margin-bottom:7px}
-.summary-card strong{font-size:28px}
-.modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.55)}
-.modal.open{display:flex}
-.modal-card{width:min(1050px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:12px}
-.modal-header{position:sticky;top:0;z-index:2;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #eee}
-.modal-header h2{margin:0}
-.modal-close{border:0;background:#eee;border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer}
-.modal-body{padding:24px}
-.detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px}
-.detail-item{padding:12px;border:1px solid #eee;border-radius:8px;background:#fafafa}
-.detail-item span{display:block;font-size:12px;color:#777;margin-bottom:5px}
-.detail-item strong{word-break:break-word}
-.registration-highlight{padding:18px;border:1px solid #dbe7ff;background:#f5f8ff;border-radius:10px;margin-bottom:24px}
-.registration-highlight span{display:block;font-size:12px;color:#666;margin-bottom:5px}
-.registration-highlight strong{font-size:22px;color:#2563eb;letter-spacing:.5px}
-.modal-body h3{margin:20px 0 10px;font-size:15px}
-.address-box{padding:14px;border:1px solid #eee;border-radius:8px}
-.address-box span{font-size:12px;color:#777}
-.address-box p{white-space:pre-wrap;margin:7px 0 0}
-.modal-open{overflow:hidden}
-@media(max-width:900px){.registration-filter-grid,.detail-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.registration-filter-grid,.summary,.detail-grid{grid-template-columns:1fr}}
-</style>
-
-
-<style>
-/* GST RECORDS TABLE UI */
-.gst-table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    background: #fff;
-    -webkit-overflow-scrolling: touch;
-}
-
-.gst-records-table {
-    width: max-content;
-    min-width: 1800px;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 13px;
-    color: #111827;
-}
-
-.gst-records-table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    padding: 13px 12px;
-    background: #f8fafc;
-    border-bottom: 1px solid #e5e7eb;
-    color: #374151;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .03em;
-    text-align: left;
-    white-space: nowrap;
-}
-
-.gst-records-table tbody td {
-    padding: 12px;
-    background: #fff;
-    border-bottom: 1px solid #f1f5f9;
-    vertical-align: middle;
-    white-space: nowrap;
-}
-
-.gst-records-table tbody tr:hover td {
-    background: #f8fafc;
-}
-
-.gst-records-table tbody tr:last-child td {
-    border-bottom: 0;
-}
-
-.gst-records-table th:first-child,
-.gst-records-table td:first-child {
-    width: 55px;
-    min-width: 55px;
-    text-align: center;
-}
-
-.gst-records-table th:nth-child(2),
-.gst-records-table td:nth-child(2) { width: 180px; min-width: 180px; }
-
-.gst-records-table th:nth-child(3),
-.gst-records-table td:nth-child(3) { width: 210px; min-width: 210px; }
-
-.gst-records-table th:nth-child(4),
-.gst-records-table td:nth-child(4) { width: 180px; min-width: 180px; }
-
-.gst-records-table th:nth-child(5),
-.gst-records-table td:nth-child(5) { width: 120px; min-width: 120px; }
-
-.gst-records-table th:nth-child(6),
-.gst-records-table td:nth-child(6) { width: 150px; min-width: 150px; }
-
-.gst-records-table th:nth-child(7),
-.gst-records-table td:nth-child(7) { width: 170px; min-width: 170px; }
-
-.gst-records-table th:nth-child(8),
-.gst-records-table td:nth-child(8) { width: 150px; min-width: 150px; }
-
-.gst-records-table th:nth-child(9),
-.gst-records-table td:nth-child(9) { width: 140px; min-width: 140px; }
-
-.gst-records-table th:nth-child(10),
-.gst-records-table td:nth-child(10) { width: 150px; min-width: 150px; }
-
-.gst-records-table th:nth-child(11),
-.gst-records-table td:nth-child(11) { width: 150px; min-width: 150px; }
-
-.gst-records-table th:nth-child(12),
-.gst-records-table td:nth-child(12) { width: 150px; min-width: 150px; }
-
-.gst-records-table th:nth-child(13),
-.gst-records-table td:nth-child(13) { width: 130px; min-width: 130px; }
-
-.gst-records-table th:nth-child(14),
-.gst-records-table td:nth-child(14) { width: 190px; min-width: 190px; }
-
-.gst-records-table th:last-child,
-.gst-records-table td:last-child {
-    width: 100px;
-    min-width: 100px;
-    text-align: center;
-}
-
-.gst-records-table input,
-.gst-records-table select {
-    width: 100%;
-    min-width: 110px;
-    height: 38px;
-    padding: 0 10px;
-    box-sizing: border-box;
-    border: 1px solid #d1d5db;
-    border-radius: 7px;
-    background: #fff;
-    color: #111827;
-    font-family: inherit;
-    font-size: 13px;
-    outline: none;
-}
-
-.gst-records-table input:focus,
-.gst-records-table select:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37,99,235,.10);
-}
-
-.gst-status {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 150px;
-    padding: 7px 10px;
-    border-radius: 7px;
-    background: #fef3c7;
-    color: #92400e;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    white-space: nowrap;
-}
-
-.gst-save-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 78px;
-    height: 36px;
-    padding: 0 14px;
-    border: 0;
-    border-radius: 7px;
-    background: #2563eb;
-    color: #fff;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .15s ease, transform .15s ease;
-}
-
-.gst-save-button:hover {
-    background: #1d4ed8;
-    transform: translateY(-1px);
-}
-
-.gst-save-button:active {
-    transform: translateY(0);
-}
-
-@media (max-width: 768px) {
-    .gst-records-table {
-        min-width: 1800px;
-    }
-}
-</style>
-
+<link rel="stylesheet" href="/CSS/gst-dashboard.css">
 </head>
-<body class="ca-admin-constant-page" class="dashboard-body">
+<body class="dashboard-body">
 <div class="dashboard-layout">
-
-
 <main class="dashboard-main">
-
-<div class="registration-page">
-
-<header class="dashboard-header">
-
-    <div>
-
-        <span class="dashboard-eyebrow">
-            TAX & REGISTRATION
-        </span>
-
-        <h1 id="registrationTitle">
-            GST
-        </h1>
-
-        <p id="registrationDescription">
-            Goods and Services Tax
-        </p>
-
-    </div>
-
-</header>
-
-<div
-    id="registrationError"
-    class="form-alert error-alert"
-    style="display:none;margin-bottom:18px;"
-></div>
-
-<section class="summary">
-
-    <div class="summary-card">
-
-        <span id="registrationCountLabel">
-            Total clients with GST
-        </span>
-
-        <strong id="registrationTotal">
-            0
-        </strong>
-
-    </div>
-
-    <div class="summary-card">
-
-        <span>
-            Currently Visible
-        </span>
-
-        <strong id="registrationVisible">
-            0
-        </strong>
-
-    </div>
-
-</section>
-
-<section class="dashboard-panel">
-
-    <div class="panel-header">
-
+<div class="gst-dashboard-page">
+    <header class="gst-head">
         <div>
-
-            <h2>
-                GST Register
-            </h2>
-
-            <p>
-                Only clients who have provided a GST
-                registration number are shown.
-            </p>
-
+            <span class="dashboard-eyebrow">TAX MANAGEMENT</span>
+            <h1>GST Dashboard</h1>
+            <p>Monthly GST working register. GST Name and GST Number are fetched from Clients.</p>
         </div>
-
-    </div>
-
-    <div class="registration-filter">
-
-        <div class="registration-filter-grid">
-
-            <div class="form-group">
-
-                <label for="registrationSearch">
-                    Search
-                </label>
-
-                <input
-                    id="registrationSearch"
-                    type="text"
-                    placeholder="Search client, registration number, PAN, email, city..."
-                    autocomplete="off"
-                >
-
-            </div>
-
-            <div class="form-group">
-
-                <label for="registrationLocation">
-                    Office Location
-                </label>
-
-                <select id="registrationLocation">
-
-                    <option value="">
-                        All office locations
-                    </option>
-
-                </select>
-
-            </div>
-
-            <div
-                class="form-group"
-                style="display:flex;align-items:end;"
-            >
-
-                <button
-                    id="clearRegistrationFilters"
-                    type="button"
-                    class="secondary-button"
-                    style="width:100%;"
-                >
-                    Clear Filter
-                </button>
-
-            </div>
-
+        <div class="gst-actions">
+            <button id="gstCurrentMonth" class="gst-btn" type="button">Current Month</button>
+            <button id="gstExport" class="gst-btn primary" type="button">Export</button>
+            <button id="gstSaveAll" class="gst-btn success" type="button">Save All</button>
         </div>
+    </header>
 
-    </div>
+    <div id="gstError" class="gst-error"></div>
 
-    <div
-        id="registrationLoading"
-        style="padding:45px;text-align:center;color:#777;"
-    >
-        Loading GST clients...
-    </div>
+    <section class="gst-toolbar">
+        <div class="gst-filters">
+            <div class="gst-field"><label>Search</label><input id="gstSearch" type="search" placeholder="GST Name, GST Number, Trade Name..."></div>
+            <div class="gst-field"><label>Month</label><input id="gstMonth" type="month"></div>
+            <div class="gst-field"><label>Type</label><select id="gstRegistrationFilter"><option value="">All Types</option><option value="REGULAR">REGULAR</option><option value="COMPOSITION">COMPOSITION</option></select></div>
+            <div class="gst-field"><label>Filing Frequency</label><select id="gstFrequencyFilter"><option value="">All Frequencies</option><option value="MONTHLY">MONTHLY</option><option value="QUARTERLY">QUARTERLY</option></select></div>
+            <div class="gst-field"><label>Status</label><select id="gstStatusFilter"><option value="">All Statuses</option><option>DOCUMENT NOT RECIEVED</option><option>DOCUMENT RECIEVED</option><option>GSTR -1/ IFF PENDING</option><option>TAX PENDING</option><option>3B FILING PENDING</option><option>SET PENDING</option><option>TRANSFERED TO BILLING</option></select></div>
+            <div class="gst-field"><label>Transferred to Billing</label><select id="gstBillingFilter"><option value="">All</option><option value="YES">YES</option><option value="NO">NO</option></select></div>
+        </div>
+        <div class="gst-note">Month: <strong id="gstMonthLabel"></strong>. Basic GST details remain; monthly date entries are separate for every month.</div>
+    </section>
 
-    <div
-        id="registrationEmpty"
-        style="display:none;padding:50px;text-align:center;"
-    >
+    <section class="gst-summary">
+        <div class="gst-summary-card"><span>Total GST Records</span><strong id="gstTotal">0</strong></div>
+        <div class="gst-summary-card"><span>Visible Records</span><strong id="gstVisible">0</strong></div>
+    </section>
 
-        <h3>
-            No GST clients found
-        </h3>
-
-        <p>
-            No client has provided a GST number,
-            or no record matches the selected filter.
-        </p>
-
-    </div>
-
-    <div class="registration-table-wrap">
-
-        <div class="gst-table-wrapper">
-<table
-            id="registrationTable"
-            class="gst-records-table"
-            style="display:none;"
-        >
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        Client
-                    </th>
-
-                    <th id="registrationTableHeading">
-                        GST Number
-                    </th>
-
-                    <th>
-                        Client Type
-                    </th>
-
-                    <th>
-                        Location
-                    </th>
-
-                    <th>
-                        PAN
-                    </th>
-
-                    <th>
-                        Contact
-                    </th>
-
-                    <th>
-                        Email
-                    </th>
-
-                    <th>
-                        Action
-                    </th>
-
-                </tr>
-
-            </thead>
-
-            <tbody id="registrationTableBody"></tbody>
-
-        </table></table>
+    <section class="gst-table-card">
+        <div id="gstLoading" class="gst-loading">Loading GST records...</div>
+        <div id="gstEmpty" class="gst-empty" style="display:none">No GST records match the selected filters.</div>
+        <div id="gstTable" class="gst-table-wrap" style="display:none">
+            <table class="gst-table">
+                <thead><tr>
+                    <th>SR NO.</th><th>GST NAME</th><th>GST NUMBER</th><th>TRADE NAME</th><th>W.E.F</th>
+                    <th>TYPE</th><th>FILING FREQUENCY</th><th>DOCUMENT RECEIVED DATE</th><th>WORKING DATE</th>
+                    <th>GSTR-1 / IFF</th><th>TAX PAYMENT DATE</th><th>3B FILING DATE</th><th>SET DATE</th>
+                    <th>STATUS</th>
+                </tr></thead>
+                <tbody id="gstTableBody"></tbody>
+            </table>
+        </div>
+    </section>
 </div>
-
-    </div>
-
-</section>
-
-</div>
-
 </main>
-
 </div>
-
-<div id="detailsModal" class="modal">
-
-    <div class="modal-card">
-
-        <div class="modal-header">
-
-            <div>
-
-                <span class="dashboard-eyebrow">
-                    CLIENT RECORD
-                </span>
-
-                <h2 id="detailsTitle">
-                    GST Client Details
-                </h2>
-
-            </div>
-
-            <button
-                id="detailsClose"
-                type="button"
-                class="modal-close"
-                aria-label="Close"
-            >
-                ×
-            </button>
-
-        </div>
-
-        <div
-            id="detailsBody"
-            class="modal-body"
-        ></div>
-
-    </div>
-
-</div>
-
+<div id="gstToast" class="gst-toast"></div>
 <script src="/JS/auth.js"></script>
-<script src="/JS/registrations.js"></script>
-
-    <script src="/JS/unified-sidebar.js"></script>
-
-<script>
-document.getElementById("logoutButton")?.addEventListener("click", function () {
-    localStorage.removeItem("caOfficeLoggedIn");
-    localStorage.removeItem("caOfficeUser");
-    window.location.href = "/login.html";
-});
-</script>
-
+<script src="/JS/gst-dashboard.js"></script>
+<script src="/JS/unified-sidebar.js"></script>
 </body>
 </html>
