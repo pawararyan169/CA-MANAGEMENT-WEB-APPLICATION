@@ -176,15 +176,93 @@
 
 .gst-table-wrap{
   width:100%;
-  overflow:auto;
+  overflow-x:auto;
+  overflow-y:auto;
   max-height:calc(100vh - 360px);
 }
 
 .gst-table{
-  width:100%;
+  width:2150px;
   min-width:2150px;
+  table-layout:fixed;
   border-collapse:separate;
   border-spacing:0;
+}
+
+/* =========================================================
+   GST TABLE COLUMN ALIGNMENT
+   Header and body use the exact same column widths.
+========================================================= */
+
+.gst-table th:nth-child(1),
+.gst-table td:nth-child(1){width:60px;min-width:60px}
+
+.gst-table th:nth-child(2),
+.gst-table td:nth-child(2){width:190px;min-width:190px}
+
+.gst-table th:nth-child(3),
+.gst-table td:nth-child(3){width:220px;min-width:220px}
+
+.gst-table th:nth-child(4),
+.gst-table td:nth-child(4){width:180px;min-width:180px}
+
+.gst-table th:nth-child(5),
+.gst-table td:nth-child(5){width:130px;min-width:130px}
+
+.gst-table th:nth-child(6),
+.gst-table td:nth-child(6){width:150px;min-width:150px}
+
+.gst-table th:nth-child(7),
+.gst-table td:nth-child(7){width:170px;min-width:170px}
+
+.gst-table th:nth-child(8),
+.gst-table td:nth-child(8){width:175px;min-width:175px}
+
+.gst-table th:nth-child(9),
+.gst-table td:nth-child(9){width:150px;min-width:150px}
+
+.gst-table th:nth-child(10),
+.gst-table td:nth-child(10){width:155px;min-width:155px}
+
+.gst-table th:nth-child(11),
+.gst-table td:nth-child(11){width:155px;min-width:155px}
+
+.gst-table th:nth-child(12),
+.gst-table td:nth-child(12){width:155px;min-width:155px}
+
+.gst-table th:nth-child(13),
+.gst-table td:nth-child(13){width:140px;min-width:140px}
+
+.gst-table th:nth-child(14),
+.gst-table td:nth-child(14){width:180px;min-width:180px}
+
+.gst-table th:nth-child(15),
+.gst-table td:nth-child(15){width:100px;min-width:100px;text-align:center}
+
+.gst-table td input,
+.gst-table td select{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+
+.gst-table td:nth-child(4) input{
+  min-width:0;
+}
+
+.gst-table input[type="date"]{
+  min-width:0;
+}
+
+.gst-table select{
+  min-width:0;
+}
+
+.gst-status-cell{
+  min-width:0;
+  width:100%;
+  white-space:normal;
+  line-height:1.35;
 }
 
 .gst-table th{
