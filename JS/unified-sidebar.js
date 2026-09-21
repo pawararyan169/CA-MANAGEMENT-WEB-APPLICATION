@@ -334,9 +334,10 @@
         ["link", "/admin/ptrc_dashboard.html", "PTRC", "◇"],
         ["link", "/admin/tan-dashboard.html", "TAN", "◇"],
         
+        
 
         ["section", "OFFICE"],
-        ["link", "/admin/dashboard.html#calendar", "Calendar", "◷"],
+        ["link", "/admin/calendar.html", "Calendar", "◷"],
         ["link", "/admin/dashboard.html#reports", "Reports", "◈"],
         ["link", "/admin/signup-requests.html","Sign-up Requests","◇"],
 
@@ -368,7 +369,7 @@
         
 
         ["section", "OFFICE"],
-        ["link", "/employee/dashboard.html#calendar", "Calendar", "◷"],
+        ["link", "/employee/calendar.html", "Calendar", "◷"],
         ["link", "/employee/dashboard.html#reports", "Reports", "◈"],
 
         ["section", "SYSTEM"],
