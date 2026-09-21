@@ -1043,7 +1043,6 @@
             style="margin-top: 18px;"
         >
 
-
             <div class="panel-header">
 
                 <div>
@@ -1062,9 +1061,10 @@
 
 
             <div
+                class="quick-actions-grid"
                 style="
                     display: grid;
-                    grid-template-columns: repeat(4, 1fr);
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
                     gap: 12px;
                     padding: 20px;
                 "
@@ -1074,10 +1074,10 @@
                 <!-- ADD EMPLOYEE -->
 
                 <button
-    type="button"
-    class="quick-action"
-    onclick="window.location.href='/admin/signup-requests.html'"
->
+                    type="button"
+                    class="quick-action"
+                    onclick="window.location.href='/admin/signup-requests.html'"
+                >
 
                     <span class="quick-action-icon">
                         +
@@ -1093,10 +1093,10 @@
                 <!-- ADD CLIENT -->
 
                 <button
-    type="button"
-    class="quick-action"
-    onclick="window.location.href='/admin/add-client.html'"
->
+                    type="button"
+                    class="quick-action"
+                    onclick="window.location.href='/admin/add-client.html'"
+                >
 
                     <span class="quick-action-icon">
                         +
@@ -1111,14 +1111,11 @@
 
                 <!-- VIEW EMPLOYEES -->
 
-              <button
-    type="button"
-    class="quick-action"
-    onclick="window.location.href='/admin/employees.html'"
->
-    <span class="quick-action-icon">◌</span>
-    <span>View employees</span>
-</button>
+                <button
+                    type="button"
+                    class="quick-action"
+                    onclick="window.location.href='/admin/employees.html'"
+                >
 
                     <span class="quick-action-icon">
                         ◌
@@ -1133,11 +1130,11 @@
 
                 <!-- CREATE TASK -->
 
-               <button
-    type="button"
-    class="quick-action"
-    onclick="window.location.href='/admin/tasks.html'"
->
+                <button
+                    type="button"
+                    class="quick-action"
+                    onclick="window.location.href='/admin/tasks.html'"
+                >
 
                     <span class="quick-action-icon">
                         ✓
@@ -1151,7 +1148,6 @@
 
 
             </div>
-
 
         </section>
 
