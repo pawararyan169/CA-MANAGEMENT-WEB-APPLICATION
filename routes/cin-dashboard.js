@@ -1,6 +1,6 @@
 const express = require("express");
 
-const db = require("../database/database");
+const { db } = require("../firebase-admin");
 
 const {
     requireAuth
